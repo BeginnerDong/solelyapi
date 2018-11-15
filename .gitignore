@@ -6,7 +6,7 @@ vendor/
 api
 build.php
 composer.json
-LICENSE
-phpunit
+LICENSE.txt
+phpunit.xml
 standard.sql
 think
