@@ -1,14 +1,2 @@
 # Auto detect text files and perform LF normalization
-
-/extend/
-/public/
-/runtime/
-/thinkphp/
-/vendor/
-api
-build.php
-composer.json
-LICENSE
-phpunit
-standard.sql
-think
+* text=auto
