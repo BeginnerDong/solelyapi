@@ -1,9 +1,10 @@
 # Auto detect text files and perform LF normalization
-/extend/*
-/public/*
-/runtime/*
-/thinkphp/*
-/vendor/*
+
+/extend/
+/public/
+/runtime/
+/thinkphp/
+/vendor/
 api
 build.php
 composer.json
