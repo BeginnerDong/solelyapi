@@ -3,7 +3,6 @@ public/
 runtime/
 thinkphp/
 vendor/
-api
 build.php
 composer.json
 LICENSE.txt
