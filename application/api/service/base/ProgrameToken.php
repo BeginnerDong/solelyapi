@@ -170,7 +170,7 @@ class ProgrameToken {
             ];
 
             if(isset($data['saveAfter'])){
-                $modelData['saveAfter'] = array_merge($data['saveAfter'],$modelData['saveAfter'])
+                $modelData['saveAfter'] = array_merge($data['saveAfter'],$modelData['saveAfter']);
             };
 
             $uid = CommonModel::CommonSave('User',$modelData);
