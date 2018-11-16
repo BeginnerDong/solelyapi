@@ -58,7 +58,7 @@ class Order{
         //判断是否是团购商品
         if(isset($data['isGroup'])&&!isset($data['group_no'])){
             $modelData['data']['group_no'] = makeGroupNo();
-            $modelData['data']['status'] = isset($data['isGroup'])?0:1;
+            $modelData['data']['order_step'] = isset($data['isGroup'])?4:5;
             $modelData['data']['standard'] = isset($data['standard'])?$data['standard']:'';
         }else if(isset($data['isGroup'])&&isset($data['group_no'])){
             $c_modelData = [];
@@ -70,18 +70,18 @@ class Order{
                 $modelData['data']['group_no'] = $data['group_no'];
                 $modelData['data']['standard'] = $groupRes['data'][0]['standard'];
                 if(count($groupRes['data'])<$groupRes['data'][0]['standard']-1){
-                    $modelData['data']['status'] = 0;
+                    $modelData['data']['order_step'] = 4;
                 }else{
-                    $modelData['data']['status'] = 1;
+                    $modelData['data']['order_step'] = 5;
                     $cc_modelData = [];
                     $cc_modelData['searchItem'] = [
                         'group_no'=>$data['group_no']
                     ];
                     $cc_modelData['data'] = [
-                        'status'=>1
+                        'order_step'=>5
                     ];
-                    $modelData['FuncName'] = 'update';
-                    $groupOrderRes =  CommonModel::CommonSave('Order',$modelData);
+                    $cc_modelData['FuncName'] = 'update';
+                    $groupOrderRes =  CommonModel::CommonSave('Order',$cc_modelData);
                     if(!$groupOrderRes>0){
                         throw new ErrorMessage([
                             'msg' => 'group更新状态失效',

@@ -120,11 +120,12 @@ class Pay
         $userInfo = $userInfo['data'][0];
         
         $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
+        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
+            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
+        };
         Db::startTrans();
         try{
-            if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
-                return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
-            };
+            
             if(isset($data['balance'])){
                 self::balancePay($userInfo,$orderInfo,$data['balance']);
             };
