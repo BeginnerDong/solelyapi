@@ -52,8 +52,10 @@ class Order{
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
         $modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
-        $modelData['data']['passage1'] = isset($data['passage1'])?$data['passage1']:'';
-        $modelData['data']['passage2'] = isset($data['passage2'])?$data['passage2']:'';
+
+        if(isset($data['data'])){
+            $modelData['data'] = array_merge($data['data'],$modelData['data']);
+        };
 
         //判断是否是团购商品
         if(isset($data['isGroup'])&&!isset($data['group_no'])){
