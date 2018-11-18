@@ -256,15 +256,21 @@ class Common extends Model{
                             if($cc_key==0){
                                 $finalItem = $copyValue[$c_value['middleKey'][0]];
                             }else{
-                                $finalItem = $finalItem[$c_value['middleKey'][$cc_key]];
+                                if ($finalItem&&isset($finalItem[$c_value['middleKey'][$cc_key]])) {
+                                    $finalItem = $finalItem[$c_value['middleKey'][$cc_key]];
+                                }else{
+                                    $finalItem = '';
+                                };
                             };
                         };
-                        $searchItem = [$c_value['condition'],$finalItem];
+                        if($finalItem){
+                            $searchItem = [$c_value['condition'],$finalItem];
+                        };
                     }else{
                         $searchItem = [$c_value['condition'],$copyValue[$c_value['middleKey']]];
                     };
                     
-                    if(isset($c_value['info'])){
+                    if(isset($c_value['info'])&&$searchItem){
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
                         $nRes = $model->where($c_value['searchItem'])->select();
                         if(!empty($nRes)){
