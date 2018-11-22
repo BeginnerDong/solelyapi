@@ -135,10 +135,14 @@ class Pay
             if(isset($data['coupon'])){
                 self::couponPay($userInfo,$orderInfo,$data['coupon']);
             };
+            if(isset($data['other'])){
+                self::otherPay($userInfo,$orderInfo,$data['other']);
+            };
             //会员卡支付
             if (isset($data['card'])) {
                 self::cardPay($userInfo,$orderInfo,$data['card']);
-            }
+            };
+            
             Db::commit();
         }catch (Exception $ex){
             Db::rollback();
@@ -178,6 +182,29 @@ class Pay
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'余额支付失败'
+            ]);
+        };
+        
+    }
+
+    public static function otherPay($userInfo,$orderinfo,$other)
+    {
+        
+        $modelData = [];
+        $modelData['data'] = array(
+            'type' => 6,
+            'count'=>-$other,
+            'order_no'=>$orderinfo['order_no'],
+            'trade_info'=>'余额支付',
+            'thirdapp_id'=>$userInfo['thirdapp_id'],
+            'user_no'=>$userInfo['user_no'],
+        );
+        $modelData['FuncName'] = 'add';
+        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        
+        if(!$res>0){
+            throw new ErrorMessage([
+                'msg'=>'other支付失败'
             ]);
         };
         
@@ -354,11 +381,18 @@ class Pay
             $totalPrice  += $data['discount'];
             $pay['discount'] = $data['discount'];
         };
+
+        if(isset($data['other'])){
+            $totalPrice  += $data['other'];
+            $pay['other'] = $data['other'];
+        };
+
         if($totalPrice!=$orderInfo['price']){
             throw new ErrorMessage([
                 'msg' => '传递支付参数有误',
             ]);
         };
+
         $modelData = [];
         $modelData['searchItem']['id'] = $orderInfo['id'];
         if(isset($data['data'])){
@@ -388,59 +422,28 @@ class Pay
         $modelData = [];
         $modelData['searchItem'] = $searchItem;
         $orderInfo = CommonModel::CommonGet('Order',$modelData);
+        if(!count($orderInfo['data'])>0){
+            throw new ErrorMessage([
+                'msg'=>'order信息有误'
+            ]);
+        };
         $orderInfo = $orderInfo['data'][0];
-
         $pass = false;
-        if(isset($orderInfo['pay']['wxPay'])){
-            $modelData = [];
-            $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-            $modelData['searchItem']['type'] = 1;
-            $modelData['searchItem']['count'] = $orderInfo['pay']['wxPay'];
-            $res = CommonModel::CommonGet('FlowLog',$modelData);
-            if(count($res['data'])>0){
+
+        $totalPrice = 0;
+        $modelData = [];
+        $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
+        $modelData['searchItem']['count'] = $orderInfo['pay']['wxPay'];
+        $res = CommonModel::CommonGet('FlowLog',$modelData);
+
+        if(count($res['data'])>0){
+            foreach ($res['data'] as $key => $value) {
+                $totalPrice += $value['count'];
+            };
+            if($totalPrice==$orderInfo['price']){
                 $pass = true;
             };
         };
-        if(isset($orderInfo['pay']['balance'])){
-            $modelData = [];
-            $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-            $modelData['searchItem']['type'] = 2;
-            $modelData['searchItem']['count'] = -$orderInfo['pay']['balance'];
-            $res = CommonModel::CommonGet('FlowLog',$modelData);
-            if(count($res['data'])>0){
-                $pass = true;
-            };
-        };
-        if(isset($orderInfo['pay']['score'])){
-            $modelData = [];
-            $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-            $modelData['searchItem']['type'] = 3;
-            $modelData['searchItem']['count'] = -$orderInfo['pay']['score'];
-            $res = CommonModel::CommonGet('FlowLog',$modelData);
-            if(count($res['data'])>0){
-                $pass = true;
-            };
-        };
-        if(isset($orderInfo['pay']['coupon'])){
-            $modelData = [];
-            $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-            $modelData['searchItem']['type'] = 3;
-            $modelData['searchItem']['count'] = -$orderInfo['pay']['coupon']['price'];
-            $res = CommonModel::CommonGet('FlowLog',$modelData);
-            if(count($res['data'])>0){
-                $pass = true;
-            };
-        };
-        if (isset($orderInfo['pay']['card'])) {
-            $modelData = [];
-            $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-            $modelData['searchItem']['type'] = 6;
-            $modelData['searchItem']['count'] = -$orderInfo['pay']['card']['price'];
-            $res = CommonModel::CommonGet('FlowLog',$modelData);
-            if(count($res['data'])>0){
-                $pass = true;
-            };
-        }
 
         if($pass){
             $modelData = [];
@@ -454,6 +457,7 @@ class Pay
             $res =  CommonModel::CommonSave('Order',$modelData);
         };
         return $pass;
+
     }
 
 
