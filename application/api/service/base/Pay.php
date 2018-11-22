@@ -193,9 +193,9 @@ class Pay
         $modelData = [];
         $modelData['data'] = array(
             'type' => 6,
-            'count'=>-$other,
+            'count'=>-$other['price'],
             'order_no'=>$orderinfo['order_no'],
-            'trade_info'=>'余额支付',
+            'trade_info'=>$other['msg'],
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
         );
