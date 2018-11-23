@@ -68,7 +68,6 @@ class Pay
                     'msg' => '关联订单有误',
                 ]);
             };
-            
             if(isset($value['wxPay'])&&isset($value['wxPayStatus'])&&$value['wxPayStatus']==0){
                 $price += $value['wxPay'];
                 $value['pay_no'] = $pay_no;
@@ -343,16 +342,13 @@ class Pay
                 'msg' => '订单已支付',
             ]);
         };
-        $totalPrice  = 0;
-        $pay = [];
+        
         if(isset($data['balance'])){
             if($userInfo['info']['balance']<$data['balance']){
                 throw new ErrorMessage([
                     'msg' => '余额不足',
                 ]);
             };
-            $totalPrice  += $data['balance'];
-            $pay['balance'] = $data['balance'];
         };
         if(isset($data['score'])){
             
@@ -361,44 +357,14 @@ class Pay
                     'msg' => '积分不足',
                 ]);
             };
-            $totalPrice  += $data['score'];
-            $pay['score'] = $data['score'];
         };
-        if(isset($data['coupon'])){
-            $totalPrice  += $data['coupon']['price'];
-            $pay['coupon'] = $data['coupon'];
-        };
-        if(isset($data['card'])){
-            $totalPrice  += $data['card']['price'];
-            $pay['card'] = $data['card'];
-        }
-        if(isset($data['wxPay'])){
-            $totalPrice  += $data['wxPay'];
-            $pay['wxPay'] = $data['wxPay'];
-        };
-
-        if(isset($data['discount'])){
-            $totalPrice  += $data['discount'];
-            $pay['discount'] = $data['discount'];
-        };
-
-        if(isset($data['other'])){
-            $totalPrice  += $data['other']['price'];
-            $pay['other'] = $data['other'];
-        };
-
-        if($totalPrice!=$orderInfo['price']){
-            throw new ErrorMessage([
-                'msg' => '传递支付参数有误',
-            ]);
-        };
+        
 
         $modelData = [];
         $modelData['searchItem']['id'] = $orderInfo['id'];
         if(isset($data['data'])){
             $modelData['data'] = $data['data'];
         }; 
-        $modelData['data']['pay'] =$pay;
         if(isset($data['payAfter'])){
             $modelData['data']['payAfter'] = json_encode($data['payAfter']);
         };
@@ -407,11 +373,13 @@ class Pay
             $orderInfo['pay_no'] = $modelData['data']['pay_no'];
         };   
         $modelData['FuncName'] = 'update';
-        $res =  CommonModel::CommonSave('Order',$modelData);
-        if(!$res>0){
-            throw new ErrorMessage([
-                'msg'=>'更新OrderPay信息失败'
-            ]);
+        if($modelData){
+            $res =  CommonModel::CommonSave('Order',$modelData);
+            if(!$res>0){
+                throw new ErrorMessage([
+                    'msg'=>'更新OrderPay信息失败'
+                ]);
+            };
         };
         return $orderInfo;
 
