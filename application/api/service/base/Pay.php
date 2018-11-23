@@ -383,7 +383,7 @@ class Pay
         };
 
         if(isset($data['other'])){
-            $totalPrice  += $data['other'];
+            $totalPrice  += $data['other']['price'];
             $pay['other'] = $data['other'];
         };
 
