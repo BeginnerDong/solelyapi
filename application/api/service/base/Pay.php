@@ -86,6 +86,7 @@ class Pay
 
     }
 
+
     public static function pay($data,$inner=false){
         
         if(!$inner){
@@ -119,8 +120,8 @@ class Pay
         $userInfo = $userInfo['data'][0];
         
         $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
-        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
-            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
+        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
+                return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
         };
         Db::startTrans();
         try{
@@ -151,12 +152,12 @@ class Pay
         $pass = self::checkIsPayAll($data['searchItem']);
         if($pass){
             throw new SuccessMessage([
-                'msg' => '支付成功',
+                'msg' => '支付完成',
             ]);
         }else{
             //self::returnPay();
-            throw new ErrorMessage([
-                'msg' => '支付失败',
+            throw new SuccessMessage([
+                'msg' => '支付成功',
             ]);
         };
         
@@ -177,7 +178,6 @@ class Pay
         );
         $modelData['FuncName'] = 'add';
         $res =  CommonModel::CommonSave('FlowLog',$modelData);
-        
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'余额支付失败'
@@ -191,7 +191,7 @@ class Pay
         
         $modelData = [];
         $modelData['data'] = array(
-            'type' => 6,
+            'type' => 7,
             'count'=>-$other['price'],
             'order_no'=>$orderinfo['order_no'],
             'trade_info'=>$other['msg'],
@@ -248,7 +248,7 @@ class Pay
         $modelData['FuncName'] = 'add';
         $modelData['data'] = array(
             'type' => $couponInfo['type'],
-            'count'=>$orderinfo['coupon']['price'],
+            'count'=>-$orderinfo['coupon']['price'],
             'order_no'=>$orderinfo['order_no'],
             'trade_info'=>'优惠券抵减',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
@@ -401,18 +401,18 @@ class Pay
         $totalPrice = 0;
         $modelData = [];
         $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-        $modelData['searchItem']['count'] = $orderInfo['pay']['wxPay'];
         $res = CommonModel::CommonGet('FlowLog',$modelData);
 
         if(count($res['data'])>0){
             foreach ($res['data'] as $key => $value) {
                 $totalPrice += $value['count'];
             };
-            if($totalPrice==$orderInfo['price']){
-                $pass = true;
-            };
         };
-
+        
+        $testNum = -floatval($orderInfo['price']);
+        if(bccomp($totalPrice,-floatval($orderInfo['price']),2)==0){
+            $pass = true;
+        };
         if($pass){
             $modelData = [];
             $modelData['searchItem']['id'] = $orderInfo['id'];
@@ -432,16 +432,28 @@ class Pay
 
 
 
-    public static function returnPay($orderNo){
+    public static function returnPay($data,$inner=false){
         
+        if(!$inner){
+            self::$token = $data['token'];
+            (new CommonValidate())->goCheck('one',$data);
+            checkTokenAndScope($data,config('scope.two')); 
+        };
+
+        $orderInfo =  CommonModel::CommonGet('Order',$data);
+        if(count($orderInfo['data'])!=1){
+            throw new ErrorMessage([
+                'msg' => '关联订单有误',
+            ]);
+        };
         $modelData = [];
-        $modelData['searchItem']['order_no'] = $orderNo;
-        $orderInfo =  CommonModel::CommonGet('FlowLog',$modelData);
-        $orderInfo = $orderInfo['data'];
-        if(count($orderInfo)>0){
-            foreach ($orderInfo as $key => $value) {     
+        $modelData['searchItem']['order_no'] = $orderInfo['data'][0]['order_no'];
+        $FlowLogInfo =  CommonModel::CommonGet('FlowLog',$modelData);
+        $FlowLogInfo = $FlowLogInfo['data'];
+        if(count($FlowLogInfo)>0){
+            foreach ($FlowLogInfo as $key => $value) {     
                 $modelData = [];
-                $modelData['searchItem']['id'] = $orderInfo[$key]['id'];
+                $modelData['searchItem']['id'] = $FlowLogInfo[$key]['id'];
                 $modelData['data']['status'] = -1;
                 $modelData['data']['update_time'] = time();
                 $modelData['FuncName'] = 'update';
@@ -450,8 +462,16 @@ class Pay
                     throw new ErrorMessage([
                         'msg' => '支付撤回失败',
                     ]);
-                };          
+                }; 
             };
+
+            throw new SuccessMessage([
+                'msg' => '撤回成功',
+            ]);
+        }else{
+            throw new ErrorMessage([
+                'msg' => '重复撤回',
+            ]);
         };
 
     }

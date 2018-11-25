@@ -233,7 +233,6 @@ class Common{
                 if(!isset($value['searchItem']['status'])){
                     $data['data'][$key]['searchItem']['status'] = 1;
                 };
-                
             }else{
                 $value['searchItem'] = [
                     'status'=>1

@@ -105,6 +105,7 @@ class WxPay
                 'info'=>$wxOrder
             ]);
         };
+        
         if($thirdappinfo['wx_appid']){
             $signature = self::sign($wxOrder,$thirdappinfo['wx_appid'],$thirdappinfo['wxkey']);
         }else{
@@ -179,20 +180,42 @@ class WxPay
 
 
     //订单退款
-    public static function refundOrder($orderID)
-    {
-        $orderinfo = OrderModel::getOrderInfo($orderID);
-        //获取项目信息
-        $thirdappinfo = ThirdappModel::getThirdUserInfo($orderinfo['thirdapp_id']);
+    public static function refundOrder($flowLogID){
+
+
+        $modelData = [];
+        $modelData['searchItem'] = ['id'=>$flowLogID];
+        $FlowLogInfo =  CommonModel::CommonGet('FlowLog',$modelData);
+        if(count($FlowLogInfo['data'])!=1){
+            throw new ErrorMessage([
+                'msg' => '关联订单有误',
+            ]);
+        };
+        $FlowLogInfo = $FlowLogInfo['data'][0];
+        $thirdappinfo = ThirdApp::get(['id' => $FlowLogInfo['thirdapp_id']]);
+        if(!isset($FlowLogInfo['payInfo']['refund_no'])){
+            $refundNo = makePayNo();
+            $FlowLogInfo['payInfo']['refund_no'] = $refundNo; 
+            $modelData = [];
+            $modelData['searchItem'] = ['id'=>$flowLogID];
+            $modelData['data'] = ['payInfo'=>$FlowLogInfo['payInfo']];
+            $modelData['FuncName'] = 'update';
+            $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        }else{
+            $refundNo = $FlowLogInfo['payInfo']['refund_no'];
+        };
+
         $wxOrderRefund = new \WxPayRefund();
-        $wxOrderRefund->SetTransaction_id($orderinfo['transaction_id']);
-        $wxOrderRefund->SetOut_trade_no($orderinfo['order_no']);
-        $wxOrderRefund->SetOut_refund_no($orderinfo['refund_no']);
-        $wxOrderRefund->SetTotal_fee($orderinfo['actual_price']*100);
-        $wxOrderRefund->SetRefund_fee($orderinfo['actual_price']*100);
-        $wxOrderRefund->SetOp_user_id($thirdappinfo['mchid']);
+        $wxOrderRefund->SetTransaction_id($FlowLogInfo['payInfo']['transaction_id']);
+        $wxOrderRefund->SetOut_trade_no($FlowLogInfo['payInfo']['out_trade_no']);
+        $wxOrderRefund->SetOut_refund_no($refundNo);
+        $wxOrderRefund->SetTotal_fee(-$FlowLogInfo['count']*100);
+        $wxOrderRefund->SetRefund_fee(-$FlowLogInfo['count']*100);
+        $wxOrderRefund->SetOp_user_id($FlowLogInfo['payInfo']['mch_id']);
         $wxOrder = \WxPayApi::refund($wxOrderRefund,$thirdappinfo);
+
         return $wxOrder;
+        
     }
 
 

@@ -6,6 +6,7 @@ use think\Model;
 use think\Cache;
 
 use app\api\service\base\Common as CommonService;
+use app\api\service\base\Pay as PayService;
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
@@ -16,6 +17,46 @@ class Order{
  
     function __construct($data){
         
+    }
+
+    public static function addVirtualOrder($data){
+        (new CommonValidate())->goCheck('one',$data);
+        checkTokenAndScope($data,config('scope.two'));
+        $user = Cache::get($data['token']);
+        if($user['user_type']>1){
+            throw new ErrorMessage([
+                'msg' => '用户类型不符',
+            ]);
+        };
+        if(isset($data['data'])){
+            $modelData['data'] = array_merge($data['data'],$modelData['data']);
+        };
+        $modelData = [];
+        $modelData['data']['order_no'] = $order_no;
+        $modelData['data']['type'] = 6;
+        $modelData['data']['pay'] = json_encode($data['pay']);
+        $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
+        $modelData['data']['user_no'] = $user['user_no'];
+
+        $modelData['FuncName'] = 'add';
+        $orderRes =  CommonModel::CommonSave('Order',$modelData);
+        if($orderRes>0){
+            if(isset($data['pay'])){
+                return PayService::pay($data['pay'],true);
+            }else{
+                throw new SuccessMessage([
+                    'msg'=>'下单成功',
+                    'info'=>[
+                        'id'=>$orderRes
+                    ]      
+                ]);
+            };
+        }else{
+            throw new ErrorMessage([
+                'msg' => '下单失败',
+            ]);
+        };
+
     }
 
 
@@ -48,7 +89,6 @@ class Order{
         $modelData['data']['price'] = $totalPrice;
         $modelData['data']['type'] = $data['type'];
         $modelData['data']['deadline'] = isset($data['deadline'])?$data['deadline']:'';
-        $modelData['data']['pay'] = json_encode($data['pay']);
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
         $modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
@@ -100,15 +140,19 @@ class Order{
         $modelData['FuncName'] = 'add';
         $orderRes =  CommonModel::CommonSave('Order',$modelData);
         if($orderRes>0){
-            throw new SuccessMessage([
-                'msg'=>'下单成功',
-                'info'=>[
-                    'id'=>$orderRes
-                ]      
-            ]); 
+            if(isset($data['pay'])){
+                return PayService::pay($data['pay'],true);
+            }else{
+                throw new SuccessMessage([
+                    'msg'=>'下单成功',
+                    'info'=>[
+                        'id'=>$orderRes
+                    ]      
+                ]);
+            }; 
         }else{
             throw new ErrorMessage([
-                'msg' => 'group更新状态失效',
+                'msg' => '下单失败',
             ]);
         };
         

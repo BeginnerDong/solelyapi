@@ -69,7 +69,7 @@ class WXPayReturn extends Controller
             };
             
             foreach ($orderList['data'] as $key => $value) {
-                $TOTAL_FEE = $this->dealOrder($data,$value,$TOTAL_FEE);
+                $this->dealOrder($data,$value,$TOTAL_FEE);
             };
             
             //根据订单号查询订单信息
@@ -96,7 +96,7 @@ class WXPayReturn extends Controller
         $modelData = [];
         $modelData['data'] = array(
             'type' => 1,
-            'count'=>$orderinfo['pay']['wxPay'],
+            'count'=>-$TOTAL_FEE,
             'order_no'=>$orderinfo['order_no'],
             'trade_info'=>'微信支付',
             'thirdapp_id'=>$orderinfo['thirdapp_id'],
@@ -124,7 +124,7 @@ class WXPayReturn extends Controller
         ];
         $modelData['wxPayStatus'] = 1;
         PayService::pay($modelData,true);
-        return $TOTAL_FEE - $orderinfo['pay']['wxPay'];
+        
     }
 
     
