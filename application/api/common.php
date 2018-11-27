@@ -449,7 +449,7 @@ function keepNum($data){
 function jsonDeal($data){
     foreach ($data as $key => $value) {
         if(is_array($value)){
-            $data[$key] = json_encode($value);
+            $data[$key] = json_encode($value,JSON_UNESCAPED_UNICODE);
         };
     };
     

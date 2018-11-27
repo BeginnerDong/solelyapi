@@ -27,10 +27,13 @@ class Sku extends Model{
                 'msg' => '关联信息有误',
             ]);
         };
-        
+        foreach ($data['data']['sku_item'] as $key => $value) {
+            $data['data']['sku_item'][$key] = (int)$value;
+        };
+        $mergeArray = array_keys(array_flip($res['sku_item']) + array_flip($data['data']['sku_item']));
         //return $data;
-        Product::where('id', $res['id'])->update(['sku_item' => array_merge($res['sku_item'],$data['data']['sku_item'])]);
-
+        Product::where('id', $res['id'])->update(['sku_item' => json_encode($mergeArray)]);
+        
         $data['data']['category_id'] = $res['category_id'];
         $data['data']['spu_array'] = $res['spu_array'];
         $data['data']['sku_no'] = makeSkuNo($res);
@@ -90,13 +93,18 @@ class Sku extends Model{
             
             
             $product = resDeal([Product::get(['product_no'=>$sku['product_no']])])[0];
-            
-            $res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode(array_merge($product['sku_item'],$data['data']['sku_item']))]);
-            if(!$res>0){
+            if(!$product){
                 throw new ErrorMessage([
-                    'msg' => '关联更新product信息失败',
+                    'msg' => '关联product信息失败',
                 ]);
             };
+
+            foreach ($data['data']['sku_item'] as $key => $value) {
+                $data['data']['sku_item'][$key] = (int)$value;
+            };
+            $mergeArray = array_keys(array_flip($product['sku_item']) + array_flip($data['data']['sku_item']));
+            $res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($mergeArray)]);
+            
         };
         
      

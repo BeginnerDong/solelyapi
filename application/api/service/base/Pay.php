@@ -57,6 +57,7 @@ class Pay
         $pay_no = makePayNo();
         $price = 0;
         foreach($multiPay as $key => $value){
+
             $orderInfo =  CommonModel::CommonGet('Order',$data);
             if(count($orderInfo['data'])!=1){
                 throw new ErrorMessage([
@@ -103,6 +104,7 @@ class Pay
         };
 
         $orderInfo = $orderInfo['data'][0];
+        self::checkStock($orderInfo);
         if(!$orderInfo['pay_no']&&!isset($data['pay_no'])){
             $data['pay_no'] = makePayNo();
         };
@@ -121,7 +123,7 @@ class Pay
         
         $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
-                return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
+            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
         };
         Db::startTrans();
         try{
@@ -163,6 +165,34 @@ class Pay
         
     }
   
+
+    public static function checkStock($orderInfo)
+    {
+        
+        $modelData = [];
+        $modelData['searchItem'] = ['order_no'=>$orderInfo['order_no']]
+        $orderItemInfo =  CommonModel::CommonGet('OrderItem',$data);
+        foreach ($orderItemInfo as $key => $value) {
+            $modelData = [];
+            
+            if(!$value['sku_id']){
+                $modelData['searchItem']['id'] = $value['product_id'];
+                $product =  CommonModel::CommonGet('Product',$modelData);
+            }else{
+                $modelData['searchItem']['id'] = $value['sku_id'];
+                $product =  CommonModel::CommonGet('Sku',$modelData);
+            };
+            if((isset($orderInfo['isGroup'])&&$product['group_stock']<$value['count'])||(!isset($orderInfo['isGroup'])&&$product['stock']<$value['count'])){
+                throw new ErrorMessage([
+                    'msg' => '库存不足',
+                    'info'=>$product
+                ]);
+                return;
+            };
+        };
+        
+    }
+
 
     public static function balancePay($userInfo,$orderinfo,$balance)
     {
@@ -464,6 +494,12 @@ class Pay
                     ]);
                 }; 
             };
+            $modelData = [];
+            $modelData['searchItem']['id'] = $FlowLogInfo[$key]['id'];
+            $modelData['data']['pay_status'] = 0;
+            $modelData['data']['order_step'] = 2;
+            $modelData['FuncName'] = 'update';
+            $res =  CommonModel::CommonSave('Order',$modelData);
 
             throw new SuccessMessage([
                 'msg' => '撤回成功',

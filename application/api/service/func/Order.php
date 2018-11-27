@@ -75,11 +75,13 @@ class Order{
         $order_no = makeOrderNo();
         if(isset($data['product'])){
             foreach ($data['product'] as $key => $value) {
-                $totalPrice += self::checkAndReduceStock($value,$totalPrice,$type,$order_no,$user);
+                $newArray = self::checkAndReduceStock($value,$totalPrice,$type,$order_no,$user);
+                $totalPrice += $newArray['totalPrice'];
             }; 
         }else if(isset($data['sku'])){
             foreach ($data['sku'] as $key => $value) {
-                $totalPrice += self::checkAndReduceStock($value,$totalPrice,$type,$order_no,$user,true);
+                $newArray = self::checkAndReduceStock($value,$totalPrice,$type,$order_no,$user,true);
+                $totalPrice += $newArray['totalPrice'];
             }; 
         };
         
@@ -185,36 +187,29 @@ class Order{
                     'msg' => '产品类型不匹配',
                     'info'=>$product
                 ]);
-            }
+            };
         };
         
-        $modelData = [];
-        $modelData['searchItem']['id'] = $product['id'];
-        if(isset($data['isGroup'])&&$product['group_stock']>$data['count']){
-            $modelData['searchItem']['group_stock'] = $product['group_stock'];
-            $modelData['data']['group_stock'] = $product['group_stock']-$data['count'];  
-        }else if($product['stock']>$data['count']){
-            $modelData['searchItem']['stock'] = $product['stock'];
-            $modelData['data']['stock'] = $product['stock']-$data['count'];  
-        }else{
+
+        if((isset($data['isGroup'])&&$product['group_stock']<$data['count'])||(!isset($data['isGroup'])&&$product['stock']<$data['count'])){
             throw new ErrorMessage([
                 'msg' => '库存不足',
                 'info'=>$product
             ]);
         };
         
-        $modelData['FuncName'] = 'update';
-        if(!$isSku){
-            $res =  CommonModel::CommonSave('Product',$modelData); 
-        }else{
-            $res =  CommonModel::CommonSave('Sku',$modelData); 
-        };
+        
         if(!$res>0){
             self::checkAndReduceStock($data,$totalPrice,$type,$order_no,$user);
         };
         $modelData = [];
         $modelData['data']['order_no'] = $order_no;
-        $modelData['data']['product_id'] = $product['id'];
+        if(!$isSku){
+            $modelData['data']['product_id'] = $product['id'];
+        }else{
+            $modelData['data']['sku_id'] = $product['id'];
+        };
+        
         $modelData['data']['count'] = $data['count'];
         $modelData['data']['snap_product'] = json_encode($product);
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
@@ -227,7 +222,13 @@ class Order{
                 'info'=>$product
             ]);  
         };
-        return $product['price']*$data['count']; 
+        return [
+            'totalPrice'=>$product['price']*$data['count'],
+            'count'=>$data['count'],
+            'price'=>$product['price'],
+            'id'=>$product['id'],
+            'title'=>$product['title'],
+        ]; 
         
     }
 
