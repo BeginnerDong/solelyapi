@@ -143,6 +143,9 @@ class Order{
         $orderRes =  CommonModel::CommonSave('Order',$modelData);
         if($orderRes>0){
             if(isset($data['pay'])){
+                $data['pay']['searchItem'] = [
+                    'id'=>$orderRes
+                ];
                 return PayService::pay($data['pay'],true);
             }else{
                 throw new SuccessMessage([
@@ -198,10 +201,7 @@ class Order{
             ]);
         };
         
-        
-        if(!$res>0){
-            self::checkAndReduceStock($data,$totalPrice,$type,$order_no,$user);
-        };
+
         $modelData = [];
         $modelData['data']['order_no'] = $order_no;
         if(!$isSku){

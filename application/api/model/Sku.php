@@ -90,23 +90,18 @@ class Sku extends Model{
 
         if(array_key_exists("sku_item",$data['data'])&&!empty($data['data']['sku_item'])){
             $sku = Sku::get($data['searchItem']);
-            
-            
             $product = resDeal([Product::get(['product_no'=>$sku['product_no']])])[0];
             if(!$product){
                 throw new ErrorMessage([
                     'msg' => '关联product信息失败',
                 ]);
             };
-
             foreach ($data['data']['sku_item'] as $key => $value) {
                 $data['data']['sku_item'][$key] = (int)$value;
             };
             $mergeArray = array_keys(array_flip($product['sku_item']) + array_flip($data['data']['sku_item']));
             $res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($mergeArray)]);
-            
-        };
-        
+        };        
      
     }
 

@@ -170,9 +170,14 @@ class Pay
     {
         
         $modelData = [];
-        $modelData['searchItem'] = ['order_no'=>$orderInfo['order_no']]
-        $orderItemInfo =  CommonModel::CommonGet('OrderItem',$data);
-        foreach ($orderItemInfo as $key => $value) {
+        $modelData['searchItem'] = ['order_no'=>$orderInfo['order_no']];
+        $orderItemInfo =  CommonModel::CommonGet('OrderItem',$modelData);
+        if(!count($orderItemInfo['data'])>0){
+            throw new ErrorMessage([
+                'msg' => 'orderItem关联信息有误',
+            ]);
+        };
+        foreach ($orderItemInfo['data'] as $key => $value) {
             $modelData = [];
             
             if(!$value['sku_id']){
@@ -182,6 +187,12 @@ class Pay
                 $modelData['searchItem']['id'] = $value['sku_id'];
                 $product =  CommonModel::CommonGet('Sku',$modelData);
             };
+            if(count($product['data'])!=1){
+                throw new ErrorMessage([
+                    'msg' => 'product关联信息有误',
+                ]);
+            };
+            $product = $product['data'][0];
             if((isset($orderInfo['isGroup'])&&$product['group_stock']<$value['count'])||(!isset($orderInfo['isGroup'])&&$product['stock']<$value['count'])){
                 throw new ErrorMessage([
                     'msg' => '库存不足',

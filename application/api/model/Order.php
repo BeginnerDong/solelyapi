@@ -67,25 +67,16 @@ class Order extends BaseModel
 
 
 
-    public static function dealGet($data)
-
-    {   
-
+    public static function dealGet($data){   
 
 
         foreach ($data as $key => $value) {
-
             $value = resDeal([$value])[0];
-
             $orderItems = resDeal(OrderItem::all(['order_no' => $value['order_no']]));
-
             $data[$key]['products'] =  $orderItems;
-
         };
 
         return $data;
-
-        
 
     }
 
@@ -139,138 +130,55 @@ class Order extends BaseModel
 
                 foreach ($orderItemRes as $c_key => $c_value) {
 
-
                     if(!empty($c_value['product_id'])){
-                        $productRes = (new Product())->where([
-
+                        $res = (new Product())->where([
                             'id' => $c_value['product_id'],
-
                             'status' => 1
-
                         ])->find();
-
-                        if($productRes){
-                            if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
-                                if(empty($res[$key]['group_no'])){
-                                    (new Product())->save(
-
-                                        [
-                                            'sale_count'  => $productRes['sale_count']+$c_value['count'],
-                                            'stock'  => $productRes['stock']+$c_value['count']
-                                        ],
-
-                                        ['id' => $productRes['id']]
-
-                                    );
-                                }else{
-                                    (new Product())->save(
-
-                                        [
-                                            'sale_count'  => $productRes['sale_count']+$c_value['count'],
-                                            'group_stock'  => $productRes['group_stock']+$c_value['count']
-                                        ],
-
-                                        ['id' => $productRes['id']]
-
-                                    );
-                                }
-                                
-                            }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
-                                if(empty($res[$key]['group_no'])){
-                                    (new Product())->save(
-
-                                        [
-                                            'sale_count'  => $productRes['sale_count']-$c_value['count'],
-                                            'stock'  => $productRes['stock']-$c_value['count']
-                                        ],
-
-                                        ['id' => $productRes['id']]
-
-                                    );
-                                }else{
-                                    (new Product())->save(
-
-                                        [
-                                            'sale_count'  => $productRes['sale_count']-$c_value['count'],
-                                            'group_stock'  => $productRes['group_stock']-$c_value['count']
-                                        ],
-
-                                        ['id' => $productRes['id']]
-
-                                    );
-                                };
-                                
-                            };
-                        };
                     }else if(!empty($c_value['sku_id'])){
-                        $skuRes = (new Sku())->where([
+                        $res = (new Sku())->where([
 
                             'id' => $c_value['sku_id'],
 
                             'status' => 1
 
                         ])->find();
-
-                        if($skuRes){
-                            if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
-                                if(empty($res[$key]['group_no'])){
-                                    (new Sku())->save(
-
-                                        [
-                                            'sale_count'  => $skuRes['sale_count']+$c_value['count'],
-                                            'stock'  => $skuRes['stock']+$c_value['count']
-                                        ],
-                                        ['id' => $skuRes['id']]
-
-                                    );
-                                }else{
-                                    (new Sku())->save(
-
-                                        [
-                                            'sale_count'  => $skuRes['sale_count']+$c_value['count'],
-                                            'group_stock'  => $skuRes['group_stock']+$c_value['count']
-                                        ],
-                                        ['id' => $skuRes['id']]
-
-                                    );
-                                };
-                                
-                            }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
-                                if(empty($res[$key]['group_no'])){
-                                    (new Sku())->save(
-
-                                        [
-                                            'sale_count'  => $skuRes['sale_count']-$c_value['count'],
-                                            'stock'  => $skuRes['stock']-$c_value['count'
-                                        ],
-
-                                        ['id' => $skuRes['id']]
-
-                                    );
-                                }else{
-                                    (new Sku())->save(
-
-                                        [
-                                            'sale_count'  => $skuRes['sale_count']-$c_value['count'],
-                                            'group_stock'  => $skuRes['group_stock']-$c_value['count'
-                                        ],
-
-                                        ['id' => $skuRes['id']]
-
-                                    );
-                                };
-                                
-                            };
-                        };
                     };
+                    if($res){
+
+                        if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
+                            $sale_count = $res['sale_count']+$c_value['count'];
+                            $stock = $res['sale_count']+$c_value['count'];
+                            $has = true;
+                        }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
+                            $sale_count = $res['sale_count']-$c_value['count'];
+                            $stock = $res['sale_count']-$c_value['count'];
+                            $has = true;
+                        };
+
+                        if(empty($res[$key]['group_no'])&&isset($has)){
+                            $content = [
+                                'sale_count'  => $sale_count,
+                                'stock'  => $stock
+                            ];
+                        }else if(isset($has)){
+                            $content = [
+                                'sale_count'  => $sale_count,
+                                'group_stock'  => $stock
+                            ];
+                        };
+                        if(!empty($c_value['product_id'])&&isset($has)){
+                            (new Product())->save($content,['id' => $productRes['id']]);
+                        }else if(!empty($c_value['sku_id'])&&isset($has)){
+                            (new Sku())->save($content,['id' => $productRes['id']]);
+                        };
+
+                    };
+
                     
-
                     (new OrderItem())->save(
-
                         ['pay_status'  => $data['data']['pay_status']],
-
                         ['id' => $c_value['id']]
-
                     );
 
                 };

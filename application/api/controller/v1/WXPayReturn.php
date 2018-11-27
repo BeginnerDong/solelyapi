@@ -110,7 +110,7 @@ class WXPayReturn extends Controller
         );
         $modelData['FuncName'] = 'add';
         if(!empty($orderinfo['payAfter'])){
-            $modelData['saveAfter'] = json_decode($orderinfo['payAfter']);
+            $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
         }; 
 
         //return $modelData;
