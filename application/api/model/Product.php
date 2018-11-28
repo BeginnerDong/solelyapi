@@ -38,7 +38,7 @@ class Product extends BaseModel
 
         $standard = ['title'=>'','description'=>'','content'=>'','mainImg'=>[],'bannerImg'=>[],'price'=>0,'stock'=>'','discount'=>'','type'=>1,'category_id'=>'','sku_array'=>[],'sku_item'=>[],'spu_array'=>[],'spu_item'=>[],'passage1'=>'','passage2'=>'','passage_array'=>[],'view_count'=>'','listorder'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','deadline'=>'','thirdapp_id'=>'','user_no'=>'','standard'=>0,'onShelf'=>1,'status'=>1,'product_no'=>makeProductNo($data['data']['category_id'])];
 
-        $data['data'] = chargeBlank($standard,$data['data']);
+        
 
 
 
@@ -103,7 +103,7 @@ class Product extends BaseModel
             (new Relation())->saveAll($label);
 
         };
-
+        $data['data'] = chargeBlank($standard,$data['data']);
         return $data;
 
 
