@@ -122,9 +122,7 @@ class Pay
         $userInfo = $userInfo['data'][0];
         
         $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
-        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
-            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
-        };
+        
         Db::startTrans();
         try{
             
@@ -150,6 +148,10 @@ class Pay
             Db::rollback();
             throw $ex;
         };
+
+        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
+            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
+        };
         
         $pass = self::checkIsPayAll($data['searchItem']);
         if($pass){
@@ -157,7 +159,6 @@ class Pay
                 'msg' => '支付完成',
             ]);
         }else{
-            //self::returnPay();
             throw new SuccessMessage([
                 'msg' => '支付成功',
             ]);

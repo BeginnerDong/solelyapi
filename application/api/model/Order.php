@@ -148,11 +148,11 @@ class Order extends BaseModel
 
                         if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
                             $sale_count = $res['sale_count']+$c_value['count'];
-                            $stock = $res['sale_count']+$c_value['count'];
+                            $stock = $res['stock']+$c_value['count'];
                             $has = true;
                         }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
                             $sale_count = $res['sale_count']-$c_value['count'];
-                            $stock = $res['sale_count']-$c_value['count'];
+                            $stock = $res['stock']-$c_value['count'];
                             $has = true;
                         };
 
@@ -172,9 +172,7 @@ class Order extends BaseModel
                         }else if(!empty($c_value['sku_id'])&&isset($has)){
                             (new Sku())->save($content,['id' => $productRes['id']]);
                         };
-
                     };
-
                     
                     (new OrderItem())->save(
                         ['pay_status'  => $data['data']['pay_status']],

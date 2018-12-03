@@ -18,8 +18,6 @@ class Sku extends Model{
     {   
         
         $standard = ['sku_no'=>'','title'=>'','label_array'=>'','sku_item'=>[],'product_id'=>'','stock'=>'','price'=>'','mainImg'=>[],'description'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','thirdapp_id'=>'','status'=>1,'user_no'=>'',];
-        
-
         $res = Product::get(['product_no' => $data['data']['product_no']]);
         $res = resDeal([$res])[0];
         if(!$res){

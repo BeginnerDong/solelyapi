@@ -97,9 +97,7 @@ class FlowLog extends Model
 
         if(isset($data['data']['type'])||isset($data['data']['count'])){
             throw new ErrorMessage([
-
                 'msg' => '不允许编辑的字段',
-
             ]);
         };
 
@@ -108,11 +106,8 @@ class FlowLog extends Model
             $FlowLogInfo = FlowLog::get($data['searchItem']);
 
             $UserInfo = UserInfo::where([
-
                 'status'=>1,
-
                 'user_no'=>$FlowLogInfo['user_no']
-
             ]);
 
             if($FlowLogInfo['type']==2){
