@@ -403,6 +403,7 @@ class Pay
 
         $modelData = [];
         $modelData['searchItem']['id'] = $orderInfo['id'];
+        $modelData['data'] = [];
         if(isset($data['data'])){
             $modelData['data'] = $data['data'];
         }; 
@@ -414,7 +415,7 @@ class Pay
             $orderInfo['pay_no'] = $modelData['data']['pay_no'];
         };   
         $modelData['FuncName'] = 'update';
-        if($modelData){
+        if($modelData['data']){
             $res =  CommonModel::CommonSave('Order',$modelData);
             if(!$res>0){
                 throw new ErrorMessage([

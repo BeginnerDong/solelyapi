@@ -118,11 +118,11 @@ class WXPayReturn extends Controller
         //return $res;
 
         $modelData = [];
-        $modelData = $orderinfo['pay'];
+        //$modelData = $orderinfo['pay'];
         $modelData['searchItem'] = [
             'id'=>$orderinfo['id']
         ];
-        $modelData['wxPayStatus'] = 1;
+        //$modelData['wxPayStatus'] = 1;
         PayService::pay($modelData,true);
         
     }
