@@ -57,7 +57,9 @@ class FlowLog extends Model
 
         };
 
-        if(isset($data['data']['type'])&&($data['data']['type']==2||$data['data']['type']==3)){
+        $data['data'] = chargeBlank($standard,$data['data']);
+
+        if(isset($data['data']['type'])&&($data['data']['type']==2||$data['data']['type']==3)&&isset($data['data']['status'])&&($data['data']['status']==1)){
 
             if($data['data']['type']==2){
 
@@ -69,13 +71,9 @@ class FlowLog extends Model
 
             };
 
-        };
-
-        $data['data'] = chargeBlank($standard,$data['data']);
+        };        
 
         return $data;
-
-
 
     }
 
@@ -101,14 +99,29 @@ class FlowLog extends Model
             ]);
         };
 
-        if(isset($data['data']['status'])&&$data['data']['status']!=1){
+        $FlowLogInfo = FlowLog::get($data['searchItem']);
 
-            $FlowLogInfo = FlowLog::get($data['searchItem']);
+        $UserInfo = UserInfo::where([
+            'status'=>1,
+            'user_no'=>$FlowLogInfo['user_no']
+        ]);
 
-            $UserInfo = UserInfo::where([
-                'status'=>1,
-                'user_no'=>$FlowLogInfo['user_no']
-            ]);
+        //流水执行
+        if (isset($data['data']['status'])&&$data['data']['status']==1&&$FlowLogInfo['status']!=1) {
+
+            if($FlowLogInfo['type']==2){
+
+                $res = UserInfo::where('user_no', $UserInfo['user_no'])->update(['balance' => $FlowLogInfo['count']+$UserInfo['balance']]);
+
+            }else if($FlowLogInfo['type']==3){
+
+                $res = UserInfo::where('user_no', $UserInfo['user_no'])->update(['score' => $FlowLogInfo['count']+$UserInfo['score']]);
+
+            };
+        }
+
+        //流水退还
+        if(isset($data['data']['status'])&&$data['data']['status']==-1&&$FlowLogInfo['status']==1){ 
 
             if($FlowLogInfo['type']==2){
 
@@ -130,8 +143,6 @@ class FlowLog extends Model
             };
 
         };
-
-        
 
     	return $data;     
 
