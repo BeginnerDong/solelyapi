@@ -28,10 +28,13 @@ class Order{
                 'msg' => '用户类型不符',
             ]);
         };
+        $modelData = [];
+        $modelData['data'] = [];
         if(isset($data['data'])){
             $modelData['data'] = array_merge($data['data'],$modelData['data']);
         };
-        $modelData = [];
+        $order_no = makeOrderNo();
+        
         $modelData['data']['order_no'] = $order_no;
         $modelData['data']['type'] = 6;
         $modelData['data']['pay'] = json_encode($data['pay']);
@@ -42,7 +45,9 @@ class Order{
         $orderRes =  CommonModel::CommonSave('Order',$modelData);
         if($orderRes>0){
             if(isset($data['pay'])){
-                return PayService::pay($data['pay'],true);
+                $pay = $data['pay'];
+                $pay['searchItem'] = ['id'=>$orderRes];
+                return PayService::pay($pay,true);
             }else{
                 throw new SuccessMessage([
                     'msg'=>'下单成功',

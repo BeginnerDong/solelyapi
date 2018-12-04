@@ -104,7 +104,10 @@ class Pay
         };
 
         $orderInfo = $orderInfo['data'][0];
-        self::checkStock($orderInfo);
+        if($orderInfo['type']!=6){
+            self::checkStock($orderInfo);
+        };
+        
         if(!$orderInfo['pay_no']&&!isset($data['pay_no'])){
             $data['pay_no'] = makePayNo();
         };
@@ -132,8 +135,10 @@ class Pay
             if(isset($data['score'])){
                 self::scorePay($userInfo,$orderInfo,$data['score']);
             };
-            if(isset($data['coupon'])){
-                self::couponPay($userInfo,$orderInfo,$data['coupon']);
+            if(isset($data['coupon'])&&count($data['coupon'])>0){
+                foreach ($data['coupon'] as $key => $value) {
+                    self::couponPay($userInfo,$orderInfo,$value);
+                };
             };
             if(isset($data['other'])){
                 self::otherPay($userInfo,$orderInfo,$data['other']);
@@ -152,8 +157,10 @@ class Pay
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
             return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
         };
+ 
         
         $pass = self::checkIsPayAll($data['searchItem']);
+
         if($pass){
             throw new SuccessMessage([
                 'msg' => '支付完成',
@@ -286,17 +293,7 @@ class Pay
             ]);
         };
         $couponInfo = $couponInfo['data'][0];
-        $modelData = [];
-        $modelData['FuncName'] = 'add';
-        $modelData['data'] = array(
-            'type' => $couponInfo['type'],
-            'count'=>-$orderinfo['coupon']['price'],
-            'order_no'=>$orderinfo['order_no'],
-            'trade_info'=>'优惠券抵减',
-            'thirdapp_id'=>$userInfo['thirdapp_id'],
-            'user_no'=>$userInfo['user_no'],
-            'relation_id'=>$couponInfo['order_no'],
-        );
+
         if($couponInfo['type']==3){
             if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$couponInfo['price']){
                 throw new ErrorMessage([
@@ -305,12 +302,25 @@ class Pay
             };
         };
         if($couponInfo['type']==4){
-            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$orderinfo['price']*$couponInfo['price']/100){
+            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$orderinfo['price']*$couponInfo['discount']/100){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
+        
+        $modelData = [];
+        $modelData['FuncName'] = 'add';
+        $modelData['data'] = array(
+            'type' => $couponInfo['type'],
+            'count'=>-$coupon['price'],
+            'order_no'=>$orderinfo['order_no'],
+            'trade_info'=>'优惠券抵减',
+            'thirdapp_id'=>$userInfo['thirdapp_id'],
+            'user_no'=>$userInfo['user_no'],
+            'relation_id'=>$couponInfo['order_no'],
+        );
+        
         $res =  CommonModel::CommonSave('FlowLog',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
@@ -456,6 +466,7 @@ class Pay
         if(bccomp($totalPrice,-floatval($orderInfo['price']),2)==0){
             $pass = true;
         };
+    
         if($pass){
             $modelData = [];
             $modelData['searchItem']['id'] = $orderInfo['id'];

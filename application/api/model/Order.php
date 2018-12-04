@@ -88,7 +88,7 @@ class Order extends BaseModel
 
         if(isset($data['data']['status'])&&$data['data']['status']==-1){
 
-            $res = (new Order())->where($data['searchItem'])->select();
+            $res = resDeal((new Order())->where($data['searchItem'])->select());
 
             foreach ($res as $key => $value) {
 
@@ -116,8 +116,8 @@ class Order extends BaseModel
 
         if(isset($data['data']['pay_status'])&&($data['data']['pay_status']==1||$data['data']['pay_status']==0)){
 
-            $res = (new Order())->where($data['searchItem'])->select();
-
+            $res = resDeal((new Order())->where($data['searchItem'])->select());
+            
             foreach ($res as $key => $value) {
 
                 $orderItemRes = (new OrderItem())->where([
@@ -131,12 +131,12 @@ class Order extends BaseModel
                 foreach ($orderItemRes as $c_key => $c_value) {
 
                     if(!empty($c_value['product_id'])){
-                        $res = (new Product())->where([
+                        $c_res = (new Product())->where([
                             'id' => $c_value['product_id'],
                             'status' => 1
                         ])->find();
                     }else if(!empty($c_value['sku_id'])){
-                        $res = (new Sku())->where([
+                        $c_res = (new Sku())->where([
 
                             'id' => $c_value['sku_id'],
 
@@ -145,14 +145,14 @@ class Order extends BaseModel
                         ])->find();
                     };
                     if($res){
-
+                        
                         if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
-                            $sale_count = $res['sale_count']+$c_value['count'];
-                            $stock = $res['stock']+$c_value['count'];
+                            $sale_count = $c_res['sale_count']+$c_value['count'];
+                            $stock = $c_res['stock']+$c_value['count'];
                             $has = true;
                         }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
-                            $sale_count = $res['sale_count']-$c_value['count'];
-                            $stock = $res['stock']-$c_value['count'];
+                            $sale_count = $c_res['sale_count']-$c_value['count'];
+                            $stock = $c_res['stock']-$c_value['count'];
                             $has = true;
                         };
 
@@ -168,9 +168,9 @@ class Order extends BaseModel
                             ];
                         };
                         if(!empty($c_value['product_id'])&&isset($has)){
-                            (new Product())->save($content,['id' => $productRes['id']]);
+                            (new Product())->save($content,['id' => $c_res['id']]);
                         }else if(!empty($c_value['sku_id'])&&isset($has)){
-                            (new Sku())->save($content,['id' => $productRes['id']]);
+                            (new Sku())->save($content,['id' => $c_res['id']]);
                         };
                     };
                     
@@ -197,7 +197,7 @@ class Order extends BaseModel
 
         };
 
-
+        return $data;
 
     }
 

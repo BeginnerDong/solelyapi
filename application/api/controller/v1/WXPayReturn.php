@@ -10,17 +10,12 @@ namespace app\api\controller\v1;
 
 use think\Db;
 use think\Controller;
-
 use app\api\model\Common as CommonModel;
 use app\api\model\FlowLog;
 use app\api\model\Log;
 use app\api\service\base\Pay as PayService;
-
-
 use think\Request as Request;
 use app\lib\exception\TokenException;
-
-
 
 class WXPayReturn extends Controller
 {
@@ -34,9 +29,9 @@ class WXPayReturn extends Controller
 
             $orderId = $data['OUT_TRADE_NO'];
             $logInfo = resDeal([Log::get(['pay_no'=>$orderId])])[0];
-            if($logInfo&&$logInfo['transaction_id']==$data['TRANSACTION_ID']){
+            /*if($logInfo&&$logInfo['transaction_id']==$data['TRANSACTION_ID']){
                 return true;
-            };
+            };*/
             
             $modelData = [];
             $modelData['searchItem'] = [
