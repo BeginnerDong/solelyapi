@@ -16,6 +16,8 @@ use app\api\model\Log;
 use app\api\service\base\Pay as PayService;
 use think\Request as Request;
 use app\lib\exception\TokenException;
+use app\lib\exception\SuccessMessage;
+use app\lib\exception\ErrorMessage;
 
 class WXPayReturn extends Controller
 {
@@ -29,9 +31,9 @@ class WXPayReturn extends Controller
 
             $orderId = $data['OUT_TRADE_NO'];
             $logInfo = resDeal([Log::get(['pay_no'=>$orderId])])[0];
-            /*if($logInfo&&$logInfo['transaction_id']==$data['TRANSACTION_ID']){
+            if($logInfo&&$logInfo['transaction_id']==$data['TRANSACTION_ID']){
                 return true;
-            };*/
+            };
             
             $modelData = [];
             $modelData['searchItem'] = [
@@ -42,13 +44,15 @@ class WXPayReturn extends Controller
                 'title'=>'微信支付回调成功',
                 'transaction_id'=>$data['TRANSACTION_ID'],
                 'content'=>$data,
+                'pay_no'=>$orderId,
                 'update_time'=>time(),
             );
             if($logInfo['payAfter']){
                 $modelData['payAfter'] = $logInfo['payAfter'];
             };
-            $modelData['FuncName'] = 'update';
-            $saveLog =  CommonModel::CommonSave('Log',$modelData);
+            $modelData['FuncName'] = 'add';
+            $saveLog =  CommonModel::CommonSave('Log',$modelData); 
+
             if($logInfo['behavior']==1){
                 return true;
             };
@@ -108,16 +112,12 @@ class WXPayReturn extends Controller
             $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
         }; 
 
-        //return $modelData;
         $res =  CommonModel::CommonSave('FlowLog',$modelData);
-        //return $res;
-
         $modelData = [];
-        //$modelData = $orderinfo['pay'];
         $modelData['searchItem'] = [
             'id'=>$orderinfo['id']
         ];
-        //$modelData['wxPayStatus'] = 1;
+
         PayService::pay($modelData,true);
         
     }

@@ -68,8 +68,22 @@ class Order{
     public static function addOrder($data){
 
         (new CommonValidate())->goCheck('one',$data);
-        checkTokenAndScope($data,config('scope.two'));
-        $user = Cache::get($data['token']);
+        if(!isset($data['data'])){
+            $data['data'] = [];
+        };
+        $data = checkTokenAndScope($data,config('scope.two'));
+        $modelData = [
+            'searchItem'=>[
+                'user_no'=>$data['data']['user_no']
+            ],
+        ];
+        $user =  CommonModel::CommonGet('User',$modelData);
+        if(!count($user['data'])>0){
+            throw new ErrorMessage([
+                'msg' => '用户不存在',
+            ]);
+        };
+        $user = $user['data'][0];
         if($user['user_type']>1){
             throw new ErrorMessage([
                 'msg' => '用户类型不符',
@@ -204,6 +218,24 @@ class Order{
                 'msg' => '库存不足',
                 'info'=>$product
             ]);
+        };
+
+        if($product['limit']>0){
+            $modelData = [
+                'searchItem'=>[]
+            ];
+            if(!$isSku){
+                $modelData['searchItem']['product_id'] = $data['id'];
+            }else{
+                $modelData['searchItem']['sku_id'] = $data['id'];
+            };
+            $modelData['searchItem']['user_no'] = $user['user_no'];
+            $limit =  CommonModel::CommonGet('OrderItem',$modelData);
+            if(count($limit['data'])>=$product['limit']){
+                throw new ErrorMessage([
+                    'msg' => '购买数量超限',
+                ]);
+            };
         };
         
 

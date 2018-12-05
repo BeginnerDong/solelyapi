@@ -153,7 +153,9 @@ class Pay
             Db::rollback();
             throw $ex;
         };
-
+        if(!isset($data['wxPayStatus'])){
+            $data['wxPayStatus'] = 0;
+        };
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
             return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
         };
@@ -284,7 +286,7 @@ class Pay
     public static function couponPay($userInfo,$orderinfo,$coupon)
     {
         $modelData = [];
-        $modelData['searchItem']['order_no'] = $coupon['coupon_no'];
+        $modelData['searchItem']['id'] = $coupon['id'];
         $modelData['searchItem']['user_no'] = $userInfo['user_no'];
         $couponInfo =  CommonModel::CommonGet('Order',$modelData);
         if(count($couponInfo['data'])!=1){
@@ -295,14 +297,14 @@ class Pay
         $couponInfo = $couponInfo['data'][0];
 
         if($couponInfo['type']==3){
-            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$couponInfo['price']){
+            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$couponInfo['products'][0]['snap_product']['discount']){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
         if($couponInfo['type']==4){
-            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$orderinfo['price']*$couponInfo['discount']/100){
+            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$orderinfo['price']*$couponInfo['products'][0]['snap_product']['discount']['discount']/100){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
@@ -330,6 +332,7 @@ class Pay
         $modelData = [];
         $modelData['searchItem']['order_no'] = $couponInfo['order_no'];
         $modelData['data']['status'] = -1;
+        $modelData['data']['order_step'] = 3;
         $modelData['FuncName'] = 'update';
         $res =  CommonModel::CommonSave('Order',$modelData);
         if(!$res>0){
