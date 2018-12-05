@@ -36,6 +36,7 @@ class Common{
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
+            'WxFormId'=>config('scope.one'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){
@@ -80,6 +81,7 @@ class Common{
 
         $scopeArr = [
             'Order'=>config('scope.two'),
+            'OrderItem'=>config('scope.two'),
             'UserInfo'=>config('scope.two'),
             'Product'=>[],
             'Label'=>[],
@@ -90,6 +92,7 @@ class Common{
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
+            'WxFormId'=>config('scope.two'),
         ];
 
         
@@ -148,6 +151,7 @@ class Common{
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
+            'WxFormId'=>config('scope.two'),
         ];
         if(isset($scopeArr[$data['modelName']])){
             $scope = $scopeArr[$data['modelName']];
@@ -180,6 +184,7 @@ class Common{
             'UserAddress'=>config('scope.two'),
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
+            'WxFormId'=>config('scope.two'),
         ];
         if(isset($scopeArr[$data['modelName']])){
             $scope = $scopeArr[$data['modelName']];
@@ -250,13 +255,4 @@ class Common{
         };
         
     }
-
-
-
-    
-
-
-    
-
-
 }

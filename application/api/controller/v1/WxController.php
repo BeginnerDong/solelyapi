@@ -339,11 +339,9 @@ class WxController extends Controller{
 		return $data;
 	}
 
-	public function sendMessagePrograme(){
+	public function sendMessage($post_data,$thirdapp_id){
 
-
-		$data = Request::instance()->param();
-		$this->thirdapp_id = $data['thirdapp_id'];
+		$this->thirdapp_id = $thirdapp_id;
 		$config = $this->getThirdConfig();
 		if($config){
 			if($config['access_token']&&$config['access_token_expire']>time()){
@@ -352,56 +350,14 @@ class WxController extends Controller{
 				$access_token = $this->getAccessToken($config);
 			}; 
 		}else{
-			return false;
+			throw new ErrorMessage([
+	            'msg'=>'发送成功',
+	        ]);
 		};
 
-		$modelData = [];
-        $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
-        $modelData['searchItem']['status'] = 1;
-        $modelData['getAfter'] =['formIdArray'=>[
-        	'tableName'=>'Message',
-        	'middleKey'=>'user_no',
-        	'key'=>'key',
-        	'condition'=>'=',
-        	'info'=>['id','title']
-        ]];
-        $user=CommonModel::CommonGet('User',$modelData);
+		$url = "https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=".$access_token;
 
-        if(count($user['data'])>0){
-        	$userdId = [];
-        	foreach ($user['data'] as $key => $value) {
-        		if(isset($value['formIdArray']['title'])&&isset($value['formIdArray']['id'])){
-        			array_push($userdId,$value['formIdArray']['id']);
-        			$data_arr = array(
-					  'keyword1' => array( "value" => 'test') 
-					  'keyword2' => array( "value" => '即将开奖') 
-					);
-					$post_data = array (
-					  // 用户的 openID，可用过 wx.getUserInfo 获取
-					  "touser"           => $value['openid'],
-					  // 小程序后台申请到的模板编号
-					  "template_id"      => 'F2u-Q0XiDACB2WKiqd_ue8hEZMmPuZvc8KNhfnCNVBg',
-					  // 点击模板消息后跳转到的页面，可以传递参数
-					  "page"             => "/pages/index/index",
-					  // 第一步里获取到的 formID
-					  "form_id"          => $value['formIdArray']['title'],
-					  // 数据
-					  "data"             => $data_arr,
-					  // 需要强调的关键字，会加大居中显示
-					  //"emphasis_keyword" => "keyword2.DATA"
-					);
-					// 这里替换为你的 appID 和 appSecret
-					$url = "https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=".$access_token;  
-					// 将数组编码为 JSON
-					$post_data = json_encode($post_data, true);   
-					// 这里的返回值是一个 JSON，可通过 json_decode() 解码成数组
-					$return = curl_wxpost($url, $post_data);
-					var_dump($return);
-
-        		};
-        	};
-        };
-
+		$return = $this->curl_wxpost($url,$post_data);
 	}
 
 	public function dealMenudata($d)

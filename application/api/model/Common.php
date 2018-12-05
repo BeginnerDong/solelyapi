@@ -23,6 +23,7 @@ use app\api\model\ThirdApp;
 use app\api\model\User;
 use app\api\model\UserAddress;
 use app\api\model\UserInfo;
+use app\api\model\WxFormId;
 
 
 class Common extends Model{
@@ -445,6 +446,8 @@ class Common extends Model{
             return new UserAddress;
         }else if($dbTable=='UserInfo'){
             return new UserInfo;
+        }else if($dbTable=='WxFormId'){
+            return new WxFormId;
         }else{
             throw new ErrorMessage([
                 'msg' => 'tableName有误',
@@ -452,10 +455,4 @@ class Common extends Model{
         };
 
     }
-
-
-
-    
-
-
 }

@@ -121,6 +121,7 @@ class Order{
         //判断是否是团购商品
         if(isset($data['isGroup'])&&!isset($data['group_no'])){
             $modelData['data']['group_no'] = makeGroupNo();
+            $modelData['data']['group_leader'] = "true";
             $modelData['data']['order_step'] = isset($data['isGroup'])?4:5;
             $modelData['data']['standard'] = isset($data['standard'])?$data['standard']:'';
         }else if(isset($data['isGroup'])&&isset($data['group_no'])){
@@ -141,7 +142,7 @@ class Order{
                         'group_no'=>$data['group_no']
                     ];
                     $cc_modelData['data'] = [
-                        'order_step'=>5
+                        'order_step'=>1
                     ];
                     $cc_modelData['FuncName'] = 'update';
                     $groupOrderRes =  CommonModel::CommonSave('Order',$cc_modelData);
