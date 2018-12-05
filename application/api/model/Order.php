@@ -148,11 +148,11 @@ class Order extends BaseModel
                         
                         if($res[$key]['pay_status']==0&&$data['data']['pay_status']==1){
                             $sale_count = $c_res['sale_count']+$c_value['count'];
-                            $stock = $c_res['stock']+$c_value['count'];
+                            $stock = $c_res['stock']-$c_value['count'];
                             $has = true;
                         }else if($res[$key]['pay_status']==1&&$data['data']['pay_status']==0){
                             $sale_count = $c_res['sale_count']-$c_value['count'];
-                            $stock = $c_res['stock']-$c_value['count'];
+                            $stock = $c_res['stock']+$c_value['count'];
                             $has = true;
                         };
 
