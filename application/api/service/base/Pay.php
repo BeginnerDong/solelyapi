@@ -18,8 +18,8 @@ use app\api\model\UserCoupon as UserCouponModel;
 use app\api\model\FlowLog;
 use app\api\model\Common as CommonModel;
 
-use app\api\service\UserOrder as OrderService;
 use app\api\service\base\WxPay;
+use app\api\service\func\Order as OrderService;
 use app\api\service\base\CommonService as CommonService;
 use app\api\validate\CommonValidate as CommonValidate;
 use app\lib\exception\OrderException;
@@ -52,37 +52,52 @@ class Pay
         if(!$inner){
             self::$token = $data['token'];
             (new CommonValidate())->goCheck('one',$data);
-            checkTokenAndScope($data,config('scope.two')); 
+            $data = checkTokenAndScope($data,config('scope.two')); 
         };
         $pay_no = makePayNo();
         $price = 0;
+
+        $modelData = [];
+        $modelData = [
+            'searchItem'=>[
+                'user_no'=>$data['data']['user_no']
+            ],
+        ];
+        $userInfo =  CommonModel::CommonGet('User',$modelData);
+        if(!count($userInfo['data'])>0){
+            throw new ErrorMessage([
+                'msg' => '用户不存在',
+            ]);
+        };
+        $userInfo = $userInfo['data'][0];
+
+        $logData['orderlist'] = [];
         foreach($multiPay as $key => $value){
 
-            $orderInfo =  CommonModel::CommonGet('Order',$data);
+            $orderInfo =  CommonModel::CommonGet('Order',$value);
             if(count($orderInfo['data'])!=1){
                 throw new ErrorMessage([
                     'msg' => '关联订单有误',
                 ]);
             };
-            if(count($orderInfo['data'])!=1){
-                throw new ErrorMessage([
-                    'msg' => '关联订单有误',
-                ]);
-            };
+            $orderInfo = $orderInfo['data'][0];
             if(isset($value['wxPay'])&&isset($value['wxPayStatus'])&&$value['wxPayStatus']==0){
                 $price += $value['wxPay'];
                 $value['pay_no'] = $pay_no;
+
+                //记录合并订单微信支付信息
+                $wxpayInfo[$orderInfo['order_no']] = $value['wxPay'];
+                $logData['orderlist'] = array_merge($logData['orderlist'],$wxpayInfo);
             };
             $orderInfo = self::checkParamValid($value,$orderInfo,$userInfo);
-            
         };
 
         if($price>0){
-            return WxPay::pay($userInfo,$pay_no,$price);
+            return WxPay::pay($userInfo,$pay_no,$price,$logData);
         }else{
-            foreach($multiPay as $key => $value){
-                self::pay($value);
-            };
+            throw new ErrorMessage([
+                'msg' => '订单金额异常',
+            ]);
         };
 
     }
@@ -156,8 +171,12 @@ class Pay
         if(!isset($data['wxPayStatus'])){
             $data['wxPayStatus'] = 0;
         };
-        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){            
-            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay']);
+        if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
+
+            $logData['orderlist'] = [];
+            $wxpayInfo[$orderInfo['order_no']] = $data['wxPay'];
+            $logData['orderlist'] = array_merge($logData['orderlist'],$wxpayInfo);
+            return WxPay::pay($userInfo,$orderInfo['pay_no'],$data['wxPay'],$logData);
         };
  
         
@@ -480,14 +499,13 @@ class Pay
                 $modelData['saveAfter'] = json_decode($orderinfo['payAfter']);
             }; 
             $res =  CommonModel::CommonSave('Order',$modelData);
+
+            //支付成功判断团购逻辑
+            OrderService::checkGroup($orderInfo);
         };
         return $pass;
 
     }
-
-
-
-
 
     public static function returnPay($data,$inner=false){
         
@@ -538,13 +556,4 @@ class Pay
         };
 
     }
-
-    
-
-    
-
-    
-
-    
-
 }

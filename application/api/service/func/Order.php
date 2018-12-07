@@ -72,6 +72,7 @@ class Order{
             $data['data'] = [];
         };
         $data = checkTokenAndScope($data,config('scope.two'));
+        $modelData = [];
         $modelData = [
             'searchItem'=>[
                 'user_no'=>$data['data']['user_no']
@@ -122,42 +123,24 @@ class Order{
         if(isset($data['isGroup'])&&!isset($data['group_no'])){
             $modelData['data']['group_no'] = makeGroupNo();
             $modelData['data']['group_leader'] = "true";
-            $modelData['data']['order_step'] = isset($data['isGroup'])?4:5;
-            $modelData['data']['standard'] = isset($data['standard'])?$data['standard']:'';
-        }else if(isset($data['isGroup'])&&isset($data['group_no'])){
+            $modelData['data']['order_step'] = 4;
+            $modelData['data']['standard'] = isset($data['data']['standard'])?$data['data']['standard']:'';
+        }else if(isset($data['isGroup'])&&isset($data['group_no'])) {            
             $c_modelData = [];
             $c_modelData['searchItem'] = [
                 'group_no'=>$data['group_no']
             ];
             $groupRes =  CommonModel::CommonGet('Order',$c_modelData);
-            if(count($groupRes['data'])>0){
+            if (count($groupRes['data'])>0) {
                 $modelData['data']['group_no'] = $data['group_no'];
                 $modelData['data']['standard'] = $groupRes['data'][0]['standard'];
-                if(count($groupRes['data'])<$groupRes['data'][0]['standard']-1){
-                    $modelData['data']['order_step'] = 4;
-                }else{
-                    $modelData['data']['order_step'] = 5;
-                    $cc_modelData = [];
-                    $cc_modelData['searchItem'] = [
-                        'group_no'=>$data['group_no']
-                    ];
-                    $cc_modelData['data'] = [
-                        'order_step'=>1
-                    ];
-                    $cc_modelData['FuncName'] = 'update';
-                    $groupOrderRes =  CommonModel::CommonSave('Order',$cc_modelData);
-                    if(!$groupOrderRes>0){
-                        throw new ErrorMessage([
-                            'msg' => 'group更新状态失效',
-                        ]);
-                    };
-                };
+                $modelData['data']['order_step'] = 4;
             }else{
                 throw new ErrorMessage([
                     'msg' => 'group_no不存在',
                 ]); 
             };
-        };
+        }
 
         $modelData['FuncName'] = 'add';
         $orderRes =  CommonModel::CommonSave('Order',$modelData);
@@ -290,5 +273,41 @@ class Order{
 
     }
 
+
+    //检测团购订单成团状况
+    public static function checkGroup($orderInfo){
+        if(!empty($orderInfo['group_no'])){
+            $c_modelData = [];
+            $c_modelData['searchItem'] = [
+                'group_no'=>$orderInfo['group_no'],
+                'pay_status'=>1,
+            ];
+            $groupRes =  CommonModel::CommonGet('Order',$c_modelData);
+            if(count($groupRes['data'])>0){
+                if(count($groupRes['data'])<$groupRes['data'][0]['standard']-1){
+                    //未成团，无操作
+                }else{
+                    $cc_modelData = [];
+                    $cc_modelData['searchItem'] = [
+                        'group_no'=>$orderInfo['group_no']
+                    ];
+                    $cc_modelData['data'] = [
+                        'order_step'=>5
+                    ];
+                    $cc_modelData['FuncName'] = 'update';
+                    $groupOrderRes = CommonModel::CommonSave('Order',$cc_modelData);
+                    if(!$groupOrderRes>0){
+                        throw new ErrorMessage([
+                            'msg' => 'group更新状态失效',
+                        ]);
+                    };
+                };
+            }else{
+                throw new ErrorMessage([
+                    'msg' => 'group_no不存在',
+                ]); 
+            };
+        };
+    }
 
 }

@@ -66,13 +66,23 @@ class WXPayReturn extends Controller
                 ]);
                 return;
             };
+
+            //获取支付log记录
+            $modelData = [];
+            $modelData['searchItem']['pay_no'] = $orderId;
+            $payLog =  CommonModel::CommonGet('Log',$modelData);
+            if(!count($orderList['data'])>0){
+                throw new ErrorMessage([
+                    'msg' => '关联日志有误',
+                ]);
+                return;
+            };
+            $orderlist = $payLog['order_list'];
             
-            foreach ($orderList['data'] as $key => $value) {
-                $this->dealOrder($data,$value,$TOTAL_FEE);
+            foreach ($['data'] as $key => $value) { 
+                $this->dealOrder($data,$value,$TOTAL_FEE,$orderlist);
             };
             
-            //根据订单号查询订单信息
-                 
         }else{
 
             //记录微信支付回调日志
@@ -90,12 +100,21 @@ class WXPayReturn extends Controller
     }
 
 
-    public function dealOrder($data,$orderinfo,$TOTAL_FEE){
+    public function dealOrder($data,$orderinfo,$TOTAL_FEE,$orderlist){
+
+        if (isset($orderlist[$orderinfo['order_no']])&&!empty($orderlist[$orderinfo['order_no'])) {
+            $price = $orderlist[$orderinfo['order_no'];
+        }else{
+            throw new ErrorMessage([
+                'msg' => '关联订单有误',
+            ]);
+            return;
+        }
         
         $modelData = [];
         $modelData['data'] = array(
             'type' => 1,
-            'count'=>-$TOTAL_FEE,
+            'count'=>-$price,
             'order_no'=>$orderinfo['order_no'],
             'trade_info'=>'微信支付',
             'thirdapp_id'=>$orderinfo['thirdapp_id'],
