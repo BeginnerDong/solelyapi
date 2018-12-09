@@ -57,32 +57,32 @@ class WXPayReturn extends Controller
                 return true;
             };
             $TOTAL_FEE = $data['TOTAL_FEE']/100;
+
+            //获取其他支付参数记录
+            $modelData = [];
+            $modelData['searchItem']['pay_no'] = $orderId;
+            $payLog =  CommonModel::CommonGet('Log',$modelData);
+            if(!count($payLog['data'])>0){
+                throw new ErrorMessage([
+                    'msg' => '关联支付信息有误',
+                ]);
+                return;
+            };
+            $payLog = $payLog['data'][0];
+
+
             $modelData = [];
             $modelData['searchItem']['pay_no'] = $orderId;
             $orderList =  CommonModel::CommonGet('Order',$modelData);
             if(!count($orderList['data'])>0){
-                throw new ErrorMessage([
-                    'msg' => '关联订单有误',
-                ]);
-                return;
-            };
+                $orderinfo = [];
+                $this->dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog);
+            }else{
+                foreach ($orderList['data'] as $key => $value) { 
+                    $this->dealOrder($data,$value,$TOTAL_FEE,$payLog);
+                };
+            }
 
-            //获取支付log记录
-            $modelData = [];
-            $modelData['searchItem']['pay_no'] = $orderId;
-            $payLog =  CommonModel::CommonGet('Log',$modelData);
-            if(!count($orderList['data'])>0){
-                throw new ErrorMessage([
-                    'msg' => '关联日志有误',
-                ]);
-                return;
-            };
-            $orderlist = $payLog['order_list'];
-            
-            foreach ($['data'] as $key => $value) { 
-                $this->dealOrder($data,$value,$TOTAL_FEE,$orderlist);
-            };
-            
         }else{
 
             //记录微信支付回调日志
@@ -100,25 +100,25 @@ class WXPayReturn extends Controller
     }
 
 
-    public function dealOrder($data,$orderinfo,$TOTAL_FEE,$orderlist){
-
-        if (isset($orderlist[$orderinfo['order_no']])&&!empty($orderlist[$orderinfo['order_no'])) {
-            $price = $orderlist[$orderinfo['order_no'];
-        }else{
-            throw new ErrorMessage([
-                'msg' => '关联订单有误',
-            ]);
-            return;
-        }
+    public function dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog){
         
+        //记录子订单支付信息
+        if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['wxPay'])&&isset($payLog['pay_info']['wxPay']['extra_info']) {
+            $extra_info = $payLog['pay_info']['wxPay']['extra_info'];
+        }else{
+            $extra_info = '';
+        }
+
         $modelData = [];
         $modelData['data'] = array(
             'type' => 1,
-            'count'=>-$price,
-            'order_no'=>$orderinfo['order_no'],
+            'count'=>-$TOTAL_FEE,
+            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'pay_no'=>$payLog['pay_no'],
             'trade_info'=>'微信支付',
-            'thirdapp_id'=>$orderinfo['thirdapp_id'],
-            'user_no'=>$orderinfo['user_no'],
+            'thirdapp_id'=>$payLog['thirdapp_id'],
+            'user_no'=>$payLog['user_no'],
+            'extra_info'=>$extra_info,
             'payInfo'=>[
                 'appid'=>$data['APPID'],
                 'mch_id'=>$data['MCH_ID'],
@@ -126,20 +126,21 @@ class WXPayReturn extends Controller
                 'out_trade_no'=>$data['OUT_TRADE_NO'],
             ]
         );
+
         $modelData['FuncName'] = 'add';
-        if(!empty($orderinfo['payAfter'])){
+        if(isset($orderinfo['payAfter'])&&!empty($orderinfo['payAfter'])){
             $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
         }; 
-
         $res =  CommonModel::CommonSave('FlowLog',$modelData);
-        $modelData = [];
+
+        $modelData = $payLog;
+        $modelData['wxPayStatus'] = 1;
         $modelData['searchItem'] = [
-            'id'=>$orderinfo['id']
+            'pay_no'=>$payLog['pay_no']
         ];
-
+        //取出第一次调取支付时记录的信息
+        $modelData = array_merge($modelData,$payLog['pay_info']);
+        unset($modelData['pay_info']);
         PayService::pay($modelData,true);
-        
     }
-
-    
 }

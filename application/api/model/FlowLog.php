@@ -14,6 +14,7 @@ use app\api\model\User;
 
 use app\api\model\UserInfo;
 use app\api\model\Order;
+use app\api\model\Common as CommonModel;
 
 use app\lib\exception\ErrorMessage;
 
@@ -71,7 +72,46 @@ class FlowLog extends Model
 
             };
 
-        };        
+        };
+
+        //检查订单支付支付是否完成
+        if ($data['data']['status']==1) {
+            //获取订单信息
+            $modelData = [];
+            $modelData = [
+                'searchItem'=>[
+                    'pay_no'=>$data['data']['pay_no']
+                ],
+            ];
+            $orderInfo = CommonModel::CommonGet('Order',$modelData);
+            if(count($orderInfo['data'])>0){
+                $orderPrice = abs($orderInfo['data'][0]['price']);
+            }else{
+                $orderPrice = 0;
+            }
+
+            if ($orderPrice > 0) {
+                //获取流水信息
+                $modelData = [];
+                $modelData = [
+                    'searchItem'=>[
+                        'pay_no'=>$data['data']['pay_no']
+                    ],
+                ];
+                $flowList = CommonModel::CommonGet('FlowLog',$modelData);
+                if(count($flowList['data'])>0){
+                    foreach ($flowList['data'] as $key => $value) {
+                        $flowPrice += abs($value['count']);
+                    }
+                }else{
+                    $flowPrice = abs($data['data']['count']);
+                }
+
+                if ($orderPrice == $flowPrice) {
+                    $res = Order::where('id', $orderInfo['id'])->update(['pay_step'=>1]);
+                }
+            }
+        }
 
         return $data;
 
@@ -92,7 +132,6 @@ class FlowLog extends Model
     {   
 
         
-
         if(isset($data['data']['type'])||isset($data['data']['count'])){
             throw new ErrorMessage([
                 'msg' => '不允许编辑的字段',
@@ -101,7 +140,7 @@ class FlowLog extends Model
 
         $FlowLogInfo = FlowLog::get($data['searchItem']);
 
-        $UserInfo = UserInfo::where([
+        $UserInfo = UserInfo::get([
             'status'=>1,
             'user_no'=>$FlowLogInfo['user_no']
         ]);
@@ -144,10 +183,9 @@ class FlowLog extends Model
 
         };
 
-    	return $data;     
+    	return $data;
 
     }
-
 
 
     public static function dealRealDelete($data)
@@ -157,9 +195,4 @@ class FlowLog extends Model
     	return $data;
 
     }
-
-
-
-
-
 }

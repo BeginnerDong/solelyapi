@@ -59,15 +59,14 @@ class Order extends BaseModel
 
         return $data;
 
-        
 
     }
 
 
 
+    public static function dealGet($data)
 
-
-    public static function dealGet($data){   
+    {   
 
 
         foreach ($data as $key => $value) {
@@ -181,10 +180,29 @@ class Order extends BaseModel
 
                 };
 
-            };  
+                //同步切换子订单支付状态
+                if(isset($data['data']['pay_status'])&&($data['data']['pay_status']==1)){
 
+                    $childOrders = (new OrderItem())->where([
+
+                        'parent_no' => $res[$key]['order_no'],
+
+                    ])->select();
+
+                    if (count($childOrders)>0) {
+                       
+                        foreach ($childOrders as $key => $value) {
+                            
+                            (new Order())->save(
+                                ['pay_status'  => 1],
+                                ['id' => $value['id']]
+                            );
+                        }
+                    }
+                }
+
+            };
         };
-
 
 
         if(isset($data['data']['status'])&&$data['data']['status']==1){
@@ -196,7 +214,6 @@ class Order extends BaseModel
             ]);
 
         };
-
         return $data;
 
     }
@@ -205,9 +222,7 @@ class Order extends BaseModel
 
     public static function dealRealDelete($data)
 
-    {   
-
-
+    {
 
     	$res = (new Order())->where($data['searchItem'])->select();
 
@@ -217,12 +232,6 @@ class Order extends BaseModel
 
         };
 
-        
-
     }
-
-
-
-
 
 }

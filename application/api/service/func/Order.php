@@ -22,25 +22,9 @@ class Order{
     public static function addVirtualOrder($data){
         (new CommonValidate())->goCheck('one',$data);
         checkTokenAndScope($data,config('scope.two'));
-        $user = Cache::get($data['token']);
-        if($user['user_type']>1){
-            throw new ErrorMessage([
-                'msg' => '用户类型不符',
-            ]);
-        };
-        $modelData = [];
-        $modelData['data'] = [];
-        if(isset($data['data'])){
-            $modelData['data'] = array_merge($data['data'],$modelData['data']);
-        };
-        $order_no = makeOrderNo();
-        
-        $modelData['data']['order_no'] = $order_no;
-        $modelData['data']['type'] = 6;
-        $modelData['data']['pay'] = json_encode($data['pay']);
-        $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
-        $modelData['data']['user_no'] = $user['user_no'];
 
+        $modelData = [];
+        $modelData = self::createVirtualOrderData($data);
         $modelData['FuncName'] = 'add';
         $orderRes =  CommonModel::CommonSave('Order',$modelData);
         if($orderRes>0){
@@ -61,13 +45,111 @@ class Order{
                 'msg' => '下单失败',
             ]);
         };
+    }
 
+
+    public static function addMultiOrder($data){
+
+        (new CommonValidate())->goCheck('one',$data);
+
+        if (!isset($data['orderlist'])) {
+            throw new ErrorMessage([
+                'msg' => '多单支付参数错误',
+            ]);
+        }
+
+        //多单支付
+        if (isset($data['multiOrder'])) {
+
+            $order_no = makeOrderNo();
+            $modelData = [];
+            $data['dataArray'] = [];
+            foreach ($data['orderlist'] as $key => $value) {
+                $value['token'] = $data['token'];
+                $value['parent_no'] = $order_no;
+                $modelData = self::createOrderData($value)
+                array_push($data['dataArray'],$modelData);
+            }
+            $modelData['FuncName'] = 'add';
+            $childOrder = CommonModel::CommonSave('Order',$modelData);
+
+            $modelData = [];
+            $modelData = self::createVirtualOrderData($data);
+            $modelData['FuncName'] = 'add';
+            $parentOrder =  CommonModel::CommonSave('Order',$modelData);
+
+            if($parentOrder>0){
+                if(isset($data['pay'])){
+                    $pay = $data['pay'];
+                    $pay['searchItem'] = ['id'=>$orderRes];
+                    return PayService::pay($pay,true);
+                }else{
+                    throw new SuccessMessage([
+                        'msg'=>'下单成功',
+                        'info'=>[
+                            'id'=>$parentOrder,
+                            'childOrder'=>$childOrder
+                        ]      
+                    ]);
+                };
+            }else{
+                throw new ErrorMessage([
+                    'msg' => '下单失败',
+                ]);
+            };
+        }else{
+            //多单下单，单独支付
+            $modelData = [];
+            $data['dataArray'] = [];
+            foreach ($data['orderlist'] as $key => $value) {
+                $value['token'] = $data['token'];
+                $modelData = self::createOrderData($value)
+                array_push($data['dataArray'],$modelData);
+            }
+            $modelData['FuncName'] = 'add';
+            $orderRes = CommonModel::CommonSave('Order',$modelData);
+            throw new SuccessMessage([
+                'msg'=>'下单成功',
+                'info'=>[
+                    'orders'=>$orderRess
+                ]      
+            ]);
+        }
     }
 
 
     public static function addOrder($data){
 
         (new CommonValidate())->goCheck('one',$data);
+
+        $modelData = [];
+        $modelData = self::createOrderData($data);
+        $modelData['FuncName'] = 'add';
+        $orderRes = CommonModel::CommonSave('Order',$modelData);
+
+        if($orderRes>0){
+            if(isset($data['pay'])){
+                $data['pay']['searchItem'] = [
+                    'id'=>$orderRes
+                ];
+                return PayService::pay($data['pay'],true);
+            }else{
+                throw new SuccessMessage([
+                    'msg'=>'下单成功',
+                    'info'=>[
+                        'id'=>$orderRes
+                    ]      
+                ]);
+            }; 
+        }else{
+            throw new ErrorMessage([
+                'msg' => '下单失败',
+            ]);
+        };
+        
+    }
+
+    public static function createOrderData($data){
         if(!isset($data['data'])){
             $data['data'] = [];
         };
@@ -78,7 +160,7 @@ class Order{
                 'user_no'=>$data['data']['user_no']
             ],
         ];
-        $user =  CommonModel::CommonGet('User',$modelData);
+        $user = CommonModel::CommonGet('User',$modelData);
         if(!count($user['data'])>0){
             throw new ErrorMessage([
                 'msg' => '用户不存在',
@@ -110,9 +192,9 @@ class Order{
         $modelData['data']['product_type'] = $type;
         $modelData['data']['price'] = $totalPrice;
         $modelData['data']['type'] = $data['type'];
-        $modelData['data']['deadline'] = isset($data['deadline'])?$data['deadline']:'';
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
+        $modelData['data']['parent_no'] =  isset($data['parent_no'])?$data['parent_no']:'';
         $modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
 
         if(isset($data['data'])){
@@ -141,29 +223,29 @@ class Order{
                 ]); 
             };
         }
+        return $modelData;
+    }
 
-        $modelData['FuncName'] = 'add';
-        $orderRes =  CommonModel::CommonSave('Order',$modelData);
-        if($orderRes>0){
-            if(isset($data['pay'])){
-                $data['pay']['searchItem'] = [
-                    'id'=>$orderRes
-                ];
-                return PayService::pay($data['pay'],true);
-            }else{
-                throw new SuccessMessage([
-                    'msg'=>'下单成功',
-                    'info'=>[
-                        'id'=>$orderRes
-                    ]      
-                ]);
-            }; 
-        }else{
+    public static function createVirtualOrderData($data){
+        $user = Cache::get($data['token']);
+        if($user['user_type']>1){
             throw new ErrorMessage([
-                'msg' => '下单失败',
+                'msg' => '用户类型不符',
             ]);
         };
+        $modelData = [];
+        $modelData['data'] = [];
+        if(isset($data['data'])){
+            $modelData['data'] = array_merge($data['data'],$modelData['data']);
+        };
+        $order_no = isset($data['order_no'])?$data['order_no']:makeOrderNo();
         
+        $modelData['data']['order_no'] = $order_no;
+        $modelData['data']['type'] = 6;
+        $modelData['data']['pay'] = json_encode($data['pay']);
+        $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
+        $modelData['data']['user_no'] = $user['user_no'];
+        return $modelData;
     }
 
     public static function checkAndReduceStock($data,$totalPrice,$type,$order_no,$user,$isSku=false){
