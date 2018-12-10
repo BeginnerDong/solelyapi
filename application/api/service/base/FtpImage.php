@@ -78,13 +78,13 @@ class FtpImage{
 
             $info = $file->move(ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id']);
 
-            
 
             if($info){
 
-                
-
                 $saveName = $info->getSaveName();
+
+                $pos = strrpos($saveName, '.');
+                $ext = substr($saveName, $pos);
 
                 $saveName = str_replace('\\','/',$saveName);
 
@@ -106,11 +106,11 @@ class FtpImage{
 
                     "size" => $info->getSize(),
 
+                    "type" => $ext,
+
                     "origin" => 2,
 
                     "behavior" => isset($data['behavior'])?$data['behavior']:1,
-
-                    "type" => isset($data['type'])?$data['type']:1,
 
                     "param" => isset($data['param'])?$data['param']:1,
 
