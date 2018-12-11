@@ -99,16 +99,25 @@ class FlowLog extends Model
                     ],
                 ];
                 $flowList = CommonModel::CommonGet('FlowLog',$modelData);
+                $flowPrice = 0;
+                //加上此次的流水金额
+                $flowPrice += abs($data['data']['count']);
                 if(count($flowList['data'])>0){
                     foreach ($flowList['data'] as $key => $value) {
                         $flowPrice += abs($value['count']);
                     }
-                }else{
-                    $flowPrice = abs($data['data']['count']);
                 }
 
                 if ($orderPrice == $flowPrice) {
-                    $res = Order::where('id', $orderInfo['id'])->update(['pay_step'=>1]);
+                    $modelData = [];
+                    $modelData = [
+                        'searchItem'=>[
+                            'id'=>$orderInfo['data'][0]['id']
+                        ],
+                    ];
+                    $modelData['data']['pay_status'] = 1;
+                    $flowList = CommonModel::CommonSave('Order',$modelData);
+                    // $res = Order::where('id', $orderInfo['data'][0]['id'])->update(['pay_status'=>1]);
                 }
             }
         }

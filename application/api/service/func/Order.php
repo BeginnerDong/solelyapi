@@ -61,22 +61,33 @@ class Order{
         //多单支付
         if (isset($data['multiOrder'])) {
 
-            $order_no = makeOrderNo();
-            $modelData = [];
-            $data['dataArray'] = [];
-            foreach ($data['orderlist'] as $key => $value) {
-                $value['token'] = $data['token'];
-                $value['parent_no'] = $order_no;
-                $modelData = self::createOrderData($value)
-                array_push($data['dataArray'],$modelData);
-            }
-            $modelData['FuncName'] = 'add';
-            $childOrder = CommonModel::CommonSave('Order',$modelData);
-
+            //生成父订单
             $modelData = [];
             $modelData = self::createVirtualOrderData($data);
             $modelData['FuncName'] = 'add';
             $parentOrder =  CommonModel::CommonSave('Order',$modelData);
+
+            $totalPrice = 0;
+            $childOrder = [];
+
+            $modelData = [];
+            foreach ($data['orderlist'] as $key => $value) {
+                $value['token'] = $data['token'];
+                $value['parent_id'] = $parentOrder;
+                $modelData = self::createOrderData($value);
+                $totalPrice += $modelData['data']['price'];
+                $modelData['FuncName'] = 'add';
+                $oneOrder = CommonModel::CommonSave('Order',$modelData);
+                array_push($childOrder,$oneOrder);
+            }
+
+            $modelData = [];
+            $modelData['FuncName'] = 'update';
+            $modelData['searchItem'] = [
+                'id'=>$parentOrder
+            ];
+            $modelData['data']['price'] = $totalPrice;
+            $updateParentOrder =  CommonModel::CommonSave('Order',$modelData);
 
             if($parentOrder>0){
                 if(isset($data['pay'])){
@@ -99,19 +110,20 @@ class Order{
             };
         }else{
             //多单下单，单独支付
+            $childOrder = [];
             $modelData = [];
-            $data['dataArray'] = [];
             foreach ($data['orderlist'] as $key => $value) {
                 $value['token'] = $data['token'];
-                $modelData = self::createOrderData($value)
-                array_push($data['dataArray'],$modelData);
+                $value['parent_no'] = $order_no;
+                $modelData = self::createOrderData($value);
+                $modelData['FuncName'] = 'add';
+                $oneOrder = CommonModel::CommonSave('Order',$modelData);
+                array_push($childOrder,$oneOrder);
             }
-            $modelData['FuncName'] = 'add';
-            $orderRes = CommonModel::CommonSave('Order',$modelData);
             throw new SuccessMessage([
                 'msg'=>'下单成功',
                 'info'=>[
-                    'orders'=>$orderRess
+                    'orders'=>$childOrder
                 ]      
             ]);
         }
@@ -194,7 +206,7 @@ class Order{
         $modelData['data']['type'] = $data['type'];
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
-        $modelData['data']['parent_no'] =  isset($data['parent_no'])?$data['parent_no']:'';
+        $modelData['data']['parent_id'] = isset($data['parent_id'])?$data['parent_id']:0;
         $modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
 
         if(isset($data['data'])){
@@ -242,7 +254,7 @@ class Order{
         
         $modelData['data']['order_no'] = $order_no;
         $modelData['data']['type'] = 6;
-        $modelData['data']['pay'] = json_encode($data['pay']);
+        $modelData['data']['pay'] = isset($data['pay'])?json_encode($data['pay']):json_encode([]);
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
         return $modelData;

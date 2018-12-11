@@ -97,7 +97,9 @@ class Common extends Model{
         $model =self::loaderModel($dbTable);
 
         $sqlStr = preModelStr($data);
-        $data['data'] = keepNum($data['data']);
+        if (isset($data['data'])) {
+            $data['data'] = keepNum($data['data']);
+        };
         
         if(isset($data['data']['password'])){
             $data['data']['password'] = md5($data['data']['password']);

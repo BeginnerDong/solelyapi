@@ -138,6 +138,9 @@ class Pay
                     'msg' => '用户不存在',
                 ]);
             }
+            if(!isset($data['pay_no'])){
+                $data['pay_no'] = makePayNo();
+            }
         }else{
             $orderInfo = $orderInfo['data'][0];
             if($orderInfo['type']!=6){
@@ -146,7 +149,9 @@ class Pay
             
             if(!$orderInfo['pay_no']&&!isset($data['pay_no'])){
                 $data['pay_no'] = makePayNo();
-            };
+            }else if($orderInfo['pay_no']){
+                $data['pay_no'] = $orderInfo['pay_no'];
+            }
             $modelData = [];
             $modelData['searchItem'] = [
                 'user_no'=>$orderInfo['user_no']
@@ -161,7 +166,6 @@ class Pay
             $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
         }
 
-        
         if(!isset($data['wxPayStatus'])){
             $data['wxPayStatus'] = 0;
         };
@@ -262,7 +266,7 @@ class Pay
             'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'余额支付',
-            'extra_info'=>isset($data['balance']['extra_info'])?isset($data['balance']['extra_info']):'',
+            'extra_info'=>isset($balance['extra_info'])?isset($balance['extra_info']):'',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
         );
@@ -285,8 +289,8 @@ class Pay
             'count'=>-$other['price'],
             'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
             'pay_no'=>$data['pay_no'],
-            'trade_info'=>$other['msg'],
-            'extra_info'=>isset($data['other']['extra_info'])?isset($data['other']['extra_info']):'',
+            'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
+            'extra_info'=>isset($other['extra_info'])?isset($other['extra_info']):'',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
         );
@@ -312,7 +316,7 @@ class Pay
             'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'积分支付,积分兑付比率为:'.$userInfo['info']['score_ratio'],
-            'extra_info'=>isset($data['score']['extra_info'])?isset($data['score']['extra_info']):'',
+            'extra_info'=>isset($score['extra_info'])?isset($score['extra_info']):'',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
         );

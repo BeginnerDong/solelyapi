@@ -23,7 +23,7 @@ class WXPayReturn extends Controller
 {
     //支付回调
     public function receiveNotify(){
-        //$data = Request::instance()->param();
+        // $data = Request::instance()->param();
         $xmlData = file_get_contents('php://input');
         $data = xml2array($xmlData);
         //开始支付回调逻辑....
@@ -50,8 +50,8 @@ class WXPayReturn extends Controller
             if($logInfo['payAfter']){
                 $modelData['payAfter'] = $logInfo['payAfter'];
             };
-            $modelData['FuncName'] = 'add';
-            $saveLog =  CommonModel::CommonSave('Log',$modelData); 
+            $modelData['FuncName'] = 'update';
+            $saveLog =  CommonModel::CommonSave('Log',$modelData);
 
             if($logInfo['behavior']==1){
                 return true;
@@ -78,7 +78,7 @@ class WXPayReturn extends Controller
                 $orderinfo = [];
                 $this->dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog);
             }else{
-                foreach ($orderList['data'] as $key => $value) { 
+                foreach ($orderList['data'] as $key => $value) {
                     $this->dealOrder($data,$value,$TOTAL_FEE,$payLog);
                 };
             }
@@ -103,7 +103,7 @@ class WXPayReturn extends Controller
     public function dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog){
         
         //记录子订单支付信息
-        if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['wxPay'])&&isset($payLog['pay_info']['wxPay']['extra_info']) {
+        if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['wxPay'])&&isset($payLog['pay_info']['wxPay']['extra_info'])) {
             $extra_info = $payLog['pay_info']['wxPay']['extra_info'];
         }else{
             $extra_info = '';
@@ -131,16 +131,17 @@ class WXPayReturn extends Controller
         if(isset($orderinfo['payAfter'])&&!empty($orderinfo['payAfter'])){
             $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
         }; 
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = CommonModel::CommonSave('FlowLog',$modelData);
 
         $modelData = $payLog;
+        //取出第一次调取支付时记录的信息
+        $modelData = array_merge($modelData,$payLog['pay_info']);
         $modelData['wxPayStatus'] = 1;
         $modelData['searchItem'] = [
             'pay_no'=>$payLog['pay_no']
         ];
-        //取出第一次调取支付时记录的信息
-        $modelData = array_merge($modelData,$payLog['pay_info']);
         unset($modelData['pay_info']);
+
         PayService::pay($modelData,true);
     }
 }

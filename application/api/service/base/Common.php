@@ -36,7 +36,7 @@ class Common{
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
-            'WxFormId'=>config('scope.one'),
+            'WxFormId'=>config('scope.two'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){

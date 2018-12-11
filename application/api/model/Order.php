@@ -183,11 +183,7 @@ class Order extends BaseModel
                 //同步切换子订单支付状态
                 if(isset($data['data']['pay_status'])&&($data['data']['pay_status']==1)){
 
-                    $childOrders = (new OrderItem())->where([
-
-                        'parent_no' => $res[$key]['order_no'],
-
-                    ])->select();
+                    $childOrders = resDeal((new OrderItem())->where(['parent_id' => $res[$key]['id'],])->select());
 
                     if (count($childOrders)>0) {
                        
