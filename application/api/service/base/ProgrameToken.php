@@ -227,14 +227,14 @@ class ProgrameToken {
         $userNo=$user['data'][0]['user_no'];
 
         $token = generateToken();
-        $cacheResult = Cache::set($token,$user['data'][0],3600);
+        $user['data'][0]['session_key'] = $wxResult['session_key'];
+        $cacheResult = Cache::set($token,$user['data'][0],7200);
         if (!$cacheResult){
             throw new ErrorMessage([
                 'msg' => '服务器缓存异常',
                 'errorCode' => 10005
             ]);
         };
-
         throw new SuccessMessage([
             'msg'=>'登录成功',
             'token'=>$token,
