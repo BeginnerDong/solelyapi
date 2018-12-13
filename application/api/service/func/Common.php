@@ -466,7 +466,7 @@ class Common{
     public static function decryptWxInfo($data){
 
         (new CommonValidate())->goCheck('one',$data);
-
+        checkTokenAndScope($data,[]);
         $appid = $data['appid'];
         $sessionKey = Cache::get($data['token'])['session_key'];
         $encryptedData = $data['encryptedData'];
@@ -488,7 +488,7 @@ class Common{
         };
         throw new SuccessMessage([
             'msg'=>'解密成功',
-            'info'=>$result
+            'info'=>json_decode($result,true)
         ]);
 
 

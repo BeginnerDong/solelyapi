@@ -875,6 +875,7 @@ function chargeBlank($arr,$data){
     }
 
     function exportExcel($expTitle,$expCellName,$expTableData,$fileName){ 
+        
         import('phpexcel.PHPExcel', EXTEND_PATH);
         import('phpexcel.PHPExcel.IOFactory', EXTEND_PATH);
         //文件名称 
@@ -884,16 +885,30 @@ function chargeBlank($arr,$data){
         $objPHPExcel = new \PHPExcel();
         $cellName = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
 
-
+        
         //合并单元格     
         //$objPHPExcel->getActiveSheet(0)->mergeCells('A1:'.$cellName[$cellNum-1].'1');    
         for($i=0;$i<$cellNum;$i++){  
-            $objPHPExcel->setActiveSheetIndex(0)->setCellValue($cellName[$i].'1', $expCellName[$i][1]);   
+            $objPHPExcel->setActiveSheetIndex(0)->setCellValue($cellName[$i].'1', $expCellName[$i][0]);   
         }     
         for($i=0;$i<$dataNum;$i++){  
           for($j=0;$j<$cellNum;$j++){  
-             $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2), $expTableData[$i][$expCellName[$j][0]]);  
-          }               
+            if(count($expCellName[$j])==2){
+                
+                if(isset($expTableData[$i][$expCellName[$j][1]])){
+                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2), $expTableData[$i][$expCellName[$j][1]]);  
+                }else{
+                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),'');  
+                };
+                
+            }else if(count($expCellName[$j])==3){
+                if(isset($expTableData[$i][$expCellName[$j][1]][$expCellName[$j][2]])){
+                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2), $expTableData[$i][$expCellName[$j][1]][$expCellName[$j][2]]);  
+                }else{
+                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),'');  
+                };
+            };
+          };               
         };
 
         ob_end_clean();
