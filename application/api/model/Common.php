@@ -78,7 +78,7 @@ class Common extends Model{
         };
 
         if(isset($data['excelOutput'])){
-            return exportExcel($data['excelOutput']['expTitle'] ,$data['excelOutput']['expCellName'],$res,$data['excelOutput']['fileName']);
+            return exportExcel($data['excelOutput'],$res);
         }else{
             $final['data'] = $res;
             return $final;

@@ -874,10 +874,16 @@ function chargeBlank($arr,$data){
         return $newArray;
     }
 
-    function exportExcel($expTitle,$expCellName,$expTableData,$fileName){ 
+    function exportExcel($excelOutput,$expTableData){ 
         
         import('phpexcel.PHPExcel', EXTEND_PATH);
         import('phpexcel.PHPExcel.IOFactory', EXTEND_PATH);
+
+        $expTitle = $excelOutput['expTitle'];
+        $expCellName = $excelOutput['expCellName'];
+        $fileName = $excelOutput['fileName'];
+        $height = isset($excelOutput['height'])?$excelOutput['height']:'';
+
         //文件名称 
         $xlsTitle = iconv('utf-8','gb2312',$expTitle);
         $cellNum = count($expCellName);  
@@ -885,32 +891,65 @@ function chargeBlank($arr,$data){
         $objPHPExcel = new \PHPExcel();
         $cellName = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
 
-        
-        //合并单元格     
-        //$objPHPExcel->getActiveSheet(0)->mergeCells('A1:'.$cellName[$cellNum-1].'1');    
         for($i=0;$i<$cellNum;$i++){  
-            $objPHPExcel->setActiveSheetIndex(0)->setCellValue($cellName[$i].'1', $expCellName[$i][0]);   
-        }     
+            $objPHPExcel->setActiveSheetIndex(0)->setCellValue($cellName[$i].'1', $expCellName[$i]['title']); 
+            if(isset($expCellName[$i]['width'])){
+                $objPHPExcel->getColumnDimension($cellName[$i])->setWidth($expCellName[$i]['width']);
+            };
+        };
+        
+          
         for($i=0;$i<$dataNum;$i++){  
-          for($j=0;$j<$cellNum;$j++){  
-            if(count($expCellName[$j])==2){
-                
-                if(isset($expTableData[$i][$expCellName[$j][1]])){
-                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2), $expTableData[$i][$expCellName[$j][1]]);  
+            
+            if($height){
+                $objPHPExcel->getActiveSheet()->getRowDimension($i)->setRowHeight($height);
+            }; 
+          for($j=0;$j<$cellNum;$j++){ 
+
+
+            
+            $finalValue = '';
+            for ($c_i=0; $c_i < count($expCellName[$j]['key']); $c_i++) {
+                if($c_i==0){
+                    if(isset($expTableData[$i][$expCellName[$j]['key'][$c_i]])){
+                        $finalValue = $expTableData[$i][$expCellName[$j]['key'][$c_i]];
+                    };
                 }else{
-                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),'');  
+                    if(isset($finalValue[$expCellName[$j]['key'][$c_i]])){
+                        $finalValue = $finalValue[$expCellName[$j]['key'][$c_i]];
+                    }else{
+                        $finalValue = '';
+                    };
                 };
-                
-            }else if(count($expCellName[$j])==3){
-                if(isset($expTableData[$i][$expCellName[$j][1]][$expCellName[$j][2]])){
-                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2), $expTableData[$i][$expCellName[$j][1]][$expCellName[$j][2]]);  
-                }else{
-                    $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),'');  
+            };
+            
+            
+            if($expCellName[$j]['type']=='string'){
+                $objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),$finalValue);
+            };
+            if($expCellName[$j]['type']=='image'&&$finalValue){
+                $objDrawing[$i+2] = new \PHPExcel_Worksheet_Drawing();
+                if(strlen($finalValue)>$expCellName[$j]['url_intercepte_start']){
+                    
+                    $path = substr($finalValue,$expCellName[$j]['url_intercepte_start']);
+                    if(file_exists(ROOT_PATH.$path)){
+                        
+                        $objDrawing[$i+2]->setPath(ROOT_PATH.$path);
+                        // 设置宽度高度
+                        $objDrawing[$i+2]->setHeight($expCellName[$j]['image_height']);//照片高度
+                        $objDrawing[$i+2]->setWidth($expCellName[$j]['image_width']); //照片宽度
+                        /*设置图片要插入的单元格*/
+                        $objDrawing[$i+2]->setCoordinates($cellName[$j].($i+2));
+                        // 图片偏移距离
+                        $objDrawing[$i+2]->setOffsetX(12);
+                        $objDrawing[$i+2]->setOffsetY(12);
+                        $objDrawing[$i+2]->setWorksheet($objPHPExcel->getActiveSheet());
+                    };  
                 };
             };
           };               
         };
-
+        
         ob_end_clean();
         header('Content-type:application/vnd.ms-excel;charset=utf-8;name="'.$xlsTitle.'.xls"');  
         header("Content-Disposition:attachment;filename=$fileName.xls");
