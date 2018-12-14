@@ -115,6 +115,7 @@ class FlowLog extends Model
                             'id'=>$orderInfo['data'][0]['id']
                         ],
                     ];
+                    $modelData['FuncName'] = 'update';
                     $modelData['data']['pay_status'] = 1;
                     $flowList = CommonModel::CommonSave('Order',$modelData);
                     // $res = Order::where('id', $orderInfo['data'][0]['id'])->update(['pay_status'=>1]);

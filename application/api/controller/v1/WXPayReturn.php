@@ -23,6 +23,7 @@ class WXPayReturn extends Controller
 {
     //支付回调
     public function receiveNotify(){
+
         // $data = Request::instance()->param();
         $xmlData = file_get_contents('php://input');
         $data = xml2array($xmlData);
@@ -128,9 +129,11 @@ class WXPayReturn extends Controller
         );
 
         $modelData['FuncName'] = 'add';
-        if(isset($orderinfo['payAfter'])&&!empty($orderinfo['payAfter'])){
+
+        if(isset($orderinfo['payAfter'])&&!empty($orderinfo['payAfter'])&&is_array($orderinfo['payAfter'])){
             $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
-        }; 
+        }
+
         $res = CommonModel::CommonSave('FlowLog',$modelData);
 
         $modelData = $payLog;
