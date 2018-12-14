@@ -898,7 +898,7 @@ function chargeBlank($arr,$data){
             };
         };
         
-          
+        $objPHPExcel -> getActiveSheet() -> getColumnDimension(PHPExcel_Cell::stringFromColumnIndex(0)) -> setAutoSize(true);  
         for($i=0;$i<$dataNum;$i++){  
             
             if($height){
