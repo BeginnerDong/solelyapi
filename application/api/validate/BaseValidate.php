@@ -69,7 +69,7 @@ class BaseValidate extends Validate{
         };
 
 
-
+        
         if(isset($data['searchItem'])){
 
             $data = array_merge($data,$data['searchItem']);

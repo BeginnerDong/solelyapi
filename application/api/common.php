@@ -949,8 +949,15 @@ function chargeBlank($arr,$data){
             };
           };               
         };
-        
-        ob_end_clean();
+
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="'.$xlsTitle.'.xls"');
+        $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter->save('php://output');
+        $objPHPExcel->disconnectWorksheets();
+
+        /*ob_end_clean();
         header('Content-type:application/vnd.ms-excel;charset=utf-8;name="'.$xlsTitle.'.xls"');  
         header("Content-Disposition:attachment;filename=$fileName.xls");
         header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
@@ -958,13 +965,12 @@ function chargeBlank($arr,$data){
         $objWriter=\PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007'); 
         
         ob_start();
-        $objWriter->save('php://output');
-        $xlsData = ob_get_contents();
-        ob_end_clean();
+        $objWriter->save('php://output');*/
+        //$xlsData = ob_get_contents();
+        /*ob_end_clean();*/
         
-        return 'data:application/vnd.ms-excel;base64,'.base64_encode($xlsData);
+        //return 'data:application/vnd.ms-excel;base64,'.base64_encode($xlsData);
         
-           
     }
 
 

@@ -96,6 +96,15 @@ class Common{
         ];
 
         
+        $notArray = ['modelName','token','FuncName'];
+        foreach ($data as $key => $value) {
+            if(!in_array($key, $notArray)&&!is_array($data[$key])){
+                $data[$key] = json_decode($value,true);
+            };
+        };
+        
+
+
         if(isset($scopeArr[$data['modelName']])){
             if(!empty($scopeArr[$data['modelName']])){
                 $scope = $scopeArr[$data['modelName']];
@@ -109,7 +118,7 @@ class Common{
                 'msg'=>'接口调用错误'
             ]); 
         };
-
+        
         $res =  CommonModel::CommonGet($data['modelName'],$data);
        
         if(isset($res['data'])&&count($res['data'])>0){
