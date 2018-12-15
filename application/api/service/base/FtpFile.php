@@ -32,7 +32,7 @@ use app\lib\exception\ErrorMessage;
 
 
 
-class FtpImage{
+class FtpFile{
 
 
 
