@@ -358,7 +358,7 @@ class Common{
 
             
 
-            $res =  CommonModel::CommonSave('log',$modelData);
+            $res =  CommonModel::CommonSave('Log',$modelData);
 
             if(!$res>0){
 
@@ -392,7 +392,7 @@ class Common{
 
                     $modelData['FuncName'] = 'add';
 
-                    $flowRes =  CommonModel::CommonSave('flow_log',$modelData);
+                    $flowRes =  CommonModel::CommonSave('FlowLog',$modelData);
 
                     if(!$flowRes>0){
 

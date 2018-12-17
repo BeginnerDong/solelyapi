@@ -75,7 +75,7 @@ class FlowLog extends Model
         };
 
         //检查订单支付支付是否完成
-        if ($data['data']['status']==1) {
+        if (($data['data']['status']==1)&&isset($data['data']['pay_no'])&&!empty($data['data']['pay_no'])) {
             //获取订单信息
             $modelData = [];
             $modelData = [
