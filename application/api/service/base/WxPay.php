@@ -125,7 +125,8 @@ class WxPay
                     'prepay_id'=>$wxOrder['prepay_id'],
                     'create_time'=>time(),
                     'type'=>2,
-                    'user_no'=>$userInfo['user_no']
+                    'user_no'=>$userInfo['user_no'],
+                    'thirdapp_id'=>$thirdappinfo['id'],
                 ),$logData);
             }else{
                 $modelData['data'] = array(
@@ -134,7 +135,8 @@ class WxPay
                     'prepay_id'=>$wxOrder['prepay_id'],
                     'create_time'=>time(),
                     'type'=>2,
-                    'user_no'=>$userInfo['user_no']
+                    'user_no'=>$userInfo['user_no'],
+                    'thirdapp_id'=>$thirdappinfo['id'],
                 ); 
             };
             $modelData['FuncName'] = 'add';

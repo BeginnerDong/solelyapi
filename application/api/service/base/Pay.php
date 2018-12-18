@@ -362,7 +362,7 @@ class Pay
         $modelData = [];
         $modelData['FuncName'] = 'add';
         $modelData['data'] = array(
-            'type' => $couponInfo['type'],
+            'type' => 4,
             'count'=>-$coupon['price'],
             'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
             'pay_no'=>$data['pay_no'],
