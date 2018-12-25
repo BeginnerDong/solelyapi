@@ -253,28 +253,37 @@ class Common extends Model{
                     $new = [];
 
                     $model =Loader::model($c_value['tableName']);
+                    
+                    
+                    $searchItem = '';
                     if(is_array($c_value['middleKey'])){
                         $finalItem = '';
                         foreach ($c_value['middleKey'] as $cc_key => $cc_value) {
                             if($cc_key==0){
                                 $finalItem = $copyValue[$c_value['middleKey'][0]];
+                                
                             }else{
                                 if ($finalItem&&isset($finalItem[$c_value['middleKey'][$cc_key]])) {
                                     $finalItem = $finalItem[$c_value['middleKey'][$cc_key]];
+                                    
                                 }else{
                                     $finalItem = '';
+                                    break;
                                 };
                             };
                         };
+                        
                         if($finalItem){
                             $searchItem = [$c_value['condition'],$finalItem];
                         };
                     }else{
                         $searchItem = [$c_value['condition'],$copyValue[$c_value['middleKey']]];
                     };
+
                     
                     if(isset($c_value['info'])&&$searchItem){
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
+
                         $nRes = $model->where($c_value['searchItem'])->select();
                         if(!empty($nRes)){
                             $nRes[0] = resDeal($nRes[0]->toArray());
@@ -282,7 +291,7 @@ class Common extends Model{
                                $new[$info_value] = $nRes[0][$info_value];
                             };
                         };
-                    }else{
+                    }else if($searchItem){
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
                         $nRes = $model->where($c_value['searchItem'])->select();
                         if(!empty($nRes)){
@@ -301,6 +310,7 @@ class Common extends Model{
                             };
                         };
                     };
+
                     $res[$key][$c_key] = [];
                     $res[$key][$c_key] = $new;
                     $copyValue[$c_key] = $new;
