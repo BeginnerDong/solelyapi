@@ -156,6 +156,14 @@ class Qr{
 
                 FtpImageService::uploadStream($modelData,true);
 
+                throw new SuccessMessage([
+
+                    'msg'=>'获取二维码图片成功',
+
+                    'info'=>['url'=>$url]
+
+                ]);
+
                 //QiniuImageService::upload($modelData,true);
 
             }else{
