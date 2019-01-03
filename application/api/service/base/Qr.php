@@ -18,7 +18,7 @@ use think\Cache;
 
 use think\Request as Request; 
 
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use app\api\service\base\QiniuImage as QiniuImageService;
 
@@ -68,7 +68,7 @@ class Qr{
 
         $modelData['searchItem']['id'] = $thirdapp_id;
 
-        $ThirdAppInfo=CommonModel::CommonGet('ThirdApp',$modelData);
+        $ThirdAppInfo=BeforeModel::CommonGet('ThirdApp',$modelData);
 
         $ThirdAppInfo = $ThirdAppInfo['data'][0];
 
@@ -98,7 +98,7 @@ class Qr{
 
 
 
-        $res = CommonModel::CommonGet('File',$modelData);
+        $res = BeforeModel::CommonGet('File',$modelData);
 
         
 
@@ -156,14 +156,6 @@ class Qr{
 
                 FtpImageService::uploadStream($modelData,true);
 
-                throw new SuccessMessage([
-
-                    'msg'=>'获取二维码图片成功',
-
-                    'info'=>['url'=>$url]
-
-                ]);
-
                 //QiniuImageService::upload($modelData,true);
 
             }else{
@@ -218,7 +210,7 @@ class Qr{
 
 
 
-        $res = CommonModel::CommonGet('File',$modelData);
+        $res = BeforeModel::CommonGet('File',$modelData);
 
         
 

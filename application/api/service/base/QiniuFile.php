@@ -3,9 +3,6 @@
 namespace app\api\service\base;
 
 
-
-use app\api\model\Common as CommonModel;
-
 use think\Exception;
 
 use think\Model;
@@ -14,7 +11,7 @@ use think\Cache;
 
 use think\Request as Request; 
 
-
+use app\api\service\beforeModel\Common as BeforeModel;
 
 
 
@@ -176,7 +173,7 @@ class QiniuFile{
 
             $data['FuncName'] = 'add';
             
-            $res = CommonModel::CommonSave('File',$data);
+            $res = BeforeModel::CommonSave('File',$data);
 
             if ($res>0) {
 

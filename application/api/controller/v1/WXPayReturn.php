@@ -10,10 +10,10 @@ namespace app\api\controller\v1;
 
 use think\Db;
 use think\Controller;
-use app\api\model\Common as CommonModel;
 use app\api\model\FlowLog;
 use app\api\model\Log;
 use app\api\service\base\Pay as PayService;
+use app\api\service\beforeModel\Common as BeforeModel;
 use think\Request as Request;
 use app\lib\exception\TokenException;
 use app\lib\exception\SuccessMessage;
@@ -52,7 +52,7 @@ class WXPayReturn extends Controller
                 $modelData['payAfter'] = $logInfo['payAfter'];
             };
             $modelData['FuncName'] = 'update';
-            $saveLog =  CommonModel::CommonSave('Log',$modelData);
+            $saveLog = BeforeModel::CommonSave('Log',$modelData);
 
             if($logInfo['behavior']==1){
                 return true;
@@ -62,7 +62,7 @@ class WXPayReturn extends Controller
             //获取其他支付参数记录
             $modelData = [];
             $modelData['searchItem']['pay_no'] = $orderId;
-            $payLog =  CommonModel::CommonGet('Log',$modelData);
+            $payLog = BeforeModel::CommonGet('Log',$modelData);
             if(!count($payLog['data'])>0){
                 throw new ErrorMessage([
                     'msg' => '关联支付信息有误',
@@ -74,7 +74,7 @@ class WXPayReturn extends Controller
 
             $modelData = [];
             $modelData['searchItem']['pay_no'] = $orderId;
-            $orderList =  CommonModel::CommonGet('Order',$modelData);
+            $orderList = BeforeModel::CommonGet('Order',$modelData);
             if(!count($orderList['data'])>0){
                 $orderinfo = [];
                 $this->dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog);
@@ -96,7 +96,7 @@ class WXPayReturn extends Controller
                 'create_time'=>time(),
                 'type'=>2,
             );
-            $saveLog =  CommonModel::CommonSave('Log',$modelData);
+            $saveLog = BeforeModel::CommonSave('Log',$modelData);
         }
     }
 
@@ -130,11 +130,7 @@ class WXPayReturn extends Controller
 
         $modelData['FuncName'] = 'add';
 
-        if(isset($orderinfo['payAfter'])&&!empty($orderinfo['payAfter'])&&is_array($orderinfo['payAfter'])){
-            $modelData['saveAfter'] = json_decode($orderinfo['payAfter'],true);
-        }
-
-        $res = CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
 
         $modelData = $payLog;
         //取出第一次调取支付时记录的信息

@@ -2,7 +2,7 @@
 
 namespace app\api\service\project;
 
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use think\Exception;
 
@@ -40,7 +40,7 @@ class Solely{
         $modelData = [];
         $modelData['FuncName'] = 'add';
         $modelData['data'] = $data['data'];
-        $addMsg =  CommonModel::CommonSave("Message",$modelData);
+        $addMsg =  BeforeModel::CommonSave("Message",$modelData);
 
         if ($addMsg>0) {
             throw new SuccessMessage([

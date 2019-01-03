@@ -23,7 +23,7 @@ use app\api\model\ThirdApp;
 use app\api\model\User;
 use app\api\model\UserAddress;
 use app\api\model\UserInfo;
-use app\api\model\WxFormId;
+use app\api\model\WxFormId;;
 
 
 class Common extends Model{
@@ -33,15 +33,13 @@ class Common extends Model{
 
     public static function CommonGet($dbTable,$data)
     {
-
-        $data = self::CommonGetPro($data);
         
         if(!$data){
-            $final['data'] = [];
+            $final = [];
             return $final;
         };
 
-        $model =Loader::model($dbTable);
+        $model =self::loaderModel($dbTable);
         $sqlStr = preModelStr($data);
         if(!isset($data['searchItem']['status'])){
             $data['searchItem']['status'] = 1;
@@ -59,14 +57,12 @@ class Common extends Model{
                 'total'=>$res['total'],
             ];
             $res = $model->dealGet(resDeal($res['data']));
-            $res = self::CommonGetAfter($data,$res);
             
         }else{
 
             $sqlStr = $sqlStr."select();";
             $res = eval($sqlStr);
             $res = $model->dealGet(resDeal($res));
-            $res = self::CommonGetAfter($data,$res);
             if($dbTable=='article'){
                 $updateData = [];
                 foreach ($res as $key => $value) {
@@ -77,13 +73,8 @@ class Common extends Model{
             
         };
 
-        if(isset($data['excelOutput'])){
-            return exportExcel($data['excelOutput'],$res);
-        }else{
-            $final['data'] = $res;
-            return $final;
-        };
-        
+        $final['data'] = $res;
+        return $final;
         
     }
 
@@ -92,8 +83,6 @@ class Common extends Model{
     public static function CommonSave($dbTable,$data)
     {
         
-        
-        $data = self::CommonGetPro($data);
         $model =self::loaderModel($dbTable);
 
         $sqlStr = preModelStr($data);
@@ -109,13 +98,13 @@ class Common extends Model{
         $FuncName = $data['FuncName'];
         Db::startTrans();
         try{
+
             if($FuncName=='update'){
                 $data['data']['update_time'] = time();
                 $model->dealUpdate($data);
                 $data['data'] = jsonDeal($data['data']);
                 $sqlStr = $sqlStr."update(\$data[\"data\"]);";
                 $finalRes = eval($sqlStr);
-                self::CommonSaveAfter($dbTable,$data);
             }else{
                 if(isset($data['dataArray'])){
                     $finalRes = [];
@@ -129,18 +118,12 @@ class Common extends Model{
                     
                 }else{
 
-                    $data = self::CommonSavePro($data);
                     $data = $model->dealAdd($data);
                     $data['data'] = jsonDeal($data['data']);
                     
                     $res = $model->allowField(true)->save($data['data']);
                     
                     $finalRes = $model->id;
-                    //return $finalRes;
-                    $data['searchItem'] = [
-                        'id'=>$finalRes
-                    ];
-                    self::CommonSaveAfter($dbTable,$data);
                 };
             };
 
@@ -169,7 +152,7 @@ class Common extends Model{
 
     public static function CommonDelete($dbTable,$data)
     {
-        $model =Loader::model($dbTable);
+        $model = self::loaderModel($dbTable);
         $sqlStr = preModelStr($data);
         $sqlStr = $sqlStr."delete();";
         Db::startTrans();
@@ -253,37 +236,28 @@ class Common extends Model{
                     $new = [];
 
                     $model =Loader::model($c_value['tableName']);
-                    
-                    
-                    $searchItem = '';
                     if(is_array($c_value['middleKey'])){
                         $finalItem = '';
                         foreach ($c_value['middleKey'] as $cc_key => $cc_value) {
                             if($cc_key==0){
                                 $finalItem = $copyValue[$c_value['middleKey'][0]];
-                                
                             }else{
                                 if ($finalItem&&isset($finalItem[$c_value['middleKey'][$cc_key]])) {
                                     $finalItem = $finalItem[$c_value['middleKey'][$cc_key]];
-                                    
                                 }else{
                                     $finalItem = '';
-                                    break;
                                 };
                             };
                         };
-                        
                         if($finalItem){
                             $searchItem = [$c_value['condition'],$finalItem];
                         };
                     }else{
                         $searchItem = [$c_value['condition'],$copyValue[$c_value['middleKey']]];
                     };
-
                     
                     if(isset($c_value['info'])&&$searchItem){
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
-
                         $nRes = $model->where($c_value['searchItem'])->select();
                         if(!empty($nRes)){
                             $nRes[0] = resDeal($nRes[0]->toArray());
@@ -291,7 +265,7 @@ class Common extends Model{
                                $new[$info_value] = $nRes[0][$info_value];
                             };
                         };
-                    }else if($searchItem){
+                    }else{
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
                         $nRes = $model->where($c_value['searchItem'])->select();
                         if(!empty($nRes)){
@@ -310,7 +284,6 @@ class Common extends Model{
                             };
                         };
                     };
-
                     $res[$key][$c_key] = [];
                     $res[$key][$c_key] = $new;
                     $copyValue[$c_key] = $new;
@@ -394,33 +367,41 @@ class Common extends Model{
     }
 
 
+    // public static function CommonCompute($data)
+    // {
+    //     $res = [];
+    //     $data = $data['data'];
+    //     foreach ($data as $key => $value) {
+    //         $new = [];
+    //         $model =self::loaderModel($key);
+    //         foreach ($value['compute'] as $compute_key => $compute_value) {
+    //             if($compute_value!='count'){
+    //                $new[$compute_key.$compute_value] = $model->where($value['searchItem'])->$compute_value($compute_key); 
+    //            }else{
+    //                 $new['count'] = $model->where($value['searchItem'])->count(); 
+    //            };
+    //         };
+    //         $res[$key] = $new;
+    //     };
+    //     return $res;
+    // }
 
-    public static function CommonCompute($data)
+    public static function CommonCompute($model,$method,$key,$map)
     {
         
-        
-            $res = [];
-            $data = $data['data'];
-            foreach ($data as $key => $value) {
-                $new = [];
+        $model =self::loaderModel($model);
 
-                $model =Loader::model($key);
-
-                foreach ($value['compute'] as $compute_key => $compute_value) {
-                    if($compute_value!='count'){
-                       $new[$compute_key.$compute_value] = $model->where($value['searchItem'])->$compute_value($compute_key); 
-                   }else{
-                        $new['count'] = $model->where($value['searchItem'])->count(); 
-                        
-                   };
-                };
-                
-                $res[$key] = $new;
-
-            };
+        if ($method!='count') {
             
-        return $res;
-        
+            $num = $model->where($map)->$method($key); 
+
+        }else{
+
+            $num = $model->where($map)->count();
+
+        }
+
+        return $num;
     }
 
 

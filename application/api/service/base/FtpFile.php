@@ -13,10 +13,7 @@ use think\Cache;
 use think\Request as Request; 
 
 
-
-
-
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use app\api\validate\CommonValidate;
 
@@ -25,38 +22,16 @@ use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 
-
-
-
-
-
-
-
 class FtpFile{
 
-
-
-
-
-
-
     function __construct(){
-
-
-
-         
 
     }
 
     
-
     public static function upload($data,$inner=false)
 
     {       
-
-       
-
-
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -122,7 +97,7 @@ class FtpFile{
 
 
 
-                $res = CommonModel::CommonSave('File',$modelData);
+                $res = BeforeModel::CommonSave('File',$modelData);
 
                 if ($res>0) {
 
@@ -264,7 +239,7 @@ class FtpFile{
 
 
 
-                $res = CommonModel::CommonSave('File',$modelData);
+                $res = BeforeModel::CommonSave('File',$modelData);
 
                 if ($res>0) {
 

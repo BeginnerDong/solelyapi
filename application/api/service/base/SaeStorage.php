@@ -27,21 +27,13 @@ use think\Cache;
 use think\Request as Request; 
 
 
-
-
-
-use app\api\model\Common as CommonModel;
-
 use app\api\validate\CommonValidate;
 
 use app\lib\exception\SuccessMessage;
 
 use app\lib\exception\ErrorMessage;
 
-
-
-
-
+use app\api\service\beforeModel\Common as BeforeModel;
 
 
 // SAE
@@ -49,16 +41,7 @@ use app\lib\exception\ErrorMessage;
 use think\sae\Storage as SAEStorage;
 
 
-
 class SaeStorage{
-
-	 
-
-
-
-    
-
-
 
     /**
 
@@ -133,7 +116,7 @@ class SaeStorage{
 
 
 
-            $res = CommonModel::CommonSave('File',$modelData);
+            $res = BeforeModel::CommonSave('File',$modelData);
 
             if ($res>0) {
 

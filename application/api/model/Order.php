@@ -29,8 +29,7 @@ class Order extends BaseModel
 
     {   
 
-        $standard = ['order_no'=>'','pay'=>[],'price'=>'','snap_address'=>[],'express'=>[],'pay_status'=>0,'type'=>'','prepay_id'=>'','wx_prepay_info'=>[],'order_step'=>0,'transport_status'=>0,'transaction_id'=>'','refund_no'=>'','isrefund'=>'','create_time'=>time(),'invalid_time'=>'','start_time'=>'','end_time'=>'','update_time'=>'','finish_time'=>'','delete_time'=>'','passage1'=>'','passage2'=>'','passage_array'=>[],'status'=>1,'thirdapp_id'=>1,'user_no'=>'','user_type'=>'','standard'=>0,'deadLine'=>0];
-
+        $standard = ['order_no'=>'','pay'=>[],'price'=>'','snap_address'=>[],'express'=>[],'payAfter'=>[],'pay_status'=>0,'type'=>'','prepay_id'=>'','wx_prepay_info'=>[],'order_step'=>0,'transport_status'=>0,'transaction_id'=>'','refund_no'=>'','isrefund'=>'','create_time'=>time(),'invalid_time'=>'','start_time'=>'','end_time'=>'','update_time'=>'','finish_time'=>'','delete_time'=>'','passage1'=>'','passage2'=>'','passage_array'=>[],'status'=>1,'thirdapp_id'=>1,'user_no'=>'','user_type'=>'','standard'=>0,'deadLine'=>0];
 
 
         if(isset($data['data']['user_no'])){
@@ -53,7 +52,6 @@ class Order extends BaseModel
 
         };
 
-        
 
         $data['data'] = chargeBlank($standard,$data['data']);
 
@@ -174,16 +172,17 @@ class Order extends BaseModel
                     };
                     
                     (new OrderItem())->save(
-                        ['pay_status'  => $data['data']['pay_status']],
+                        ['pay_status' => $data['data']['pay_status']],
                         ['id' => $c_value['id']]
                     );
 
                 };
 
-                //同步切换子订单支付状态
+                
                 if(isset($data['data']['pay_status'])&&($data['data']['pay_status']==1)){
 
-                    $childOrders = resDeal((new Order())->where(['parent_id' => $res[$key]['id'],])->select());
+                    //同步切换子订单支付状态
+                    $childOrders = resDeal((new Order())->where(['parentid' => $res[$key]['id'],])->select());
 
                     if (count($childOrders)>0) {
                        
@@ -193,9 +192,33 @@ class Order extends BaseModel
                                 ['pay_status'  => 1],
                                 ['id' => $value['id']]
                             );
-                        }
-                    }
-                }
+                        };
+                    };
+
+                    //检测团购订单
+                    if (!empty($res[$key]['group_no'])) {
+                        
+                        $groupRes = resDeal((new Order())->where(['group_no' => $res[$key]['group_no'],'pay_status'=>1])->select());
+
+                        if (count($groupRes)>0) {
+                            
+                            if (count($groupRes)<($groupRes[0]['standard']-1)) {
+                                //未成团，无操作
+                            }else{
+
+                                $res = Order::where('group_no', $res[$key]['group_no'])->update(['order_step' => 5]);
+
+                                $data['data']['order_step'] = 5;
+                            };
+
+                        }else if($res[$key]['standard']==1){
+
+                            $data['data']['order_step'] = 5;
+
+                        };
+
+                    };
+                };
 
             };
         };

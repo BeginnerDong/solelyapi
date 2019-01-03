@@ -5,21 +5,17 @@ use think\Model;
 use think\Exception;
 use think\Cache;
 
-
-use app\api\model\Common as CommonModel;
 use app\api\model\Distribution;
 
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use app\api\validate\CommonValidate;
-
 
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 
 class User{
-
-    
     
     private static $filterArr = ['wx_mainImg'];
         function __construct($data){   
@@ -38,7 +34,7 @@ class User{
         //判断用户名是否重复
         $modelData = [];
         $modelData['searchItem']['login_name'] = $data['data']['login_name'];
-        $res =  CommonModel::CommonGet("user",$modelData);
+        $res = BeforeModel::CommonGet("User",$modelData);
         if(!empty($res['data'])){
             throw new ErrorMessage([
                 'msg' => '用户名重复',
@@ -71,7 +67,7 @@ class User{
                 ]
             ]
         ];
-        $res =  CommonModel::CommonSave("User",$data);
+        $res = BeforeModel::CommonSave("User",$data);
         if($inner){
             return $res;
         }else{
@@ -112,7 +108,7 @@ class User{
         (new CommonValidate())->goCheck('one',$data);
         $data = checkTokenAndScope($data,config('scope.two'));
         //return $data;
-        $res =  CommonModel::CommonGet("user",$data);
+        $res = BeforeModel::CommonGet("User",$data);
         if($inner){
             return $res;
         }else{
@@ -130,7 +126,7 @@ class User{
         $data = checkTokenAndScope($data,config('scope.two'));
         unset($data['data']['thirdapp_id']);
        
-        $res =  CommonModel::CommonSave("User",$data);
+        $res = BeforeModel::CommonSave("User",$data);
 
         if($inner){
             return $res;
@@ -157,7 +153,7 @@ class User{
 
         (new CommonValidate())->goCheck('one',$data);
         $data = checkTokenAndScope($data,config('scope.two'));
-        $res =  CommonModel::CommonDelete("User",$data);
+        $res = BeforeModel::CommonDelete("User",$data);
         if($inner){
             return $res;
         }else{
@@ -165,13 +161,5 @@ class User{
         };
         
     }
-
-
-
-    
-
-
-    
-
 
 }

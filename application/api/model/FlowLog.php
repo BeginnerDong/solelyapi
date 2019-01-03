@@ -1,11 +1,7 @@
 <?php
 
 
-
 namespace app\api\model;
-
-
-
 
 
 use think\Model;
@@ -14,25 +10,18 @@ use app\api\model\User;
 
 use app\api\model\UserInfo;
 use app\api\model\Order;
-use app\api\model\Common as CommonModel;
 
 use app\lib\exception\ErrorMessage;
 
 use app\api\service\base\WxPay;
 
-
-
 class FlowLog extends Model
 
 {
 
-
-
     public static function dealAdd($data)
 
     {   
-
-        
 
         $standard = ['type'=>'','count'=>'','relation_id'=>'','create_time'=>time(),'delete_time'=>'','status'=>1,'trade_info'=>'','relation_table'=>'','thirdapp_id'=>'','payInfo'=>'','product_no'=>'','order_no'=>'','user_no'=>'','user_type'=>0,'behavior'=>1,'update_time'=>''];
 
@@ -73,55 +62,6 @@ class FlowLog extends Model
             };
 
         };
-
-        //检查订单支付支付是否完成
-        if (($data['data']['status']==1)&&isset($data['data']['pay_no'])&&!empty($data['data']['pay_no'])) {
-            //获取订单信息
-            $modelData = [];
-            $modelData = [
-                'searchItem'=>[
-                    'pay_no'=>$data['data']['pay_no']
-                ],
-            ];
-            $orderInfo = CommonModel::CommonGet('Order',$modelData);
-            if(count($orderInfo['data'])>0){
-                $orderPrice = abs($orderInfo['data'][0]['price']);
-            }else{
-                $orderPrice = 0;
-            }
-
-            if ($orderPrice > 0) {
-                //获取流水信息
-                $modelData = [];
-                $modelData = [
-                    'searchItem'=>[
-                        'pay_no'=>$data['data']['pay_no']
-                    ],
-                ];
-                $flowList = CommonModel::CommonGet('FlowLog',$modelData);
-                $flowPrice = 0;
-                //加上此次的流水金额
-                $flowPrice += abs($data['data']['count']);
-                if(count($flowList['data'])>0){
-                    foreach ($flowList['data'] as $key => $value) {
-                        $flowPrice += abs($value['count']);
-                    }
-                }
-
-                if ($orderPrice == $flowPrice) {
-                    $modelData = [];
-                    $modelData = [
-                        'searchItem'=>[
-                            'id'=>$orderInfo['data'][0]['id']
-                        ],
-                    ];
-                    $modelData['FuncName'] = 'update';
-                    $modelData['data']['pay_status'] = 1;
-                    $flowList = CommonModel::CommonSave('Order',$modelData);
-                    // $res = Order::where('id', $orderInfo['data'][0]['id'])->update(['pay_status'=>1]);
-                }
-            }
-        }
 
         return $data;
 

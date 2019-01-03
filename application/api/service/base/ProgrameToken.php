@@ -4,9 +4,10 @@ namespace app\api\service\base;
 
 use app\api\model\User;
 use app\api\model\ThirdApp as ThirdAppModel;
-use app\api\model\Common as CommonModel;
 use app\api\model\Distribution;
+
 use app\api\service\DistributionMain as DistributionService;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 
 use think\Model;
@@ -49,7 +50,7 @@ class ProgrameToken {
         $modelData = [];
         $modelData['searchItem']['id'] = $data['thirdapp_id'];
 
-        $ThirdAppInfo=CommonModel::CommonGet('ThirdApp',$modelData);
+        $ThirdAppInfo = BeforeModel::CommonGet('ThirdApp',$modelData);
 
         if(!count($ThirdAppInfo)>0){
             throw new ErrorMessage([
@@ -108,12 +109,12 @@ class ProgrameToken {
         $modelData['searchItem']['openid'] = $openid;
         $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
         $modelData['searchItem']['status'] = 1;
-        $user=CommonModel::CommonGet('User',$modelData);
+        $user=BeforeModel::CommonGet('User',$modelData);
 
         if(isset($wxResult['unionid'])){ 
             $modelData = [];
             $modelData['searchItem']['unionid'] = $wxResult['unionid'];
-            $unionUser=CommonModel::CommonGet('User',$modelData);
+            $unionUser=BeforeModel::CommonGet('User',$modelData);
         };
 
 
@@ -125,7 +126,7 @@ class ProgrameToken {
             $modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
             $modelData['searchItem'] = ['id'=>$uid];
             $modelData['FuncName'] = 'update';
-            $res = CommonModel::CommonSave('User',$modelData);
+            $res = BeforeModel::CommonSave('User',$modelData);
 
         }else{
 
@@ -173,7 +174,7 @@ class ProgrameToken {
                 $modelData['saveAfter'] = array_merge($data['saveAfter'],$modelData['saveAfter']);
             };
 
-            $uid = CommonModel::CommonSave('User',$modelData);
+            $uid = BeforeModel::CommonSave('User',$modelData);
             if(!$uid>0){
                 throw new ErrorMessage([
                     'msg'=>'新添加用户失败'
@@ -188,7 +189,7 @@ class ProgrameToken {
                 $modelData['data']['thirdapp_id'] = $data['thirdapp_id'];
                 $modelData['FuncName'] = 'add';
                 
-                $distriRes = CommonModel::CommonSave('Distribution',$modelData);
+                $distriRes = BeforeModel::CommonSave('Distribution',$modelData);
                 
                 $parent_no = $data['parent_no'];
                 if($data['distribution_level']>0){
@@ -217,10 +218,10 @@ class ProgrameToken {
 
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
-        $user=CommonModel::CommonGet('user',$modelData);
+        $user=BeforeModel::CommonGet('User',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
-        $thirdApp=CommonModel::CommonGet('ThirdApp',$modelData);
+        $thirdApp=BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];
 

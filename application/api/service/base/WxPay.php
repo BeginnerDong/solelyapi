@@ -13,18 +13,20 @@ namespace app\api\service\base;
 
 use app\api\model\Order as OrderModel;
 use app\api\model\ThirdApp as ThirdappModel;
-
 use app\api\model\User as UserModel;
 use app\api\model\ThirdApp;
 use app\api\model\Log;
-use app\api\model\Common as CommonModel;
+
+use app\api\service\beforeModel\Common as BeforeModel;
+
 use think\Exception;
 use think\Loader;
+use think\Cache;
 
 use app\lib\exception\ErrorMessage;
 use app\lib\exception\SuccessMessage;
 use app\api\validate\CommonValidate as CommonValidate;
-use think\Cache;
+
 Loader::import('WxPay.WxPay', EXTEND_PATH, '.Api.php');
 
 
@@ -56,7 +58,7 @@ class WxPay
                 'user_no'=>Cache::get($data['token'])['user_no']
             ];
         };
-        $userInfo =  CommonModel::CommonGet('User',$modelData);
+        $userInfo = BeforeModel::CommonGet('User',$modelData);
         if(count($userInfo['data'])==0){
             throw new ErrorMessage([
                 'msg' => 'userInfo未创建',
@@ -140,7 +142,7 @@ class WxPay
                 ); 
             };
             $modelData['FuncName'] = 'add';
-            $saveLog =  CommonModel::CommonSave('Log',$modelData);
+            $saveLog = BeforeModel::CommonSave('Log',$modelData);
         };
         
         throw new SuccessMessage([
@@ -187,7 +189,7 @@ class WxPay
 
         $modelData = [];
         $modelData['searchItem'] = ['id'=>$flowLogID];
-        $FlowLogInfo =  CommonModel::CommonGet('FlowLog',$modelData);
+        $FlowLogInfo = BeforeModel::CommonGet('FlowLog',$modelData);
         if(count($FlowLogInfo['data'])!=1){
             throw new ErrorMessage([
                 'msg' => '关联订单有误',
@@ -202,7 +204,7 @@ class WxPay
             $modelData['searchItem'] = ['id'=>$flowLogID];
             $modelData['data'] = ['payInfo'=>$FlowLogInfo['payInfo']];
             $modelData['FuncName'] = 'update';
-            $res =  CommonModel::CommonSave('FlowLog',$modelData);
+            $res = BeforeModel::CommonSave('FlowLog',$modelData);
         }else{
             $refundNo = $FlowLogInfo['payInfo']['refund_no'];
         };
@@ -274,7 +276,7 @@ class WxPay
             $modelData['data']['payAfter'] = json_encode($data['payAfter']);
         };   
         $modelData['FuncName'] = 'update';
-        $res =  CommonModel::CommonSave('Order',$modelData);
+        $res = BeforeModel::CommonSave('Order',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'更新OrderPay信息失败'

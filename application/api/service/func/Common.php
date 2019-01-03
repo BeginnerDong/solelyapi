@@ -2,7 +2,7 @@
 
 namespace app\api\service\func;
 
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use think\Exception;
 
@@ -120,7 +120,7 @@ class Common{
 
         $modelData['searchItem']['login_name'] = $data['login_name'];
 
-        $loginRes =  CommonModel::CommonGet("User",$modelData);
+        $loginRes = BeforeModel::CommonGet("User",$modelData);
 
         
 
@@ -146,7 +146,7 @@ class Common{
 
 
 
-        $ThirdAppRes =  CommonModel::CommonGet("ThirdApp",$modelData);
+        $ThirdAppRes = BeforeModel::CommonGet("ThirdApp",$modelData);
 
        
 
@@ -188,7 +188,7 @@ class Common{
 
             $modelData['FuncName'] = 'update';
 
-            $upt = CommonModel::CommonSave("User",$modelData);
+            $upt = BeforeModel::CommonSave("User",$modelData);
 
 
 
@@ -358,7 +358,7 @@ class Common{
 
             
 
-            $res =  CommonModel::CommonSave('Log',$modelData);
+            $res = BeforeModel::CommonSave('Log',$modelData);
 
             if(!$res>0){
 
@@ -392,7 +392,7 @@ class Common{
 
                     $modelData['FuncName'] = 'add';
 
-                    $flowRes =  CommonModel::CommonSave('FlowLog',$modelData);
+                    $flowRes = BeforeModel::CommonSave('FlowLog',$modelData);
 
                     if(!$flowRes>0){
 

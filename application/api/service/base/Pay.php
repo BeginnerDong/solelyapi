@@ -16,10 +16,9 @@ use app\api\model\ThirdApp as ThirdappModel;
 use app\api\model\User as UserModel;
 use app\api\model\UserCoupon as UserCouponModel;
 use app\api\model\FlowLog;
-use app\api\model\Common as CommonModel;
 
+use app\api\service\beforeModel\Common as BeforeModel;
 use app\api\service\base\WxPay;
-use app\api\service\func\Order as OrderService;
 use app\api\service\base\CommonService as CommonService;
 use app\api\validate\CommonValidate as CommonValidate;
 use app\lib\exception\OrderException;
@@ -47,60 +46,6 @@ class Pay
     function __construct(){
         
     }
-    // public static function multiPay($data,$inner=false){
-
-    //     if(!$inner){
-    //         self::$token = $data['token'];
-    //         (new CommonValidate())->goCheck('one',$data);
-    //         $data = checkTokenAndScope($data,config('scope.two')); 
-    //     };
-    //     $pay_no = makePayNo();
-    //     $price = 0;
-
-    //     $modelData = [];
-    //     $modelData = [
-    //         'searchItem'=>[
-    //             'user_no'=>$data['data']['user_no']
-    //         ],
-    //     ];
-    //     $userInfo =  CommonModel::CommonGet('User',$modelData);
-    //     if(!count($userInfo['data'])>0){
-    //         throw new ErrorMessage([
-    //             'msg' => '用户不存在',
-    //         ]);
-    //     };
-    //     $userInfo = $userInfo['data'][0];
-
-    //     $logData['orderlist'] = [];
-    //     foreach($multiPay as $key => $value){
-
-    //         $orderInfo =  CommonModel::CommonGet('Order',$value);
-    //         if(count($orderInfo['data'])!=1){
-    //             throw new ErrorMessage([
-    //                 'msg' => '关联订单有误',
-    //             ]);
-    //         };
-    //         $orderInfo = $orderInfo['data'][0];
-    //         if(isset($value['wxPay'])&&isset($value['wxPayStatus'])&&$value['wxPayStatus']==0){
-    //             $price += $value['wxPay'];
-    //             $value['pay_no'] = $pay_no;
-
-    //             //记录合并订单微信支付信息
-    //             $wxpayInfo[$orderInfo['order_no']] = $value['wxPay'];
-    //             $logData['orderlist'] = array_merge($logData['orderlist'],$wxpayInfo);
-    //         };
-    //         $orderInfo = self::checkParamValid($value,$orderInfo,$userInfo);
-    //     };
-
-    //     if($price>0){
-    //         return WxPay::pay($userInfo,$pay_no,$price,$logData);
-    //     }else{
-    //         throw new ErrorMessage([
-    //             'msg' => '订单金额异常',
-    //         ]);
-    //     };
-
-    // }
 
 
     public static function pay($data,$inner=false){
@@ -111,42 +56,17 @@ class Pay
             checkTokenAndScope($data,config('scope.two')); 
         };
 
-        $orderInfo =  CommonModel::CommonGet('Order',$data);
+        $orderInfo = BeforeModel::CommonGet('Order',$data);
+
         if(count($orderInfo['data'])!=1){
-            // throw new ErrorMessage([
-            //     'msg' => '关联订单有误',
-            // ]);
-            $orderInfo = [];
-            if (Cache::get($data['token'])) {
-                $userInfo = Cache::get($data['token']);
-            }else if(isset($data['user_no'])){
-                $modelData = [];
-                $modelData = [
-                    'searchItem'=>[
-                        'user_no'=>$data['user_no']
-                    ],
-                ];
-                $userInfo = CommonModel::CommonGet('User',$modelData);
-                if(!count($userInfo['data'])>0){
-                    throw new ErrorMessage([
-                        'msg' => '用户不存在',
-                    ]);
-                };
-                $userInfo = $userInfo['data'][0];
-            }else{
-                throw new ErrorMessage([
-                    'msg' => '用户不存在',
-                ]);
-            }
-            if(!isset($data['pay_no'])){
-                $data['pay_no'] = makePayNo();
-            }
+            throw new ErrorMessage([
+                'msg' => '关联订单有误',
+            ]);
         }else{
             $orderInfo = $orderInfo['data'][0];
             if($orderInfo['type']!=6){
                 self::checkStock($orderInfo);
             };
-            
             if(!$orderInfo['pay_no']&&!isset($data['pay_no'])){
                 $data['pay_no'] = makePayNo();
             }else if($orderInfo['pay_no']){
@@ -156,7 +76,7 @@ class Pay
             $modelData['searchItem'] = [
                 'user_no'=>$orderInfo['user_no']
             ];
-            $userInfo =  CommonModel::CommonGet('User',$modelData);
+            $userInfo = BeforeModel::CommonGet('User',$modelData);
             if(count($userInfo['data'])==0){
                 throw new ErrorMessage([
                     'msg' => 'userInfo未创建',
@@ -164,7 +84,7 @@ class Pay
             };
             $userInfo = $userInfo['data'][0];
             $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
-        }
+        };
 
         if(!isset($data['wxPayStatus'])){
             $data['wxPayStatus'] = 0;
@@ -202,19 +122,9 @@ class Pay
             Db::rollback();
             throw $ex;
         };
-        
-        // $pass = self::checkIsPayAll($data['searchItem']);
-
-        // if($pass){
-        //     throw new SuccessMessage([
-        //         'msg' => '支付完成',
-        //     ]);
-        // }else{
-            throw new SuccessMessage([
-                'msg' => '支付成功',
-            ]);
-        // };
-        
+        throw new SuccessMessage([
+            'msg' => '支付完成',
+        ]);
     }
   
 
@@ -223,7 +133,7 @@ class Pay
         
         $modelData = [];
         $modelData['searchItem'] = ['order_no'=>$orderInfo['order_no']];
-        $orderItemInfo =  CommonModel::CommonGet('OrderItem',$modelData);
+        $orderItemInfo = BeforeModel::CommonGet('OrderItem',$modelData);
         if(!count($orderItemInfo['data'])>0){
             throw new ErrorMessage([
                 'msg' => 'orderItem关联信息有误',
@@ -234,10 +144,10 @@ class Pay
             
             if(!$value['sku_id']){
                 $modelData['searchItem']['id'] = $value['product_id'];
-                $product =  CommonModel::CommonGet('Product',$modelData);
+                $product = BeforeModel::CommonGet('Product',$modelData);
             }else{
                 $modelData['searchItem']['id'] = $value['sku_id'];
-                $product =  CommonModel::CommonGet('Sku',$modelData);
+                $product = BeforeModel::CommonGet('Sku',$modelData);
             };
             if(count($product['data'])!=1){
                 throw new ErrorMessage([
@@ -271,7 +181,7 @@ class Pay
             'user_no'=>$userInfo['user_no'],
         );
         $modelData['FuncName'] = 'add';
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'余额支付失败'
@@ -295,7 +205,7 @@ class Pay
             'user_no'=>$userInfo['user_no'],
         );
         $modelData['FuncName'] = 'add';
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
         
         if(!$res>0){
             throw new ErrorMessage([
@@ -321,7 +231,7 @@ class Pay
             'user_no'=>$userInfo['user_no'],
         );
         $modelData['FuncName'] = 'add';
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'积分支付失败'
@@ -335,7 +245,7 @@ class Pay
         $modelData = [];
         $modelData['searchItem']['id'] = $coupon['id'];
         $modelData['searchItem']['user_no'] = $userInfo['user_no'];
-        $couponInfo =  CommonModel::CommonGet('Order',$modelData);
+        $couponInfo = BeforeModel::CommonGet('Order',$modelData);
         if(count($couponInfo['data'])!=1){
             throw new ErrorMessage([
                 'msg' => '关联优惠券有误',
@@ -373,7 +283,7 @@ class Pay
             'relation_id'=>$couponInfo['order_no'],
         );
         
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'核销优惠卷失败'
@@ -384,7 +294,7 @@ class Pay
         $modelData['data']['status'] = -1;
         $modelData['data']['order_step'] = 3;
         $modelData['FuncName'] = 'update';
-        $res =  CommonModel::CommonSave('Order',$modelData);
+        $res = BeforeModel::CommonSave('Order',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'更新用户信息失败'
@@ -399,7 +309,7 @@ class Pay
         $modelData = [];
         $modelData['searchItem']['order_no'] = $card['card_no'];
         $modelData['searchItem']['user_no'] = $userInfo['user_no'];
-        $cardInfo =  CommonModel::CommonGet('Order',$modelData);
+        $cardInfo = BeforeModel::CommonGet('Order',$modelData);
         if(count($cardInfo['data'])!=1){
             throw new ErrorMessage([
                 'msg' => '会员卡信息有误',
@@ -424,7 +334,7 @@ class Pay
             'user_no'=>$userInfo['user_no'],
             'relation_id'=>$cardInfo['order_no'],
         );
-        $res =  CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'使用会员卡失败'
@@ -434,7 +344,7 @@ class Pay
         $modelData['searchItem']['order_no'] = $cardInfo['order_no'];
         $modelData['data']['balance'] = $cardInfo['balance']-$card['price'];
         $modelData['FuncName'] = 'update';
-        $res =  CommonModel::CommonSave('Order',$modelData);
+        $res = BeforeModel::CommonSave('Order',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'更新用户信息失败'
@@ -482,7 +392,7 @@ class Pay
         };   
         $modelData['FuncName'] = 'update';
         if($modelData['data']){
-            $res =  CommonModel::CommonSave('Order',$modelData);
+            $res = BeforeModel::CommonSave('Order',$modelData);
             if(!$res>0){
                 throw new ErrorMessage([
                     'msg'=>'更新OrderPay信息失败'
@@ -497,7 +407,7 @@ class Pay
     {
         $modelData = [];
         $modelData['searchItem'] = $searchItem;
-        $orderInfo = CommonModel::CommonGet('Order',$modelData);
+        $orderInfo =BeforeModel::CommonGet('Order',$modelData);
         if(!count($orderInfo['data'])>0){
             throw new ErrorMessage([
                 'msg'=>'order信息有误'
@@ -509,7 +419,7 @@ class Pay
         $totalPrice = 0;
         $modelData = [];
         $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-        $res = CommonModel::CommonGet('FlowLog',$modelData);
+        $res =BeforeModel::CommonGet('FlowLog',$modelData);
 
         if(count($res['data'])>0){
             foreach ($res['data'] as $key => $value) {
@@ -531,10 +441,8 @@ class Pay
             if(!empty($orderinfo['payAfter'])){
                 $modelData['saveAfter'] = json_decode($orderinfo['payAfter']);
             }; 
-            $res =  CommonModel::CommonSave('Order',$modelData);
+            $res = BeforeModel::CommonSave('Order',$modelData);
 
-            //支付成功判断团购逻辑
-            OrderService::checkGroup($orderInfo);
         };
         return $pass;
 
@@ -548,7 +456,7 @@ class Pay
             checkTokenAndScope($data,config('scope.two')); 
         };
 
-        $orderInfo =  CommonModel::CommonGet('Order',$data);
+        $orderInfo = BeforeModel::CommonGet('Order',$data);
         if(count($orderInfo['data'])!=1){
             throw new ErrorMessage([
                 'msg' => '关联订单有误',
@@ -556,7 +464,7 @@ class Pay
         };
         $modelData = [];
         $modelData['searchItem']['order_no'] = $orderInfo['data'][0]['order_no'];
-        $FlowLogInfo =  CommonModel::CommonGet('FlowLog',$modelData);
+        $FlowLogInfo = BeforeModel::CommonGet('FlowLog',$modelData);
         $FlowLogInfo = $FlowLogInfo['data'];
         if(count($FlowLogInfo)>0){
             foreach ($FlowLogInfo as $key => $value) {     
@@ -565,7 +473,7 @@ class Pay
                 $modelData['data']['status'] = -1;
                 $modelData['data']['update_time'] = time();
                 $modelData['FuncName'] = 'update';
-                $res =  CommonModel::CommonSave('FlowLog',$modelData);   
+                $res = BeforeModel::CommonSave('FlowLog',$modelData);   
                 if(!$res>0){
                     throw new ErrorMessage([
                         'msg' => '支付撤回失败',
@@ -577,7 +485,7 @@ class Pay
             $modelData['data']['pay_status'] = 0;
             $modelData['data']['order_step'] = 2;
             $modelData['FuncName'] = 'update';
-            $res =  CommonModel::CommonSave('Order',$modelData);
+            $res = BeforeModel::CommonSave('Order',$modelData);
 
             throw new SuccessMessage([
                 'msg' => '撤回成功',

@@ -1,15 +1,12 @@
 <?php
 namespace app\api\service\base;
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 use think\Exception;
 use think\Model;
 use think\Cache;
-use think\Loader;
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
-use think\Request; 
-//use Scope\Config as Config;
 
 
 class Common{
@@ -49,7 +46,7 @@ class Common{
             ]);
         };
         
-        $res =  CommonModel::CommonSave($data['modelName'],$data);
+        $res = BeforeModel::CommonSave($data['modelName'],$data);
         
         if($inner){
             return $res;
@@ -119,7 +116,7 @@ class Common{
             ]); 
         };
         
-        $res =  CommonModel::CommonGet($data['modelName'],$data);
+        $res = BeforeModel::CommonGet($data['modelName'],$data);
        
         if(isset($res['data'])&&count($res['data'])>0){
             $res['data'] = clist_to_tree($res['data']);
@@ -171,7 +168,7 @@ class Common{
                 'msg'=>'接口调用错误'
             ]); 
         };
-        $res =  CommonModel::CommonSave($data['modelName'],$data);
+        $res = BeforeModel::CommonSave($data['modelName'],$data);
         if($inner){
             return $res;
         }else{
@@ -230,7 +227,7 @@ class Common{
         };
         
         
-        $res =  CommonModel::CommonDelete($data['modelName'],$data);
+        $res =  BeforeModel::CommonDelete($data['modelName'],$data);
         if($inner){
             return $res;
         }else{
@@ -253,7 +250,7 @@ class Common{
                 ];
             };
         };
-        $res =  CommonModel::CommonCompute($data);
+        $res = BeforeModel::CommonCompute($data);
         if($inner){
             return $res;
         }else{
