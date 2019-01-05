@@ -34,11 +34,6 @@ class Common extends Model{
     public static function CommonGet($dbTable,$data)
     {
         
-        if(!$data){
-            $final = [];
-            return $final;
-        };
-
         $model =self::loaderModel($dbTable);
         $sqlStr = preModelStr($data);
         if(!isset($data['searchItem']['status'])){

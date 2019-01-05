@@ -22,6 +22,11 @@ class Common {
 
     	$data = self::CommonGetPro($data);
 
+        if(!$data){
+            $final['data'] = [];
+            return $final;
+        };
+
     	$final = CommonModel::CommonGet($dbTable,$data);
 
     	$final['data'] = self::CommonGetAfter($data,$final['data']);
