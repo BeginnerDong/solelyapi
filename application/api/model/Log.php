@@ -4,6 +4,7 @@ namespace app\api\model;
 use think\Model;
 use app\api\model\User;
 use app\api\model\Order;
+use app\lib\exception\ErrorMessage;
 
 
 class Log extends BaseModel
@@ -29,7 +30,7 @@ class Log extends BaseModel
                 $data['data']['user_type'] = $res['user_type'];
             }else{
                 throw new ErrorMessage([
-                    'msg' => '关联user信息有误',
+                    'msg' => '关联order信息有误',
                 ]);
             };
         };
