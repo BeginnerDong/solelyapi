@@ -70,22 +70,25 @@ class User extends Model{
             ]);
         };
         if(isset($data['data'])&&isset($data['data']['status'])){
-            $UserInfo = (new UserInfo())->where($data['searchItem'])->select();
-            foreach ($UserInfo as $key => $value) {
 
-                $relationRes = (new UserInfo())->save(
-                    ['status'  => $data['searchItem']['status']],
-                    ['order_no' => $UserInfo[$key]['order_no']]
-                );
-            };
-            $UserAddress = (new UserAddress())->where($data['searchItem'])->select();
-            foreach ($UserAddress as $key => $value) {
+            $User = (new User())->where($data['searchItem'])->select();
 
-                $relationRes = (new UserAddress())->save(
-                    ['status'  => $data['searchItem']['status']],
-                    ['order_no' => $UserAddress[$key]['order_no']]
-                );
+            foreach ($User as $key => $value) {
+
+                //更新userInfo
+                $upInfo = UserInfo::where('user_no', $value['user_no'])->update(['status' => $data['data']['status']]);
+
+                //更新address
+                $UserAddress = (new UserAddress())->where(['user_no'  => $User[$key]['user_no']])->select();
+
+                foreach ($UserAddress as $a_key => $a_value) {
+
+                    $upAddress = UserAddress::where('id', $a_value['id'])->update(['status' => $data['data']['status']]);
+
+                };
+
             };
+            
         };
     }
 
