@@ -51,7 +51,11 @@ Route::get('api/:version/Timer/TimerByMins','api/:version.Timer/timerByMins');
 
 /*公众号接口入口*/
 
-Route::any('api/:version/WxController/:thirdapp_id','api/:version.WxController/index');
+Route::any('api/:version/WxController/Index/:thirdapp_id','api/:version.WxController/index');
+
+/*公众号获取素材列表*/
+
+Route::post('api/:version/WxController/GetSource','api/:version.WxController/getSource');
 
 /*公众号网页授权*/
 

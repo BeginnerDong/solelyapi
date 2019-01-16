@@ -24,7 +24,8 @@ class WxController extends Controller{
 	protected $openid;
 	protected $parent_id;
 
-	public function index(){
+	public function index()
+	{
 
 		//接受身份识别参数
 		$data = Request::instance()->param();
@@ -61,7 +62,6 @@ class WxController extends Controller{
 		}else{
 			$api->transferCustomerService()->reply();
 		};
-		
 	}
 
 	public function checkSignature($data)  
@@ -150,7 +150,8 @@ class WxController extends Controller{
 		}
 	}
 
-	public function getAccessToken($config){
+	public function getAccessToken($config)
+	{
 
 		$accessRes = curl_get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".$config["appid"]."&secret=".$config["appsecret"]);
 		if($accessRes){
@@ -164,7 +165,8 @@ class WxController extends Controller{
 		}
 	} 
 
-	public function addUser($userInfo){
+	public function addUser($userInfo)
+	{
 
 		$headimgurl = json_encode(["0"=>['name'=>'headimg','url'=>$userInfo['headimgurl']]]);
 		$adduserRes = Db::execute('insert into user (wx_openid, unionid ,thirdapp_id,member_id,nickname,headimgurl,create_time) values (?,?,?,?,?,?,?)',[$userInfo['openid'],$userInfo['unionid'],$this->thirdapp_id,$this->parent_id,$userInfo['nickname'],$headimgurl,time()]);
@@ -339,7 +341,8 @@ class WxController extends Controller{
 		return $data;
 	}
 
-	public function sendMessage($post_data,$thirdapp_id){
+	public function sendMessage($post_data,$thirdapp_id)
+	{
 
 		$this->thirdapp_id = $thirdapp_id;
 		$config = $this->getThirdConfig();
@@ -388,6 +391,74 @@ class WxController extends Controller{
 			}
 		}
 		return $res;
+	}
+
+	public function getSource()
+	{
+		$data = Request::instance()->param();
+		$currentPage = $data['paginate']['currentPage'];
+
+		$this->thirdapp_id = $data['thirdapp_id'];
+		$config = $this->getThirdConfig();
+
+		if($config){
+			if($config['access_token']&&$config['access_token_expire']>time()){
+				$access_token = $config['access_token'];
+			}else{
+				$access_token = $this->getAccessToken($config);
+			}; 
+		}else{
+			return false;
+		};
+
+		$post_data = array(
+		    "type"=>$data['type'],
+		    "offset"=>$currentPage-1,
+		    "count"=>1,
+		);
+
+		$url = "https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=".$access_token;
+
+		$source = $this->curl_wxpost($url,$post_data);
+		$source = json_decode($source,true);
+		
+		$res['total'] = $source['total_count'];
+		$res['data'] = [];
+		if ($source['item_count']>0) {
+
+			foreach ($source['item'] as $key => $value) {
+
+				$media_id = $value['media_id'];
+
+				foreach ($value['content']['news_item'] as $c_key => $c_value) {
+
+					$info['title'] = $c_value['title'];
+					$info['content'] = $c_value['content'];
+					$info['mainImg'] = array(['name'=>'主图','url'=>$c_value['thumb_url']]);
+					$info['media_id'] = $media_id;
+					$info['url'] = $c_value['url'];
+					$info['thumb_media_id'] = $c_value['thumb_media_id'];
+					//查询此篇文章是否已保存
+					$checkExist = Db::query('select * from article where passage1 = ?',[$c_value['thumb_media_id']]);
+					$info['exist'] = $checkExist?'true':'false';
+
+					array_push($res['data'],$info);
+				}
+			}
+		}
+
+		if ($source['item_count']>0) {
+			throw new SuccessMessage([
+	            'msg'=>'查询成功',
+	            'info'=>$res
+	        ]);
+		}else{
+			throw new SuccessMessage([
+                'msg'=>'查询结果为空',
+                'info'=>$res
+            ]);
+		}
+	    
 	}
 
 	private function curl_wxpost($url, array $params = array())

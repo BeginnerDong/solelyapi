@@ -173,7 +173,7 @@ class Common {
                                $new[$info_value] = $nRes['data'][0][$info_value];
                             };
                         };
-                    }else{
+                    }else if($searchItem){
                         $c_value['searchItem'][$c_value['key']] = $searchItem;
 
                         $modelData = [];
