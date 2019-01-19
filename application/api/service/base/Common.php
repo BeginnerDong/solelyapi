@@ -34,6 +34,7 @@ class Common{
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
+            'Wechat'=>config('scope.two'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){
@@ -90,6 +91,7 @@ class Common{
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
+            'Wechat'=>config('scope.two'),
         ];
 
         
@@ -158,6 +160,7 @@ class Common{
             'Log'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
+            'Wechat'=>config('scope.two'),
         ];
         if(isset($scopeArr[$data['modelName']])){
             $scope = $scopeArr[$data['modelName']];

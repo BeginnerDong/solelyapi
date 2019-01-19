@@ -1,51 +1,38 @@
 <?php
+/**
+ * Created by 董博明.
+ * Author: 董博明
+ * Date: 2018/4/9
+ * Time: 19:23
+ */
 
-namespace app\api\controller\v1\func;
-
-
-
-use think\Request as Request; 
+namespace app\api\controller\v1\weFunc;
 
 use think\Controller;
-
-use think\Cache;
-
+use think\Db;
+use think\Request as Request;
 use think\Loader;
 
-use app\api\model\Common as CommonModel;
+use app\api\controller\v1\weFunc\Message as WxMessage;
 
-use app\api\controller\BaseController;
-
-use app\api\controller\v1\WxController as WxController;
+use app\api\service\beforeModel\Common as BeforeModel;
 
 use app\lib\exception\SuccessMessage;
-
 use app\lib\exception\ErrorMessage;
 
 
-//模板相关
-
-class Wechat extends BaseController{
+class Project extends Controller{
 
 
+  function __construct($data)
+  {
 
-    protected $beforeActionList = [
+  }
 
 
-    ];
+	public static function sendMessage($data,$inner=false){
 
-
-    //发送模板消息
-
-    public static function sendMessage(){
-
-        $data = Request::instance()->param();
-
-        $data = checkSmsAuth($data);
-
-        $data = transformExcel($data);
-
-        $Wechat = new WxController;
+        $Wechat = new WxMessage;
 
         $modelData = [];
         if (isset($data['getBefore'])) {
@@ -56,19 +43,26 @@ class Wechat extends BaseController{
         };
         $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
         $modelData['searchItem']['status'] = 1;
-        $modelData['getAfter'] =['formIdArray'=>[
+        $modelData['getAfter'] = ['formIdArray'=>[
             'tableName'=>'WxFormId',
             'middleKey'=>'user_no',
             'key'=>'user_no',
             'condition'=>'=',
-            'info'=>['id','form_id']
+            'info'=>['id','form_id'],
+            'searchItem'=>[
+              'end_time'=>['<',time()],
+            ],
         ]];
-        $user=CommonModel::CommonGet('User',$modelData);
+        $user = BeforeModel::CommonGet('User',$modelData);
 
         if(count($user['data'])>0){
             $userdId = [];
+            $result = [];
             foreach ($user['data'] as $key => $value) {
+
                 if(isset($value['formIdArray']['form_id'])&&isset($value['formIdArray']['id'])){
+
+                	$result[$key] = [];
                     array_push($userdId,$value['formIdArray']['id']);
                     $data_arr = array(
                       'keyword1' => array( "value" => date("Y-m-d")),
@@ -90,22 +84,39 @@ class Wechat extends BaseController{
                     // 将数组编码为 JSON
                     $post_data = json_encode($post_data, true);   
                     // 这里的返回值是一个 JSON，可通过 json_decode() 解码成数组
-                    $res = $Wechat->sendMessage($post_data,$data['thirdapp_id']);
+                    $send = $Wechat->sendMessage($post_data,$data['thirdapp_id']);\
+
+                    $result[$key]['code'] = $send['errcode'];
+                   	$result[$key]['msg'] = $send['errmsg'];
+
+                    if ($send['errcode']!=0) {
+                    	continue;
+                    }
                     
                     $modelData = [];
                     $modelData['searchItem']['id'] = $value['formIdArray']['id'];
                     $modelData['searchItem']['end_time'] = ['>',time()];
                     $modelData['data']['status'] = -1;
                     $modelData['FuncName'] = 'update';
-                    $res=CommonModel::CommonSave('WxFormId',$modelData);
+                    $res = BeforeModel::CommonSave('WxFormId',$modelData);
+                    $result[$key]['updateFormID'] = $res;
                 };
             };
         };
 
-        throw new SuccessMessage([
-            'msg'=>'发送成功',
-        ]);
+        if (!$inner) {
+        	
+        	throw new SuccessMessage([
+	            'msg'=>'发送成功',
+	            'res'=>$result,
+	        ]);
 
+        }else{
+
+        	return $result;
+
+        }
+        
     }
 
 }

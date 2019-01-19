@@ -21,7 +21,7 @@ Route::any('api/:version/Base/:serviceName/:FuncName', 'api/:version.base.Main/B
 Route::post('api/:version/Func/:serviceName/:FuncName', 'api/:version.base.Main/Func');
 
 
-
+Route::post('api/:version/WeFunc/:WeFuncName/:FuncName', 'api/:version.base.Main/WeFunc');
 
 
 Route::any('api/:version/Common/:modelName/:FuncName', 'api/:version.base.Main/Common');

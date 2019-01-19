@@ -35,7 +35,6 @@ Route::post('api/:version/pay/notify','api/:version.WXPayReturn/receiveNotify');
 
 
 
-
 //计时器接口
 
 /*分钟计时器，暂定每5分钟执行一次*/
@@ -53,9 +52,7 @@ Route::get('api/:version/Timer/TimerByMins','api/:version.Timer/timerByMins');
 
 Route::any('api/:version/WxController/Index/:thirdapp_id','api/:version.WxController/index');
 
-/*公众号获取素材列表*/
 
-Route::post('api/:version/WxController/GetSource','api/:version.WxController/getSource');
 
 /*公众号网页授权*/
 
@@ -84,5 +81,3 @@ Route::post('api/:version/token/verify', 'api/:version.Token/verifyToken');
 /*回调函数*/ 
 
 Route::post('api/:version/pay/refund','api/:version.MerchantPay/refund');
-
-//todo...缺少证书
