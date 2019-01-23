@@ -30,9 +30,8 @@ class Project extends Controller{
   }
 
 
-	public static function sendMessage($data,$inner=false){
-
-        $Wechat = new WxMessage;
+	public static function sendMessage($data,$inner=false)
+  {
 
         $modelData = [];
         if (isset($data['getBefore'])) {
@@ -84,7 +83,7 @@ class Project extends Controller{
                     // 将数组编码为 JSON
                     $post_data = json_encode($post_data, true);   
                     // 这里的返回值是一个 JSON，可通过 json_decode() 解码成数组
-                    $send = $Wechat->sendMessage($post_data,$data['thirdapp_id']);\
+                    $send = WxMessage::sendMessage($post_data,$data['thirdapp_id']);
 
                     $result[$key]['code'] = $send['errcode'];
                    	$result[$key]['msg'] = $send['errmsg'];
