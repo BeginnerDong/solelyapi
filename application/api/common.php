@@ -35,6 +35,44 @@ function curl_post($url, array $params = array())
     return ($data);
 }
 
+function curl_post_string($url,$string)
+{
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $string);
+    curl_setopt(
+        $ch, CURLOPT_HTTPHEADER,
+        array(
+            'Content-Type: application/x-www-form-urlencoded'
+        )
+    );
+    $data = curl_exec($ch);
+    curl_close($ch);
+    return ($data);
+}
+
+/**
+ * post发送数组
+ * form-data
+ */
+function curl_post_data($url, array $params = array())
+{
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+    $data = curl_exec($ch);
+    curl_close($ch);
+    return ($data);
+}
+
 function curl_post_raw($url, $rawData)
 {
     $ch = curl_init();

@@ -14,7 +14,7 @@ use think\Db;
 use think\Request as Request;
 use think\Loader;
 use app\api\service\Token as TokenService;
-use app\api\model\Common as CommonModel;
+use app\api\service\beforeModel\Common as BeforeModel;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 use think\Cache;
@@ -70,12 +70,12 @@ class WxAuth
         $modelData['searchItem']['openid'] = $openid;
         $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
         $modelData['searchItem']['status'] = 1;
-        $user=CommonModel::CommonGet('User',$modelData);
+        $user=BeforeModel::CommonGet('User',$modelData);
 
         if(isset($wxResult['unionid'])){ 
             $modelData = [];
             $modelData['searchItem']['unionid'] = $wxResult['unionid'];
-            $unionUser=CommonModel::CommonGet('User',$modelData);
+            $unionUser=BeforeModel::CommonGet('User',$modelData);
         };
         $userInfo = $this->getUserInfo();
 		$data['headImgUrl'] = $userInfo['headimgurl'];
@@ -89,7 +89,7 @@ class WxAuth
             $modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
             $modelData['searchItem'] = ['id'=>$uid];
             $modelData['FuncName'] = 'update';
-            $res = CommonModel::CommonSave('User',$modelData);
+            $res = BeforeModel::CommonSave('User',$modelData);
 
         }else{
 
@@ -132,7 +132,7 @@ class WxAuth
                 ]
             ];
 
-            $uid = CommonModel::CommonSave('User',$modelData);
+            $uid = BeforeModel::CommonSave('User',$modelData);
             if(!$uid>0){
                 throw new ErrorMessage([
                     'msg'=>'新添加用户失败'
@@ -147,7 +147,7 @@ class WxAuth
                 $modelData['data']['thirdapp_id'] = $data['thirdapp_id'];
                 $modelData['FuncName'] = 'add';
                 
-                $distriRes = CommonModel::CommonSave('Distribution',$modelData);
+                $distriRes = BeforeModel::CommonSave('Distribution',$modelData);
                 
                 $parent_no = $data['parent_no'];
                 if($data['distribution_level']>0){
@@ -176,10 +176,10 @@ class WxAuth
 
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
-        $user=CommonModel::CommonGet('user',$modelData);
+        $user=BeforeModel::CommonGet('user',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
-        $thirdApp=CommonModel::CommonGet('ThirdApp',$modelData);
+        $thirdApp=BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];
 
@@ -243,7 +243,7 @@ class WxAuth
 
     	$modelData = [];
         $modelData['searchItem']['id'] = $this->thirdapp_id;
-        $thirdRes=CommonModel::CommonGet('ThirdApp',$modelData);
+        $thirdRes=BeforeModel::CommonGet('ThirdApp',$modelData);
 		$thirdRes = $thirdRes['data'];
 		if(count($thirdRes)>0){
             $thirdRes = $thirdRes[0];
