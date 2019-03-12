@@ -17,7 +17,42 @@ class Sku extends Model{
     public static function dealAdd($data)
     {   
         
-        $standard = ['sku_no'=>'','title'=>'','label_array'=>'','sku_item'=>[],'product_id'=>'','stock'=>'','price'=>'','mainImg'=>[],'description'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','thirdapp_id'=>'','status'=>1,'user_no'=>'',];
+        $standard = [
+            'sku_no'=>'',
+            'title'=>'',
+            'label_array'=>'',
+            'sku_item'=>[],
+            'product_no'=>'',
+            'stock'=>'',
+            'price'=>'',
+            'group_price'=>'',
+            'o_price'=>'',
+            'mainImg'=>[],
+            'description'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'status'=>1,
+            'thirdapp_id'=>'',
+            'user_no'=>'',
+            'on_shelf'=>'',
+            'category_id'=>'',
+            'spu_array'=>[],
+            'spu_item'=>[],
+            'behavior'=>'',
+            'sale_count'=>'',
+            'limit'=>'',
+            'start_time'=>'',
+            'end_time'=>'',
+            'use_limit'=>'',
+            'duration'=>'',
+            'standard'=>'',
+            'is_group'=>'',
+            'group_stock'=>'',
+            'score'=>'',
+            'img_array'=>[],
+        ];
+        
         $res = Product::get(['product_no' => $data['data']['product_no']]);
         $res = resDeal([$res])[0];
         if(!$res){

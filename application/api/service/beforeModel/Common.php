@@ -56,6 +56,7 @@ class Common {
 
         if($FuncName=='update'){
 
+            CommonModel::imgManage($dbTable,$data);
             self::CommonSaveAfter($dbTable,$data);
 
         }else{
@@ -63,6 +64,7 @@ class Common {
             $data['searchItem'] = [
                 'id'=>$finalRes
             ];
+            CommonModel::imgManage($dbTable,$data);
             self::CommonSaveAfter($dbTable,$data);
         };
 

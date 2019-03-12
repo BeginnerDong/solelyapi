@@ -29,8 +29,45 @@ class Order extends BaseModel
 
     {   
 
-        $standard = ['order_no'=>'','pay'=>[],'price'=>'','snap_address'=>[],'express'=>[],'payAfter'=>[],'pay_status'=>0,'type'=>'','prepay_id'=>'','wx_prepay_info'=>[],'order_step'=>0,'transport_status'=>0,'transaction_id'=>'','refund_no'=>'','isrefund'=>'','create_time'=>time(),'invalid_time'=>'','start_time'=>'','end_time'=>'','update_time'=>'','finish_time'=>'','delete_time'=>'','passage1'=>'','passage2'=>'','passage_array'=>[],'status'=>1,'thirdapp_id'=>1,'user_no'=>'','user_type'=>'','standard'=>0,'deadLine'=>0];
-
+        $standard = [
+            'order_no'=>'',
+            'parent_id'=>'',
+            'pay'=>[],
+            'price'=>'',
+            'snap_address'=>[],
+            'express'=>[],
+            'pay_status'=>0,
+            'type'=>'',
+            'prepay_id'=>'',
+            'wx_prepay_info'=>[],
+            'order_step'=>0,
+            'transport_status'=>0,
+            'transaction_id'=>'',
+            'refund_no'=>'',
+            'isrefund'=>'',
+            'create_time'=>time(),
+            'invalid_time'=>'',
+            'start_time'=>'',
+            'end_time'=>'',
+            'update_time'=>'',
+            'finish_time'=>'',
+            'delete_time'=>'',
+            'passage1'=>'',
+            'passage_array'=>[],
+            'status'=>1,
+            'thirdapp_id'=>'',
+            'user_no'=>'',
+            'user_type'=>'',
+            'express_info'=>'',
+            'payAfter'=>[],
+            'standard'=>0,
+            'discount'=>0,
+            'balance'=>0,
+            'group_no'=>'',
+            'group_leader'=>'',
+            'pay_no'=>'',
+            'limit'=>'',
+        ];
 
         if(isset($data['data']['user_no'])){
 

@@ -10,7 +10,25 @@ class Label extends BaseModel
 
     public static function dealAdd($data)
     {   
-        $standard = ['title'=>'','description'=>'','parentid'=>'','listorder'=>'','type'=>'','bannerImg'=>[],'thirdapp_id'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','status'=>1,'mainImg'=>[],'user_no'=>'','passage1'=>'','url'=>''];
+        $standard = [
+            'title'=>'',
+            'description'=>'',
+            'parentid'=>'',
+            'listorder'=>'',
+            'type'=>'',
+            'mainImg'=>[],
+            'bannerImg'=>[],
+            'thirdapp_id'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'status'=>1,
+            'user_no'=>'',
+            'passage1'=>'',
+            'url'=>'',
+            'img_array'=>[],
+        ];
+        
         $data['data'] = chargeBlank($standard,$data['data']);
         return $data;
         

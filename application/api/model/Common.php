@@ -23,7 +23,16 @@ use app\api\model\ThirdApp;
 use app\api\model\User;
 use app\api\model\UserAddress;
 use app\api\model\UserInfo;
-use app\api\model\WxFormId;;
+use app\api\model\WxFormId;
+use app\api\model\Project;
+use app\api\model\Process;
+use app\api\model\Operation;
+use app\api\model\Salesphone;
+use app\api\model\Statistics;
+use app\api\model\Coupon;
+use app\api\model\UserCoupon;
+use app\api\model\CouponRelation;
+use app\api\model\Auth;
 
 
 class Common extends Model{
@@ -95,11 +104,13 @@ class Common extends Model{
         try{
 
             if($FuncName=='update'){
+
                 $data['data']['update_time'] = time();
                 $model->dealUpdate($data);
                 $data['data'] = jsonDeal($data['data']);
                 $sqlStr = $sqlStr."update(\$data[\"data\"]);";
                 $finalRes = eval($sqlStr);
+
             }else{
                 if(isset($data['dataArray'])){
                     $finalRes = [];
@@ -436,11 +447,83 @@ class Common extends Model{
             return new UserInfo;
         }else if($dbTable=='WxFormId'){
             return new WxFormId;
+        }else if($dbTable=='Project'){
+            return new Project;
+        }else if($dbTable=='Process'){
+            return new Process;
+        }else if($dbTable=='Operation'){
+            return new Operation;
+        }else if($dbTable=='Salesphone'){
+            return new Salesphone;
+        }else if($dbTable=='Statistics'){
+            return new Statistics;
+        }else if($dbTable=='Coupon'){
+            return new Coupon;
+        }else if($dbTable=='UserCoupon'){
+            return new UserCoupon;
+        }else if($dbTable=='CouponRelation'){
+            return new CouponRelation;
+        }else if($dbTable=='Auth'){
+            return new Auth;
         }else{
             throw new ErrorMessage([
                 'msg' => 'tableName有误',
             ]);
         };
 
+    }
+
+
+    public static function imgManage($dbTable,$data)
+    {
+        //获取关联信息
+        $model = Loader::model($dbTable);
+        $sqlStr = preModelStr($data);
+        $sqlStr = $sqlStr."select();";
+        $info = eval($sqlStr);
+        $info = $model->dealGet(resDeal($info));
+        $info = $info[0];
+
+        if ($data['FuncName']=="add") {
+
+            if (!empty($info['img_array'])) {
+                
+                foreach ($info['img_array'] as $value) {
+                    
+                    $addImg = File::where('id', $value)->update(['relation_id' => $info['id'],'relation_table'=>$dbTable,'relation_status'=>1]);
+
+                }
+
+            }
+            
+        }elseif ($data['FuncName']=="update") {
+            
+            if (isset($data['data']['img_array'])) {
+                
+                foreach ($data['data']['img_array'] as $new_img) {
+
+                    /*判断新增的图片*/
+                    if (!in_array($new_img,$info['img_array'])) {
+                        
+                        $addImg = File::where('id', $new_img)->update(['relation_id' => $info['id'],'relation_table'=>$dbTable,'relation_status'=>1]);
+
+                    }
+                    
+                }
+
+                foreach ($info['img_array'] as $old_img) {
+                    
+                    /*判断删除的图片*/
+                    if (!in_array($old_img,$data['data']['img_array'])) {
+                        
+                        $delImg = File::where('id', $old_img)->update(['relation_status'=>-1]);
+
+                    }
+
+                }
+
+            }
+
+        }
     }
 }

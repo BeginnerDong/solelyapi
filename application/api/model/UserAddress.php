@@ -14,7 +14,24 @@ class UserAddress extends BaseModel
     public static function dealAdd($data)
     {   
         
-        $standard = ['name'=>'','phone'=>'','province'=>'','city'=>'','country'=>'','detail'=>'','longitude'=>'','latitude'=>'','user_no'=>'','thirdapp_id'=>'','isdefault'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','status'=>1,'user_type'=>''];
+        $standard = [
+            'name'=>'',
+            'phone'=>'',
+            'province'=>'',
+            'city'=>'',
+            'country'=>'',
+            'detail'=>'',
+            'longitude'=>'',
+            'latitude'=>'',
+            'user_no'=>'',
+            'thirdapp_id'=>'',
+            'isdefault'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'status'=>1,
+            'user_type'=>''
+        ];
 
 
         if(isset($data['data']['user_no'])){

@@ -3,19 +3,42 @@
 namespace app\api\controller\v1\base;
 
 
-
 use think\Request as Request; 
-
 use think\Controller;
-
 use think\Cache;
-
 use think\Loader;
-
-
 
 use app\api\controller\BaseController;
 
+use app\api\controller\v1\weFunc\Base as weFuncBase;
+use app\api\controller\v1\weFunc\Menu as weFuncMenu;
+use app\api\controller\v1\weFunc\Message as weFuncMessage;
+use app\api\controller\v1\weFunc\Project as weFuncProject;
+use app\api\controller\v1\weFunc\Source as weFuncSource;
+
+
+
+use app\api\service\base\Common;
+use app\api\service\base\CouponPay;
+use app\api\service\base\FtpFile;
+use app\api\service\base\Label;
+use app\api\service\base\Pay;
+use app\api\service\base\ProgrameToken;
+use app\api\service\base\QiniuFile;
+use app\api\service\base\Qr;
+use app\api\service\base\SaeStorage;
+use app\api\service\base\SmsAli;
+use app\api\service\base\SmsTencent;
+use app\api\service\base\ThirdApp;
+use app\api\service\base\User;
+use app\api\service\base\WxPay;
+
+use app\api\service\func\Common as CommonService;
+use app\api\service\func\Coupon;
+use app\api\service\func\Order;
+use app\api\service\func\Token;
+
+use app\api\service\project\Solely;
 
 
 
@@ -26,23 +49,8 @@ class Main extends BaseController{
 
 
 
-
-
-    protected $beforeActionList = [
-
-        /*'checkID' => ['only' => 'UpdateAdmin,DelAdmin,getInfo'],
-
-        'checkPrimary' => ['only' => 'AddAdmin,UpdateAdmin,DelAdmin,getAllAdmin,getAdminInfo']*/
-
-    ];
-
-
-
-
-
-     //主方法
-
-    public static function Base(){
+    public static function Base()
+    {
 
         $data = Request::instance()->param();
 
@@ -50,23 +58,18 @@ class Main extends BaseController{
 
         $data = transformExcel($data);
 
+        $service = self::loaderService($data['serviceName'],$data);
 
-
-        $url  = "app\api\service\base\\".$data['serviceName'];
-
-        $service = new $url($data);
-
-        return $service::$data['FuncName']($data);
+        $FuncName = $data['FuncName'];
+        
+        return $service::$FuncName($data);
 
     }
 
 
 
-    //主方法
-
-    public static function Func(){
-
-
+    public static function Func()
+    {
 
         $data = Request::instance()->param();
 
@@ -74,23 +77,26 @@ class Main extends BaseController{
 
         $data = transformExcel($data);
 
+        if ($data['serviceName']=="Common") {
 
+            $service = new CommonService($data);
+            
+        }else{
+            
+            $service = self::loaderService($data['serviceName'],$data);
 
-        $url  = "app\api\service\\func\\".$data['serviceName'];
+        }
 
-        $service = new $url($data);
-
-        return $service::$data['FuncName']($data);
+        $FuncName = $data['FuncName'];
+        
+        return $service::$FuncName($data);
 
     }
 
 
 
-    //微信主方法
-
-    public static function WeFunc(){
-
-
+    public static function WeFunc()
+    {
 
         $data = Request::instance()->param();
 
@@ -98,22 +104,36 @@ class Main extends BaseController{
 
         $data = transformExcel($data);
 
+        switch ($data['WeFuncName']) {
+            case 'Base':
+                $WeFunc = new weFuncBase($data);
+                break;
+            case 'Menu':
+                $WeFunc = new weFuncMenu($data);
+                break;
+            case 'Message':
+                $WeFunc = new weFuncMessage($data);
+                break;
+            case 'Project':
+                $WeFunc = new weFuncProject($data);
+                break;
+            case 'Source':
+                $WeFunc = new weFuncSource($data);
+                break;
+            default:
+                break;
+        }
 
-        $url  = "app\api\controller\\v1\\weFunc\\".$data['WeFuncName'];
+        $FuncName = $data['FuncName'];
 
-        $WeFunc = new $url($data);
-
-        return $WeFunc::$data['FuncName']($data);
+        return $WeFunc::$FuncName($data);
 
     }
 
     
 
-    //common
-
-    public static function Common(){
-
-
+    public static function Common()
+    {
 
         $data = Request::instance()->param();
 
@@ -121,24 +141,18 @@ class Main extends BaseController{
 
         $data = transformExcel($data);
 
+        $service = self::loaderService('Common',$data);
 
-
-
-        $url  = "app\api\service\base\\Common";
-
-        $service = new $url($data);
-
-        return $service::$data['FuncName']($data);
+        $FuncName = $data['FuncName'];
+        
+        return $service::$FuncName($data);
 
     }
 
 
 
-    //主方法
-
-    public static function Project(){
-
-
+    public static function Project()
+    {
 
         $data = Request::instance()->param();
 
@@ -146,16 +160,59 @@ class Main extends BaseController{
 
         $data = transformExcel($data);
 
+        $service = self::loaderService($data['serviceName'],$data);
 
-
-        $url  = "app\api\service\\project\\".$data['serviceName'];
-
-        $service = new $url($data);
-
-
-
-        return $service::$data['FuncName']($data);
+        $FuncName = $data['FuncName'];
+        
+        return $service::$FuncName($data);
 
     }
 
+
+
+    public static function loaderService($serviceName,$data)
+    {
+
+        if($serviceName=='Common'){
+            return new Common($data);
+        }else if($serviceName=='CouponPay'){
+            return new CouponPay($data);
+        }else if($serviceName=='FtpFile'){
+            return new FtpFile($data);
+        }else if($serviceName=='Label'){
+            return new Label($data);
+        }else if($serviceName=='Pay'){
+            return new Pay($data);
+        }else if($serviceName=='ProgrameToken'){
+            return new ProgrameToken($data);
+        }else if($serviceName=='QinFile'){
+            return new QinFile($data);
+        }else if($serviceName=='Qr'){
+            return new Qr($data);
+        }else if($serviceName=='SaeStorage'){
+            return new SaeStorage($data);
+        }else if($serviceName=='SmsAli'){
+            return new SmsAli($data);
+        }else if($serviceName=='SmsTencent'){
+            return new SmsTencent($data);
+        }else if($serviceName=='ThirdApp'){
+            return new ThirdApp($data);
+        }else if($serviceName=='User'){
+            return new User($data);
+        }else if($serviceName=='WxPay'){
+            return new WxPay($data);
+        }else if($serviceName=='Coupon'){
+            return new Coupon($data);
+        }else if($serviceName=='Order'){
+            return new Order($data);
+        }else if($serviceName=='Token'){
+            return new Token($data);
+        }else if($serviceName=='Solely'){
+            return new Solely($data);
+        }else{
+            throw new ErrorMessage([
+                'msg' => 'serviceName有误',
+            ]);
+        };
+    }
 }

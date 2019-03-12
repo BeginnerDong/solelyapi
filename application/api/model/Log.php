@@ -13,7 +13,26 @@ class Log extends BaseModel
     public static function dealAdd($data)
     {   
         
-        $standard = ['title'=>'','result'=>'','content'=>'','create_time'=>time(),'user_id'=>'','status'=>1,'thirdapp_id'=>'','type'=>'','user_no'=>'','order_no'=>'','user_type'=>''];
+        $standard = [
+            'title'=>'',
+            'result'=>'',
+            'content'=>'',
+            'create_time'=>time(),
+            'user_no'=>'',
+            'thirdapp_id'=>'',
+            'type'=>'',
+            'user_type'=>''
+            'status'=>1,
+            'update_time'=>'',
+            'order_no'=>'',
+            'pay_no'=>'',
+            'transaction_id'=>'',
+            'payAfter'=>[],
+            'behavior'=>'',
+            'passage'=>'',
+            'pay_info'=>'',
+        ];
+        
         if(isset($data['data']['user_no'])){
             $res = User::get(['user_no' => $data['data']['user_no']]);
             if($res){

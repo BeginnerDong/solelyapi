@@ -13,6 +13,7 @@ use think\Controller;
 use app\api\model\FlowLog;
 use app\api\model\Log;
 use app\api\service\base\Pay as PayService;
+use app\api\service\base\CouponPay as CouponPayService;
 use app\api\service\beforeModel\Common as BeforeModel;
 use think\Request as Request;
 use app\lib\exception\TokenException;
@@ -71,6 +72,13 @@ class WXPayReturn extends Controller
             };
             $payLog = $payLog['data'][0];
 
+            if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['coupon'])) {
+                $modelData = [];
+                $modelData['searchItem']['pay_no'] = $orderId;
+                $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
+                $this->dealCoupon($data,$couponInfo,$TOTAL_FEE,$payLog);
+                return true;
+            }
 
             $modelData = [];
             $modelData['searchItem']['pay_no'] = $orderId;
@@ -83,6 +91,7 @@ class WXPayReturn extends Controller
                     $this->dealOrder($data,$value,$TOTAL_FEE,$payLog);
                 };
             }
+            return true;
 
         }else{
 
@@ -119,6 +128,7 @@ class WXPayReturn extends Controller
             'trade_info'=>'微信支付',
             'thirdapp_id'=>$payLog['thirdapp_id'],
             'user_no'=>$payLog['user_no'],
+            'relation_table'=>'order',
             'extra_info'=>$extra_info,
             'payInfo'=>[
                 'appid'=>$data['APPID'],
@@ -142,5 +152,40 @@ class WXPayReturn extends Controller
         unset($modelData['pay_info']);
 
         PayService::pay($modelData,true);
+    }
+
+    public function dealCoupon($data,$couponInfo,$TOTAL_FEE,$payLog){
+
+        $modelData = [];
+        $modelData['data'] = array(
+            'type' => 1,
+            'count'=>-$TOTAL_FEE,
+            'pay_no'=>$payLog['pay_no'],
+            'trade_info'=>'微信支付',
+            'thirdapp_id'=>$payLog['thirdapp_id'],
+            'user_no'=>$payLog['user_no'],
+            'relation_table'=>'coupon',
+            'payInfo'=>[
+                'appid'=>$data['APPID'],
+                'mch_id'=>$data['MCH_ID'],
+                'transaction_id'=>$data['TRANSACTION_ID'],
+                'out_trade_no'=>$data['OUT_TRADE_NO'],
+            ]
+        );
+
+        $modelData['FuncName'] = 'add';
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = $payLog;
+        //取出第一次调取支付时记录的信息
+        $modelData = array_merge($modelData,$payLog['pay_info']);
+        $modelData['wxPayStatus'] = 1;
+        $modelData['searchItem'] = [
+            'pay_no'=>$payLog['pay_no']
+        ];
+        unset($modelData['pay_info']);
+
+        CouponPayService::pay($modelData,true);
+
     }
 }

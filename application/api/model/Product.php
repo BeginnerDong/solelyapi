@@ -1,11 +1,6 @@
 <?php
 
-
-
 namespace app\api\model;
-
-
-
 
 
 use think\Model;
@@ -23,24 +18,55 @@ use app\lib\exception\ErrorMessage;
 
 
 class Product extends BaseModel
-
 {
 
 
 
-
-
     public static function dealAdd($data)
-
     {   
 
-
-
-        $standard = ['title'=>'','description'=>'','content'=>'','mainImg'=>[],'bannerImg'=>[],'price'=>0,'stock'=>'','discount'=>'','type'=>1,'category_id'=>'','sku_array'=>[],'sku_item'=>[],'spu_array'=>[],'spu_item'=>[],'passage1'=>'','passage2'=>'','passage_array'=>[],'view_count'=>'','listorder'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','deadline'=>'','thirdapp_id'=>'','user_no'=>'','standard'=>0,'onShelf'=>1,'status'=>1,'product_no'=>makeProductNo($data['data']['category_id'])];
-
-        
-
-
+        $standard = [
+            'title'=>'',
+            'description'=>'',
+            'content'=>'',
+            'mainImg'=>[],
+            'bannerImg'=>[],
+            'price'=>0,
+            'stock'=>'',
+            'discount'=>'',
+            'type'=>1,
+            'category_id'=>'',
+            'sku_array'=>[],
+            'sku_item'=>[],
+            'spu_array'=>[],
+            'spu_item'=>[],
+            'passage1'=>'',
+            'passage2'=>'',
+            'passage_array'=>[],
+            'view_count'=>'',
+            'listorder'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'start_time'=>'',
+            'end_time'=>'',
+            'thirdapp_id'=>'',
+            'user_no'=>'',
+            'user_type'=>'',
+            'onShelf'=>1,
+            'status'=>1,
+            'product_no'=>makeProductNo($data['data']['category_id']),
+            'standard'=>0,
+            'group_stock'=>0,
+            'balance'=>0,
+            'limit'=>'',
+            'behavior'=>'',
+            'sale_count'=>'',
+            'use_limit'=>'',
+            'duration'=>'',
+            'score'=>'',
+            'img_array'=>[],
+        ];
 
         if($data['data']['category_id']!=0){
 
@@ -57,8 +83,6 @@ class Product extends BaseModel
             };
 
         };
-
-        
 
         $label = [];
 
@@ -78,7 +102,6 @@ class Product extends BaseModel
 
         };
 
-        
 
         if(!empty($label)){
 
@@ -106,8 +129,6 @@ class Product extends BaseModel
         $data['data'] = chargeBlank($standard,$data['data']);
         return $data;
 
-
-
     }
 
 
@@ -115,43 +136,32 @@ class Product extends BaseModel
 
 
     public static function dealGet($data)
-
     {   
 
+        foreach ($data as $key => $value) {
 
+            if($value['category_id']!=0){
 
-        
+                $label = array();
 
-            foreach ($data as $key => $value) {
+                array_push($label,$value['category_id']);
+                $label = array_keys(array_flip($label) + array_flip($value['sku_array'])+ array_flip($value['sku_item'])+ array_flip($value['spu_array'])+ array_flip($value['spu_item']));
 
-                if($value['category_id']!=0){
+                $map['id'] = ['in',$label];
 
-                    $label = array();
+                $res = resDeal((new label())->where($map)->select());
 
-                    array_push($label,$value['category_id']);
-                    $label = array_keys(array_flip($label) + array_flip($value['sku_array'])+ array_flip($value['sku_item'])+ array_flip($value['spu_array'])+ array_flip($value['spu_item']));
+                $res = clist_to_tree($res);
 
-                    $map['id'] = ['in',$label];
+                $res = changeIndexArray('id',$res);
 
-                    $res = resDeal((new label())->where($map)->select());
+                $data[$key]['label'] = $res;
 
-                    $res = clist_to_tree($res);
+            };
 
-                    $res = changeIndexArray('id',$res);
-
-                    $data[$key]['label'] = $res;
-
-                };
-
-            }; 
-
-        
-
-               
+        }; 
 
         return $data;
-
-        
 
     }
 
@@ -159,19 +169,12 @@ class Product extends BaseModel
 
 
 
-
-
     public static function dealUpdate($data)
-
     {   
 
         if(isset($data['data'])&&(isset($data['data']['status'])||isset($data['data']['spu_item']))){
 
-            
-
             $product = resDeal((new Product())->where($data['searchItem'])->select());
-
-
 
             if(isset($data['data']['status'])){
 
@@ -187,15 +190,9 @@ class Product extends BaseModel
 
                 $res = (new Sku())->where('product_no','in',$product_no)->update(['status'=>$data['data']['status']]);
 
-                
-
             };
 
-
-
             if(isset($data['data']['spu_item'])){
-
-
 
                 $new_array = json_decode($data['data']['spu_item']);
 
@@ -203,17 +200,11 @@ class Product extends BaseModel
 
                     $label = [];
 
-                    
-
                     $map['relation_two'] = ['in',$value['spu_item']];
 
                     $map['relation_one'] = ['=',$value['product_no']];
 
-                    
-
                     $res = (new Relation())->where($map)->delete();
-
-
 
                     foreach ($new_array as $c_key => $c_value) {
 
@@ -233,31 +224,19 @@ class Product extends BaseModel
 
                     };
 
-
-
                     (new Relation())->saveAll($label);
-
-                    
 
                 };
 
-                
-
             };
 
-
-
             if(isset($data['data']['spu_array'])){
-
-
 
                 $new_array = json_decode($data['data']['spu_item']);
 
                 foreach ($product as $key => $value) {
 
                     $label = [];
-
-
 
                     $res = (new Relation())->where('relation_two','in',$value['spu_array'])->delete();
 
@@ -287,29 +266,14 @@ class Product extends BaseModel
 
         }
 
-        
-
-        
-
-
-
-
-
-        
-
     }
 
 
 
 
 
-
-
     public static function dealRealDelete($data)
-
-    {   
-
-
+    {
 
     	$res = (new Product())->where($data['map'])->select();
 
@@ -329,12 +293,6 @@ class Product extends BaseModel
 
         (new Relation())->where('relation_one','in',$product_no)->delete();
 
-        
-
     }
-
-
-
-
 
 }

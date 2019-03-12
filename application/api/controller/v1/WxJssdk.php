@@ -27,6 +27,7 @@ class WxJssdk
 		
 	}
 
+
 	public function getSignPackage() {
 
 		$param = Request::instance()->param();
@@ -48,7 +49,8 @@ class WxJssdk
 		  "timestamp" => $timestamp,
 		  "url"       => $url,
 		  "signature" => $signature,
-		  "rawString" => $string
+		  "rawString" => $string,
+		  "access_token" => $config['access_token']
 		);
 		return $signPackage; 
 	}
@@ -64,9 +66,13 @@ class WxJssdk
 			
 			$config['appid'] = $thirdRes['data'][0]['wx_appid'];
 			$config['appsecret'] = $thirdRes['data'][0]['wx_appsecret'];
-			$config['encodingaeskey'] = $thirdRes['data'][0]['encodingaeskey'];
-			$config['access_token'] = $thirdRes['data'][0]['access_token'];
-			$config['access_token_expire'] = $thirdRes['data'][0]['access_token_expire'];
+
+			if($thirdRes['data'][0]['access_token']&&$thirdRes['data'][0]['access_token_expire']-300>time()){
+				$config['access_token'] = $thirdRes['data'][0]['access_token'];
+			}else{
+				$config['access_token'] = $this->getAccessToken($config);
+			};
+
 			return $config;
 		}else{
 			return false;
@@ -86,16 +92,12 @@ class WxJssdk
 
 		// jsapi_ticket 应该全局存储与更新，以下代码以写入到文件中做示例
 		
-		
+		    
 		if (!Cache::get('jsapi_ticket')) {
-		  if($config['access_token']&&$config['access_token_expire']>time()){
-		  	$access_token = $config['access_token'];
-		  }else{
-		  	$access_token = $this->getAccessToken($config);
-		  };
+		  
 
 		  
-		  $res = curl_get("https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=".$access_token."&type=jsapi");
+		  $res = curl_get("https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=".$config['access_token']."&type=jsapi");
 		  
 		  $res = json_decode($res,true);
 		  

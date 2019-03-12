@@ -22,7 +22,17 @@ class WxFormId extends BaseModel
 
         
 
-        $standard = ['form_id'=>'','user_no'=>'','thirdapp_id'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','end_time'=>'','status'=>1];
+        $standard = [
+            'form_id'=>'',
+            'user_no'=>'',
+            'user_type'=>'',
+            'thirdapp_id'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'end_time'=>'',
+            'status'=>1,
+        ];
 
         if(isset($data['data']['user_no'])){
 

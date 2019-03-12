@@ -16,7 +16,32 @@ class UserInfo extends Model
     public static function dealAdd($data)
     {   
         
-        $standard = ['mainImg'=>[],'name'=>'','phone'=>'','gender'=>'','email'=>'','address'=>'','level'=>'','deadline'=>'','passage_array'=>[],'passage1'=>'','signin_time'=>'','thirdapp_id'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','user_no'=>'','user_type'=>'','idCard'=>'','score_ratio'=>1,'score'=>0,'balance'=>0];
+        $standard = [
+            'mainImg'=>[],
+            'name'=>'',
+            'phone'=>'',
+            'gender'=>'',
+            'email'=>'',
+            'address'=>'',
+            'score'=>0,
+            'balance'=>0,
+            'level'=>'',
+            'deadline'=>'',
+            'passage_array'=>[],
+            'passage1'=>'',
+            'signin_time'=>'',
+            'thirdapp_id'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'status'=>1,
+            'score_ratio'=>1,
+            'user_no'=>'',
+            'user_type'=>'',
+            'idCard'=>'',
+            'behavior'=>'',
+            'img_array'=>[],
+        ];
 
         if(isset($data['data']['user_no'])){
             $res = User::get(['user_no' => $data['data']['user_no']]);

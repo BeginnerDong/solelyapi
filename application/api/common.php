@@ -497,7 +497,7 @@ function jsonDeal($data){
 
 function resDeal($data)
 {   
-    $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info'];
+    $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array'];
     
     
     if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){

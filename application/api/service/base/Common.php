@@ -16,10 +16,10 @@ class Common{
         
     }
 
-    //添加admin时判断name是否重复
-    
-    public static function add($data,$inner=false){
 
+    
+    public static function add($data,$inner=false)
+    {
 
         $scopeArr = [
             'Order'=>config('scope.one'),
@@ -35,6 +35,15 @@ class Common{
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
+            'Project'=>config('scope.two'),
+            'Process'=>config('scope.two'),
+            'Operation'=>config('scope.two'),
+            'Salesphone'=>config('scope.two'),
+            'Statistics'=>config('scope.two'),
+            'Coupon'=>config('scope.one'),
+            'UserCoupon'=>config('scope.one'),
+            'CouponRelation'=>config('scope.one'),
+            'Auth'=>config('scope.two'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){
@@ -92,6 +101,15 @@ class Common{
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
+            'Project'=>config('scope.two'),
+            'Process'=>config('scope.two'),
+            'Operation'=>config('scope.two'),
+            'Salesphone'=>config('scope.two'),
+            'Statistics'=>config('scope.two'),
+            'Coupon'=>[],
+            'UserCoupon'=>config('scope.two'),
+            'CouponRelation'=>config('scope.six'),
+            'Auth'=>config('scope.two'),
         ];
 
         
@@ -102,8 +120,6 @@ class Common{
             };
         };
         
-
-
         if(isset($scopeArr[$data['modelName']])){
             if(!empty($scopeArr[$data['modelName']])){
                 $scope = $scopeArr[$data['modelName']];
@@ -140,12 +156,10 @@ class Common{
             ]);
         };
         
-           
     }
 
-    public static function update($data,$key='更新',$inner=false){
-
-        
+    public static function update($data,$key='更新',$inner=false)
+    {
 
         $scopeArr = [
             'Order'=>config('scope.two'),
@@ -161,7 +175,17 @@ class Common{
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
+            'Project'=>config('scope.two'),
+            'Process'=>config('scope.six'),
+            'Operation'=>config('scope.two'),
+            'Salesphone'=>config('scope.two'),
+            'Statistics'=>config('scope.two'),
+            'Coupon'=>config('scope.one'),
+            'UserCoupon'=>config('scope.two'),
+            'CouponRelation'=>config('scope.one'),
+            'Auth'=>config('scope.two'),
         ];
+        
         if(isset($scopeArr[$data['modelName']])){
             $scope = $scopeArr[$data['modelName']];
             (new CommonValidate())->goCheck('one',$data);
@@ -180,7 +204,10 @@ class Common{
            
     }
 
-    public static function delete($data,$inner=false){
+
+
+    public static function delete($data,$inner=false)
+    {
 
         $scopeArr = [
             'Order'=>config('scope.two'),
@@ -212,7 +239,11 @@ class Common{
 
     }
 
-    public static function realDelete($data,$key='真实删除',$inner=false){
+
+
+    public static function realDelete($data,$key='真实删除',$inner=false)
+    {
+
         $data = preSearch($data);
 
         $scopeArr = [
@@ -229,7 +260,6 @@ class Common{
             checkTokenAndScope($data,$scope);
         };
         
-        
         $res =  BeforeModel::CommonDelete($data['modelName'],$data);
         if($inner){
             return $res;
@@ -239,9 +269,9 @@ class Common{
         
     }
 
-    public static function compute($data,$inner=false){
+    public static function compute($data,$inner=false)
+    {
        
-        
         foreach ($data['data'] as $key => $value) {
             if(isset($value['searchItem'])){
                 if(!isset($value['searchItem']['status'])){

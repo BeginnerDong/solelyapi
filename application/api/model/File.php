@@ -13,7 +13,26 @@ class File extends Model
     public static function dealAdd($data)
     {   
         
-        $standard = ['title'=>'','path'=>'','thirdapp_id'=>'','size'=>0,'create_time'=>time(),'type'=>1,'user_no'=>'','relation_table'=>'','relation'=>'','status'=>1,'relation_id'=>'','prefix'=>'','user_type'=>'','origin'=>'','behavior'=>'','param'=>''];
+        $standard = [
+            'title'=>'',
+            'path'=>'',
+            'thirdapp_id'=>'',
+            'size'=>0,
+            'create_time'=>time(),
+            'update_time'=>'',
+            'type'=>'',
+            'user_no'=>'',
+            'relation_table'=>'',
+            'status'=>1,
+            'relation_id'=>'',
+            'relation_status'=>1,
+            'prefix'=>'',
+            'user_type'=>'',
+            'origin'=>'',
+            'behavior'=>'',
+            'param'=>'',
+        ];
+        
         if(isset($data['data']['user_no'])){
             $res = User::get(['user_no' => $data['data']['user_no']]);
             if($res){

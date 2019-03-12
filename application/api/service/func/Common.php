@@ -18,8 +18,6 @@ use app\api\model\User;
 
 use app\api\model\UserInfo;
 
-
-
 use app\api\validate\CommonValidate;
 
 use app\lib\exception\SuccessMessage;
@@ -28,49 +26,20 @@ use app\lib\exception\ErrorMessage;
 
 
 
-
-
-
-
-
-
 class Common{
-
-
-
-    
-
-    
-
-    
-
 
 
     function __construct($data){
 
-        
-
     }
 
 
-
-    
-
-
-
-
-
-
-
-    public static function addAdmin($data){
-
-
+    public static function addAdmin($data)
+    {
 
         (new CommonValidate())->goCheck('four',$data);
 
         checkTokenAndScope($data,20);
-
-
 
         //判断用户名是否重复
 
@@ -98,31 +67,20 @@ class Common{
 
         CommonService::add($data);
 
-       
-
     }
 
 
 
-    
-
-
-
-    public static function loginByUp($data){
-
-        
+    public static function loginByUp($data)
+    {
 
         (new CommonValidate())->goCheck('three',$data);
-
-
 
         $modelData = [];
 
         $modelData['searchItem']['login_name'] = $data['login_name'];
 
         $loginRes = BeforeModel::CommonGet("User",$modelData);
-
-        
 
         if(empty($loginRes['data'])){
 
@@ -136,19 +94,13 @@ class Common{
 
         $loginRes = $loginRes['data'][0];
 
-        
-
         //根据返回结果查询关联商户信息
 
         $modelData = [];
 
         $modelData['searchItem']['id'] = $loginRes['thirdapp_id'];
 
-
-
         $ThirdAppRes = BeforeModel::CommonGet("ThirdApp",$modelData);
-
-       
 
         if(empty($ThirdAppRes['data'])){
 
@@ -167,8 +119,6 @@ class Common{
             ]);
 
         };
-
-
 
         //判断密码是否正确&&获取储存token
 
@@ -190,8 +140,6 @@ class Common{
 
             $upt = BeforeModel::CommonSave("User",$modelData);
 
-
-
             if($upt == 1){
 
                 //生成token并放入缓存
@@ -210,13 +158,32 @@ class Common{
 
                 $loginRes['thirdApp'] = $ThirdAppRes['data'][0];
 
+                //查询权限
+                $modelData = [];
+
+                $modelData['searchItem']['user_no'] = $loginRes['user_no'];
+
+                $authList = BeforeModel::CommonGet("Auth",$modelData);
+
+                $auth = [];
+
+                if (count($authList['data'])>0) {
+                    
+                    foreach ($authList['data'] as $key => $value) {
+                       
+                       array_push($auth,$value['path']);
+
+                    }
+
+                };
+
+                $loginRes['auth'] = $auth;
+
                 $tokenAndToken = ['token'=>$res,'info'=>$loginRes,'solely_code'=>100000,'msg'=>'登录成功'];
 
                 Cache::set($res,$loginRes,3600);
 
                 return $tokenAndToken;
-
-
 
                 throw new SuccessMessage([
 
@@ -248,17 +215,12 @@ class Common{
 
         }
 
-
-
     }
 
 
 
-    public static function getRankByUserInfo($data){
-
-
-
-
+    public static function getRankByUserInfo($data)
+    {
 
         $res = UserInfo::where([
 
@@ -267,8 +229,6 @@ class Common{
             'user_type'=>0,
 
         ])->order($data['order'])->limit(5)->select();
-
-        
 
         $rankInfo = [];
 
@@ -310,17 +270,12 @@ class Common{
 
         ]);
 
-
-
-
-
     }
 
 
 
-    public static function signIn($data){
-
-
+    public static function signIn($data)
+    {
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -329,8 +284,6 @@ class Common{
         $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 
         $user_no = Cache::get($data['token'])['user_no'];
-
-
 
         $modelData = [];
 
@@ -348,15 +301,9 @@ class Common{
 
         $modelData['FuncName'] = 'add';
 
-        
-
-
-
         Db::startTrans();
 
         try{
-
-            
 
             $res = BeforeModel::CommonSave('Log',$modelData);
 
@@ -410,16 +357,9 @@ class Common{
 
             Db::commit(); 
 
-            
-
-
-
         } catch (\Exception $e) {
 
             // 回滚事务
-
-            
-
             if(isset($e->msg)){
 
                 throw new ErrorMessage([
@@ -440,8 +380,6 @@ class Common{
 
             };
 
-            
-
             Db::rollback();
 
         };
@@ -454,16 +392,12 @@ class Common{
 
         ]); 
 
-        
-
-
-
     }
 
 
 
-
-    public static function decryptWxInfo($data){
+    public static function decryptWxInfo($data)
+    {
 
         (new CommonValidate())->goCheck('one',$data);
         checkTokenAndScope($data,[]);
@@ -491,17 +425,6 @@ class Common{
             'info'=>json_decode($result,true)
         ]);
 
-
     }
-
-
-
-
-
-    
-
-
-
-
 
 }

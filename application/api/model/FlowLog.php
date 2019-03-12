@@ -23,7 +23,27 @@ class FlowLog extends Model
 
     {   
 
-        $standard = ['type'=>'','count'=>'','relation_id'=>'','create_time'=>time(),'delete_time'=>'','status'=>1,'trade_info'=>'','relation_table'=>'','thirdapp_id'=>'','payInfo'=>'','product_no'=>'','order_no'=>'','user_no'=>'','user_type'=>0,'behavior'=>1,'update_time'=>''];
+        $standard = [
+            'type'=>'',
+            'count'=>'',
+            'relation_id'=>'',
+            'standard_id'=>'',
+            'create_time'=>time(),
+            'delete_time'=>'',
+            'status'=>1,
+            'trade_info'=>'',
+            'relation_table'=>'',
+            'thirdapp_id'=>'',
+            'order_no'=>'',
+            'pay_no'=>'',
+            'product_no'=>'',
+            'user_no'=>'',
+            'user_type'=>'',
+            'update_time'=>'',
+            'behavior'=>1,
+            'payInfo'=>'',
+            'extra_info'=>'',
+        ];
 
         if(isset($data['data']['user_no'])){
 

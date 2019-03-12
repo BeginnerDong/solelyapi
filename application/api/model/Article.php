@@ -14,7 +14,32 @@ class Article extends BaseModel
 
     public static function dealAdd($data)
     {   
-        $standard = ['title'=>'','small_title'=>'','content'=>'','menu_id'=>'','mainImg'=>[],'bannerImg'=>[],'contactPhone'=>'','keywords'=>'','description'=>'','listorder'=>'','view_count'=>'','thirdapp_id'=>'','passage_array'=>[],'passage1'=>'','passage2'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','status'=>1,'user_no'=>'','spu_array'=>[],'spu_item'=>[]];
+        $standard = [
+            'title'=>'',
+            'small_title'=>'',
+            'description'=>'',
+            'content'=>'',
+            'mainImg'=>[],
+            'bannerImg'=>[],
+            'contactPhone'=>'',
+            'keywords'=>'',
+            'menu_id'=>'',
+            'listorder'=>'',
+            'view_count'=>0,
+            'thirdapp_id'=>'',
+            'passage1'=>'',
+            'passage2'=>'',
+            'passage_array'=>[],
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'status'=>1,
+            'user_no'=>'',
+            'spu_array'=>[],
+            'spu_item'=>[],
+            'img_array'=>[],
+        ];
+        
         $data['data'] = chargeBlank($standard,$data['data']);
         $res = Label::get(['id' => $data['data']['menu_id']]);
         if(!$res){

@@ -14,7 +14,47 @@ class ThirdApp extends BaseModel{
     public static function dealAdd($data)
     {   
 
-        $standard = ['appid'=>'','appsecret'=>'','app_description'=>'','name'=>'','codeName'=>'','distribution'=>'','distributionRule'=>'','custom_rule'=>'','phone'=>'','mainImg'=>[],'smsKey_ali'=>'','smsSecret_ali'=>'','smsID_tencet'=>'','smsKey_tencet'=>'','scope'=>'','scope_description'=>'','app_type'=>'','mchid'=>'','wxkey'=>'','wx_token'=>'','wxgh_id'=>'','wx_appid'=>'','wx_appsecret'=>'','encodingaeskey'=>'','access_token'=>'','access_token_expire'=>'','aestype'=>'','picstandard'=>'','picstorage'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','invalid_time'=>'','view_count'=>'','status'=>1,'child_array'=>[],'user_no'=>''];
+        $standard = [
+            'appid'=>'',
+            'appsecret'=>'',
+            'app_description'=>'',
+            'name'=>'',
+            'codeName'=>'',
+            'distribution_level'=>'',
+            'distributionRule'=>'',
+            'custom_rule'=>'',
+            'phone'=>'',
+            'mainImg'=>[],
+            'smsKey_ali'=>'',
+            'smsSecret_ali'=>'',
+            'smsID_tencet'=>'',
+            'smsKey_tencet'=>'',
+            'scope'=>'',
+            'scope_description'=>'',
+            'app_type'=>'',
+            'mchid'=>'',
+            'wxkey'=>'',
+            'wx_token'=>'',
+            'wxgh_id'=>'',
+            'wx_appid'=>'',
+            'wx_appsecret'=>'',
+            'encodingaeskey'=>'',
+            'access_token'=>'',
+            'access_token_expire'=>'',
+            'aestype'=>'',
+            'picstandard'=>'',
+            'picstorage'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'invalid_time'=>'',
+            'view_count'=>'',
+            'status'=>1,
+            'parentid'=>1,
+            'child_array'=>[],
+            'user_no'=>'',
+            'img_array'=>[],
+        ];
 
         $data['data'] = chargeBlank($standard,$data['data']);
         return $data;

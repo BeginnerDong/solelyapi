@@ -15,7 +15,25 @@ class OrderItem extends BaseModel
     public static function dealAdd($data)
     {   
         
-        $standard = ['order_no'=>'','product_id'=>'','count'=>'','snap_product'=>[],'isremark'=>'','thirdapp_id'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','passage1'=>'','passage2'=>'','passage_array'=>[],'status'=>1,'user_no'=>'','user_type'=>''];
+        $standard = [
+            'order_no'=>'',
+            'product_id'=>'',
+            'count'=>'',
+            'snap_product'=>[],
+            'isremark'=>'',
+            'thirdapp_id'=>'',
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'passage1'=>'',
+            'passage2'=>'',
+            'passage_array'=>[],
+            'status'=>1,
+            'user_no'=>'',
+            'user_type'=>'',
+            'sku_id'=>'',
+            'pay_status'=>'',
+        ];
 
         if(isset($data['data']['user_no'])){
             $res = User::get(['user_no' => $data['data']['user_no']]);

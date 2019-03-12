@@ -15,7 +15,31 @@ class User extends Model{
     public static function dealAdd($data)
     {   
         
-        $standard = ['login_name'=>'','password'=>'','wx_mainImg'=>'','create_time'=>time(),'update_time'=>'','delete_time'=>'','lastlogintime'=>'','thirdapp_id'=>'','primary_scope'=>10,'scope'=>'','status'=>1,'user_type'=>0,'behavior'=>'','user_no'=>'','openid'=>'','parent_no'=>'','child_array'=>'','nickname'=>'','passage1'=>'','headImgUrl'=>''];
+        $standard = [
+            'login_name'=>'',
+            'password'=>'',
+            'mainImg'=>[],
+            'create_time'=>time(),
+            'update_time'=>'',
+            'delete_time'=>'',
+            'lastlogintime'=>'',
+            'thirdapp_id'=>'',
+            'primary_scope'=>10,
+            'scope'=>'',
+            'status'=>1,
+            'user_type'=>0,
+            'behavior'=>'',
+            'user_no'=>'',
+            'openid'=>'',
+            'parent_no'=>'',
+            'child_array'=>[],
+            'nickname'=>'',
+            'passage1'=>'',
+            'headImgUrl'=>'',
+            'passage_array'=>[],
+            'img_array'=>[],
+        ];
+
         $data['data'] = chargeBlank($standard,$data['data']);
         return $data;
         

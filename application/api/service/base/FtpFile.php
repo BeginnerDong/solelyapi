@@ -36,12 +36,9 @@ class FtpFile{
         (new CommonValidate())->goCheck('one',$data);
 
         checkTokenAndScope($data,config('scope.two'));
-
         
 
         $userinfo = Cache::get($data['token']);
-
-
 
         $file = request()->file();
 
@@ -52,7 +49,6 @@ class FtpFile{
             // 移动到框架应用根目录/public/uploads/ 目录下
 
             $info = $file->move(ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id']);
-
 
             if($info){
 
@@ -95,13 +91,9 @@ class FtpFile{
 
                 $modelData['FuncName'] = 'add';
 
-
-
                 $res = BeforeModel::CommonSave('File',$modelData);
 
                 if ($res>0) {
-
-
 
                     if(!$inner){
 
@@ -109,7 +101,7 @@ class FtpFile{
 
                             'msg'=>'图片上传成功',
 
-                            'info'=>['url'=>$url]
+                            'info'=>['url'=>$url,'id'=>$res]
 
                         ]);
 
@@ -118,8 +110,6 @@ class FtpFile{
                         return $url;
 
                     };
-
-
 
                 }else{
 
@@ -131,31 +121,21 @@ class FtpFile{
 
                 }
 
-
-
             }else{
 
                 // 上传失败获取错误信息
-
                 echo $file->getError();
 
             }    
 
         }
 
-
-
-        
-
     }
 
 
 
     public static function uploadStream($data,$inner=false)
-
     {       
-
-       
 
         if(!$inner){
 
@@ -179,8 +159,6 @@ class FtpFile{
 
         $ext = $data['ext'];
 
-        
-
         $saveName = substr(md5('streamSolely') , 0, 5). date('YmdH') . rand(0, 100) . '.' . $ext;
 
         $dir = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd');
@@ -189,21 +167,12 @@ class FtpFile{
 
         is_dir($dir) OR mkdir($dir, 0777, true); 
 
-
-
         if($data['stream']){
 
             // 移动到框架应用根目录/public/uploads/ 目录下
-
-
-
             $res = file_put_contents($path,$data['stream']);
 
-            
-
             if($res){
-
-
 
                 $url = config('secure.base_url').'/public/uploads/'.$thirdapp_id.'/'.date('Ymd').'/'.$saveName;
 
@@ -237,8 +206,6 @@ class FtpFile{
 
                 $modelData['FuncName'] = 'add';
 
-
-
                 $res = BeforeModel::CommonSave('File',$modelData);
 
                 if ($res>0) {
@@ -259,8 +226,6 @@ class FtpFile{
 
                     };
 
-
-
                 }else{
 
                     throw new ErrorMessage([
@@ -270,8 +235,6 @@ class FtpFile{
                     ]);
 
                 };
-
-
 
             }else{
 
@@ -285,24 +248,35 @@ class FtpFile{
 
         }
 
-
-
-        
-
     }
 
 
+    public static function uploadByUrl($data){
+        
+        (new CommonValidate())->goCheck('one',$data);
+        checkTokenAndScope($data,config('scope.two'));
+        
+        $userinfo = Cache::get($data['token']);
+        
+        
+        $stream = file_get_contents($data['url'], 'r');
+        $modelData = [];
+        $modelData['stream'] = $stream;
+        $modelData['thirdapp_id'] = $userinfo['thirdapp_id'];
+        $modelData['user_no'] = $userinfo['user_no'];
+        $modelData['behavior'] = 2;
+        $modelData['type'] = 1;
+        $modelData['param'] = isset($data['param'])?$data['param']:'';
+        $modelData['ext'] = $data['ext'];
 
-
-
-  
-
-
-
-
-
-
-
-
-
+        $res = self::uploadStream($modelData,true);
+        //$res = QiniuImageService::upload($modelData,true);
+        if($res){
+            throw new SuccessMessage([
+                'msg'=>'获取二维码图片成功',
+                'info'=>['url'=>$res]
+            ]); 
+        };
+        
+    }
 }
