@@ -8,6 +8,9 @@ use think\Controller;
 use think\Cache;
 use think\Loader;
 
+use app\lib\exception\SuccessMessage;
+use app\lib\exception\ErrorMessage;
+
 use app\api\controller\BaseController;
 
 use app\api\controller\v1\weFunc\Base as weFuncBase;
@@ -23,7 +26,7 @@ use app\api\service\base\CouponPay;
 use app\api\service\base\FtpFile;
 use app\api\service\base\Label;
 use app\api\service\base\Pay;
-use app\api\service\base\ProgrameToken;
+use app\api\service\base\ProgramToken;
 use app\api\service\base\QiniuFile;
 use app\api\service\base\Qr;
 use app\api\service\base\SaeStorage;
@@ -183,8 +186,8 @@ class Main extends BaseController{
             return new Label($data);
         }else if($serviceName=='Pay'){
             return new Pay($data);
-        }else if($serviceName=='ProgrameToken'){
-            return new ProgrameToken($data);
+        }else if($serviceName=='ProgramToken'){
+            return new ProgramToken($data);
         }else if($serviceName=='QinFile'){
             return new QinFile($data);
         }else if($serviceName=='Qr'){

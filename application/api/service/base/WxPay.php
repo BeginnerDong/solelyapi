@@ -102,10 +102,17 @@ class WxPay
         $wxOrder = \WxPayApi::unifiedOrder($wxOrderData,$thirdappinfo);
         
         if($wxOrder['return_code'] != 'SUCCESS' || $wxOrder['result_code'] !='SUCCESS'){
-            throw new ErrorMessage([
-                'msg'=>$wxOrder['return_msg'],
-                'info'=>$wxOrder
-            ]);
+            
+            if ($wxOrder['err_code']=="ORDERPAID") {
+                //微信已支付
+                return "pass";
+            }else{
+                throw new ErrorMessage([
+                    'msg'=>$wxOrder['return_msg'],
+                    'info'=>$wxOrder
+                ]);
+            }
+            
         };
         
         if($thirdappinfo['wx_appid']){
@@ -125,6 +132,7 @@ class WxPay
                     'title'=>'微信支付',
                     'pay_no'=>$pay_no,
                     'prepay_id'=>$wxOrder['prepay_id'],
+                    'wx_prepay_info' => json_encode($signature),
                     'create_time'=>time(),
                     'type'=>2,
                     'user_no'=>$userInfo['user_no'],
@@ -135,6 +143,7 @@ class WxPay
                     'title'=>'微信支付',
                     'pay_no'=>$pay_no,
                     'prepay_id'=>$wxOrder['prepay_id'],
+                    'wx_prepay_info' => json_encode($signature),
                     'create_time'=>time(),
                     'type'=>2,
                     'user_no'=>$userInfo['user_no'],
@@ -142,7 +151,7 @@ class WxPay
                 ); 
             };
             $modelData['FuncName'] = 'add';
-            $saveLog = BeforeModel::CommonSave('Log',$modelData);
+            $saveLog = BeforeModel::CommonSave('PayLog',$modelData);
         };
         
         throw new SuccessMessage([

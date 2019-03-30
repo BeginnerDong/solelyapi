@@ -48,7 +48,8 @@ class Order{
     }
 
 
-    public static function addMultiOrder($data){
+    public static function addMultiOrder($data)
+    {
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -102,7 +103,8 @@ class Order{
     }
 
 
-    public static function addOrder($data){
+    public static function addOrder($data)
+    {
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -180,8 +182,12 @@ class Order{
         $type = 0;
         $order_no = makeOrderNo();
 
+        if (!isset($data['product'])&&!isset($data['sku'])) {
+            throw new ErrorMessage([
+                'msg' => '购买商品信息错误',
+            ]);
+        }
         if(isset($data['product'])){
-
             foreach ($data['product'] as $key => $value) {
                 $newArray = self::checkAndReduceStock($value,$totalPrice,$type,$order_no,$user);
                 $totalPrice += $newArray['totalPrice'];

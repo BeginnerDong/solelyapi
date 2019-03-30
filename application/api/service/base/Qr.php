@@ -31,7 +31,7 @@ use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 
-
+Loader::import('phpqrcode.phpqrcode', EXTEND_PATH, '.php');
 
 
 /**
@@ -46,7 +46,8 @@ class Qr{
 
     
 
-    public static function ProgramQrGet($data){
+    public static function ProgramQrGet($data)
+    {
 
 
 
@@ -173,14 +174,9 @@ class Qr{
     }
 
 
-
-    public static function CommonQrGet($data){
-
-
-
-       //data需要appid,appsecret,qrInfo,output,thirdapp_id,user_no
-
-        
+    /*调用第三方网站生成二维码*/
+    public static function CommonQrGet($data)
+    {
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -189,10 +185,6 @@ class Qr{
         $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 
         $user_no = Cache::get($data['token'])['user_no'];
-
-        
-
-
 
         $modelData = [];
 
@@ -208,11 +200,7 @@ class Qr{
 
         ];
 
-
-
         $res = BeforeModel::CommonGet('File',$modelData);
-
-        
 
         if(count($res['data'])>0){
 
@@ -226,13 +214,9 @@ class Qr{
 
         };
 
-
-
         $url = 'http://qr.liantu.com/api.php?text=solelynet';
 
         $stream = file_get_contents('http://qr.liantu.com/api.php?text='.$data['param'], 'r');
-
-
 
         //var_dump($stream);
 
@@ -253,10 +237,6 @@ class Qr{
             $modelData['param'] = $data['param'];
 
             $modelData['ext'] = $data['ext'];
-
-
-
-           
 
             $res = FtpImageService::uploadStream($modelData,true);
 
@@ -284,16 +264,87 @@ class Qr{
 
         };
 
-        
+    }
+
+
+    /**
+     * [PHPQrGet 使用phpqrcode本地生成二维码]
+     * @param [type]  $data  [token/params/ext目前支持png]
+     * @param boolean $inner [description]
+     */
+    public static function PHPQrGet($data,$inner=false)
+    {
+
+        (new CommonValidate())->goCheck('one',$data);
+
+        checkTokenAndScope($data,config('scope.two'));
+
+        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+
+        $user_no = Cache::get($data['token'])['user_no'];
+
+        $value = $data['param'];        //二维码内容
+
+        $errorCorrectionLevel = 'L';    //容错级别
+
+        $matrixPointSize = 5;           //生成图片大小
+
+        $ext = $data['ext'];
+
+        $saveName = substr(md5('streamSolely') , 0, 5). date('YmdH') . rand(0, 100) . '.' . $ext;
+
+        $dir = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd');
+
+        $path = $dir.'/'.$saveName;
+
+        $qrCode = new \QRcode();
+
+        ob_start();
+
+        $qrCode::png($value);
+
+        $stream = ob_get_contents();
+
+        ob_end_clean();
+
+        $modelData = [];
+
+        $modelData['stream'] = $stream;
+
+        $modelData['thirdapp_id'] = $thirdapp_id;
+
+        $modelData['user_no'] = $user_no;
+
+        $modelData['behavior'] = 2;
+
+        $modelData['type'] = 1;
+
+        $modelData['param'] = $data['param'];
+
+        $modelData['ext'] = $data['ext'];
+
+        $url = FtpImageService::uploadStream($modelData,true);
+
+        if(!$inner){
+
+            throw new SuccessMessage([
+
+                'msg'=>'二维码生成成功',
+
+                'info'=>['url'=>$url]
+
+            ]);
+
+        }else{
+
+            return $url;
+
+        };
 
     }
 
 
-
-
-
     public static function data_uri($contents, $mime)
-
     {
 
         $base64   = base64_encode($contents);

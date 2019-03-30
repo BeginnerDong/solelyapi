@@ -16,11 +16,11 @@ use app\api\model\ThirdApp as ThirdappModel;
 use app\api\model\User as UserModel;
 use app\api\model\UserCoupon as UserCouponModel;
 use app\api\model\FlowLog;
-use app\api\model\Common as CommonModel;
 
 use app\api\service\base\WxPay;
-use app\api\service\func\Order as OrderService;
 use app\api\service\base\CommonService as CommonService;
+use app\api\service\beforeModel\Common as BeforeModel;
+use app\api\service\func\FlowLog as FlowLogService;
 use app\api\validate\CommonValidate as CommonValidate;
 use app\lib\exception\OrderException;
 use app\lib\exception\TokenException;
@@ -44,14 +44,14 @@ class CouponPay
         
     }
 
-    public static function payCoupon($data,$inner=false)
+    public static function couponPay($data,$inner=false)
     {
         if(!$inner){
             (new CommonValidate())->goCheck('one',$data);
             checkTokenAndScope($data,config('scope.two')); 
         };
 
-        $couponInfo = CommonModel::CommonGet('UserCoupon',$data);
+        $couponInfo = BeforeModel::CommonGet('UserCoupon',$data);
         if(count($couponInfo['data'])>0){
             $couponInfo = $couponInfo['data'][0];
             self::checkCouponStock($couponInfo);
@@ -65,7 +65,7 @@ class CouponPay
             $modelData['searchItem'] = [
                 'user_no'=>$couponInfo['user_no']
             ];
-            $userInfo =  CommonModel::CommonGet('User',$modelData);
+            $userInfo =  BeforeModel::CommonGet('User',$modelData);
             if(count($userInfo['data'])==0){
                 throw new ErrorMessage([
                     'msg' => 'userInfo未创建',
@@ -85,7 +85,7 @@ class CouponPay
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
             //记录订单的全部信息，回调时执行其它支付方式
             $logData['pay_info'] = $data;
-            $logData['pay_info']['coupon'] = "true";
+            $logData['pay_info']['iscoupon'] = "true";
             return WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData);
         };
 
@@ -112,7 +112,7 @@ class CouponPay
     {
         $modelData = [];
         $modelData['searchItem'] = ['coupon_no'=>$couponInfo['coupon_no']];
-        $Info = CommonModel::CommonGet('Coupon',$modelData);
+        $Info = BeforeModel::CommonGet('Coupon',$modelData);
         if(!count($Info['data'])>0){
             throw new ErrorMessage([
                 'msg' => '优惠券关联信息有误',
@@ -141,7 +141,12 @@ class CouponPay
             'user_no'=>$userInfo['user_no'],
         );
         $modelData['FuncName'] = 'add';
-        $res = CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'余额支付失败'
@@ -163,7 +168,12 @@ class CouponPay
             'user_no'=>$userInfo['user_no'],
         );
         $modelData['FuncName'] = 'add';
-        $res = CommonModel::CommonSave('FlowLog',$modelData);
+        $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'积分支付失败'
@@ -207,7 +217,7 @@ class CouponPay
         };   
         $modelData['FuncName'] = 'update';
         if($modelData['data']){
-            $res = CommonModel::CommonSave('UserCoupon',$modelData);
+            $res = BeforeModel::CommonSave('UserCoupon',$modelData);
             if(!$res>0){
                 throw new ErrorMessage([
                     'msg'=>'更新CouponPay信息失败'

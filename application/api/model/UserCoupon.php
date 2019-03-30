@@ -27,6 +27,7 @@ class UserCoupon extends Model
             'condition'=>0,
             'pay_status'=>0,
             'type'=>'',
+            'use_step'=>1,
             'invalid_time'=>'',
             'use_limit'=>'',
             'pay_no'=>'',

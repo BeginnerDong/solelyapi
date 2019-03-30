@@ -1,89 +1,80 @@
 <?php
 
 namespace app\api\model;
-
-
 use think\Model;
-
 use app\api\model\User;
-
+use app\api\model\Order;
 use app\lib\exception\ErrorMessage;
 
 
-
-class Operation extends Model
+class PayLog extends BaseModel
 {
 
-
     public static function dealAdd($data)
-    {
-
-
+    {   
+        
         $standard = [
-            'name'=>'',
-            'phone'=>'',
-            'address'=>'',
-            'mainImg'=>[],
+            'title'=>'',
+            'result'=>'',
             'content'=>'',
-            'description'=>'',
-            'step'=>0,
-            'origin'=>0,
-            'user_no'=>'',
-            'status'=>1,
+            'type'=>'',
+            'order_no'=>'',
+            'pay_no'=>'',
+            'transaction_id'=>'',
+            'behavior'=>'',
+            'pay_info'=>'',
             'create_time'=>time(),
+            'update_time'=>'',
             'thirdapp_id'=>'',
             'user_type'=>'',
-            'img_array'=>[],
+            'user_no'=>'',
+            'status'=>1,
         ];
-
+        
         if(isset($data['data']['user_no'])){
-
             $res = User::get(['user_no' => $data['data']['user_no']]);
-
             if($res){
-
                 $data['data']['user_type'] = $res['user_type'];
-
             }else{
-
                 throw new ErrorMessage([
-
                     'msg' => '关联user信息有误',
-
                 ]);
-
             };
-
         };
-
-
+        if(isset($data['data']['order_no'])){
+            $res = Order::get(['order_no' => $data['data']['order_no']]);
+            if($res){
+                $data['data']['user_type'] = $res['user_type'];
+            }else{
+                throw new ErrorMessage([
+                    'msg' => '关联order信息有误',
+                ]);
+            };
+        };
         $data['data'] = chargeBlank($standard,$data['data']);
-
         return $data;
-
+        
     }
-
-
     public static function dealGet($data)
     {   
 
         return $data;
-
+        
     }
-
 
     public static function dealUpdate($data)
     {   
 
     	return $data;
-
+        
     }
-
 
     public static function dealRealDelete($data)
     {   
 
     	return $data;
-
+        
     }
+
+
 }

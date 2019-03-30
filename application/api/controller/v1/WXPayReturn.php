@@ -11,9 +11,10 @@ namespace app\api\controller\v1;
 use think\Db;
 use think\Controller;
 use app\api\model\FlowLog;
-use app\api\model\Log;
+use app\api\model\PayLog;
 use app\api\service\base\Pay as PayService;
 use app\api\service\base\CouponPay as CouponPayService;
+use app\api\service\func\FlowLog as FlowLogService;
 use app\api\service\beforeModel\Common as BeforeModel;
 use think\Request as Request;
 use app\lib\exception\TokenException;
@@ -32,8 +33,8 @@ class WXPayReturn extends Controller
         if($data['RESULT_CODE']=='SUCCESS'){
 
             $orderId = $data['OUT_TRADE_NO'];
-            $logInfo = resDeal([Log::get(['pay_no'=>$orderId])])[0];
-            if($logInfo&&$logInfo['transaction_id']==$data['TRANSACTION_ID']){
+            $payLog = resDeal([PayLog::get(['pay_no'=>$orderId])])[0];
+            if($payLog&&$payLog['transaction_id']==$data['TRANSACTION_ID']){
                 return true;
             };
             
@@ -49,30 +50,15 @@ class WXPayReturn extends Controller
                 'pay_no'=>$orderId,
                 'update_time'=>time(),
             );
-            if($logInfo['payAfter']){
-                $modelData['payAfter'] = $logInfo['payAfter'];
-            };
             $modelData['FuncName'] = 'update';
-            $saveLog = BeforeModel::CommonSave('Log',$modelData);
+            $saveLog = BeforeModel::CommonSave('PayLog',$modelData);
 
-            if($logInfo['behavior']==1){
+            if($payLog['behavior']==1){
                 return true;
             };
             $TOTAL_FEE = $data['TOTAL_FEE']/100;
 
-            //获取其他支付参数记录
-            $modelData = [];
-            $modelData['searchItem']['pay_no'] = $orderId;
-            $payLog = BeforeModel::CommonGet('Log',$modelData);
-            if(!count($payLog['data'])>0){
-                throw new ErrorMessage([
-                    'msg' => '关联支付信息有误',
-                ]);
-                return;
-            };
-            $payLog = $payLog['data'][0];
-
-            if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['coupon'])) {
+            if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['iscoupon'])&&!empty($payLog['pay_info']['iscoupon'])) {
                 $modelData = [];
                 $modelData['searchItem']['pay_no'] = $orderId;
                 $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
@@ -142,6 +128,11 @@ class WXPayReturn extends Controller
 
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
 
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
+        $modelData = [];
         $modelData = $payLog;
         //取出第一次调取支付时记录的信息
         $modelData = array_merge($modelData,$payLog['pay_info']);

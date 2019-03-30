@@ -1,8 +1,9 @@
 <?php
 
-namespace app\api\service\beforeModel;
+namespace app\api\service\func;
 
-use app\api\model\Common as CommonModel;
+
+use app\api\service\beforeModel\Common as BeforeModel;
 use think\Exception;
 use think\Model;
 use think\Cache;
@@ -16,19 +17,32 @@ class FlowLog {
 
 	public static function checkIsPayAll($data){
 
+        $flowInfo = BeforeModel::CommonGet('FlowLog',$data);
+
+        if (count($flowInfo['data'])==0) {
+            
+            throw new ErrorMessage([
+                'msg'=>'流水信息有误'
+            ]);
+
+        }
+
+        $flowInfo = $flowInfo['data'][0];
+
         /**
          * 检查订单支付是否完成
          */
-		if ($data['FuncName']=="add"&&!isset($data['data']['status'])&&isset($data['data']['pay_no'])&&!empty($data['data']['pay_no'])&&isset($data['data']['relation_table'])&&($data['data']['relation_table']=='order')) {
+		if (isset($flowInfo['relation_table'])&&($flowInfo['relation_table']=='order')) 
+        {
 			
 			//获取订单信息
             $modelData = [];
             $modelData = [
                 'searchItem'=>[
-                    'pay_no'=>$data['data']['pay_no']
+                    'pay_no'=>$flowInfo['pay_no']
                 ],
             ];
-            $orderInfo = CommonModel::CommonGet('Order',$modelData);
+            $orderInfo = BeforeModel::CommonGet('Order',$modelData);
             if(count($orderInfo['data'])>0){
                 $orderPrice = abs($orderInfo['data'][0]['price']);
                 $orderInfo = $orderInfo['data'][0];
@@ -41,13 +55,13 @@ class FlowLog {
                 $modelData = [];
                 $modelData = [
                     'searchItem'=>[
-                        'pay_no'=>$data['data']['pay_no']
+                        'pay_no'=>$flowInfo['pay_no'],
+                        'status'=>1,
                     ],
                 ];
-                $flowList = CommonModel::CommonGet('FlowLog',$modelData);
+                $flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+
                 $flowPrice = 0;
-                //加上此次的流水金额
-                $flowPrice += abs($data['data']['count']);
                 if(count($flowList['data'])>0){
                     foreach ($flowList['data'] as $key => $value) {
                         $flowPrice += abs($value['count']);
@@ -67,14 +81,12 @@ class FlowLog {
 
                     //执行payAfter
                     if(isset($orderInfo['payAfter'])&&!empty($orderInfo['payAfter'])){
-                        if (isset($data['saveAfter'])) {
-                            $data['saveAfter'] = array_merge($data['saveAfter'],$orderInfo['payAfter']);
-                        }else{
-                            $data['saveAfter'] = $orderInfo['payAfter'];
-                        }
+
+                        $data['saveAfter'] = $orderInfo['payAfter'];
+
                     };
 
-                    $updateOrder = CommonModel::CommonSave('Order',$modelData);
+                    $updateOrder = BeforeModel::CommonSave('Order',$modelData);
                 }
             }
 
@@ -83,16 +95,17 @@ class FlowLog {
         /**
          * 检查优惠券支付是否完成
          */
-        if ($data['FuncName']=="add"&&!isset($data['data']['status'])&&isset($data['data']['pay_no'])&&!empty($data['data']['pay_no'])&&isset($data['data']['relation_table'])&&($data['data']['relation_table']=='coupon')) {
+        if (isset($flowInfo['relation_table'])&&($flowInfo['relation_table']=='coupon')) 
+        {
 
             //获取优惠券信息
             $modelData = [];
             $modelData = [
                 'searchItem'=>[
-                    'pay_no'=>$data['data']['pay_no']
+                    'pay_no'=>$flowInfo['pay_no']
                 ],
             ];
-            $couponInfo = CommonModel::CommonGet('UserCoupon',$modelData);
+            $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
             if(count($couponInfo['data'])>0){
                 $couponPrice = abs($couponInfo['data'][0]['price']);
             }else{
@@ -104,13 +117,12 @@ class FlowLog {
                 $modelData = [];
                 $modelData = [
                     'searchItem'=>[
-                        'pay_no'=>$data['data']['pay_no']
+                        'pay_no'=>$flowInfo['pay_no']
                     ],
                 ];
-                $flowList = CommonModel::CommonGet('FlowLog',$modelData);
+                $flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+
                 $flowPrice = 0;
-                //加上此次的流水金额
-                $flowPrice += abs($data['data']['count']);
                 if(count($flowList['data'])>0){
                     foreach ($flowList['data'] as $key => $value) {
                         $flowPrice += abs($value['count']);
@@ -126,12 +138,10 @@ class FlowLog {
                     ];
                     $modelData['FuncName'] = 'update';
                     $modelData['data']['pay_status'] = 1;
-                    $upCoupon = CommonModel::CommonSave('UserCoupon',$modelData);
+                    $upCoupon = BeforeModel::CommonSave('UserCoupon',$modelData);
                 }
             }
         }
-
-        return $data;
 
 	}
 

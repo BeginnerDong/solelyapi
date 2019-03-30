@@ -57,6 +57,7 @@ class User extends Model{
         $info = resDeal((new UserInfo())->where('user_no','in',$user_no)->select());
         $address = resDeal((new UserAddress())->where('user_no','in',$user_no)->select());
         $distriParent = resDeal((new Distribution())->where('child_no','in',$user_no)->select());
+        $auth = resDeal((new Auth())->where('user_no','in',$user_no)->select());
         $info = changeIndexArray('user_no',$info);
         $address = changeIndexArray('user_no',$address);
         $distriParent = changeIndexArray('child_no',$distriParent);
@@ -81,7 +82,22 @@ class User extends Model{
                 $data[$key]['distriParent'] = '';
             };
 
+            $authList = [];
+
+            foreach ($auth as $a_key => $a_value) {
+
+                if ($a_value['user_no'] == $value['user_no']) {
+
+                    array_push($authList,$a_value['path']);
+
+                }
+
+            }
+
+            $data[$key]['auth'] = $authList;
+
         };
+        
         return $data;
         
     }

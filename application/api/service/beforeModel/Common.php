@@ -29,7 +29,12 @@ class Common {
 
     	$final = CommonModel::CommonGet($dbTable,$data);
 
-    	$final['data'] = self::CommonGetAfter($data,$final['data']);
+        $final = self::getLimit($data,$final);
+
+        $final['data'] = self::CommonGetAfter($data,$final['data']);
+
+    	$final['data'] = self::getLimit($data,$final['data']);
+
 
         if(isset($data['excelOutput'])){
             return exportExcel($data['excelOutput'],$final['data']);
@@ -50,13 +55,18 @@ class Common {
 
         $data = self::CommonSavePro($data);
 
-        $finalRes = CommonModel::CommonSave($dbTable,$data);
-        
         $FuncName = $data['FuncName'];
+
+        if ($FuncName=='update'){
+            
+            CommonModel::imgManage($dbTable,$data);
+
+        }
+
+        $finalRes = CommonModel::CommonSave($dbTable,$data);
 
         if($FuncName=='update'){
 
-            CommonModel::imgManage($dbTable,$data);
             self::CommonSaveAfter($dbTable,$data);
 
         }else{
@@ -128,6 +138,7 @@ class Common {
             };
         };
         return $data;
+    
     }
 
     public static function CommonGetAfter($data,$res)
@@ -205,7 +216,7 @@ class Common {
         };
 
         return $res;
-        
+
     }
 
     public static function CommonSavePro($data)
@@ -272,6 +283,33 @@ class Common {
             };
 
         };
+    }
+
+
+    public static function getLimit($limit,$data)
+    {
+
+        if (isset($limit['getLimit'])&&is_array($limit['getLimit'])) {
+
+            $limits = $limit['getLimit'];
+
+            foreach ($data['data'] as $key => $value) {
+
+                foreach ($limits as $c_key => $c_value) {
+                    
+                    if ($value['c_value']) {
+                        
+                        unset($value['c_value']);
+
+                    }
+
+                }
+
+            }
+            
+        }
+
+        return $data;
 
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace app\api\service\base;
 use app\api\service\beforeModel\Common as BeforeModel;
+use app\api\model\Common as CommonModel;
 use think\Exception;
 use think\Model;
 use think\Cache;
@@ -35,15 +36,11 @@ class Common{
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
-            'Project'=>config('scope.two'),
-            'Process'=>config('scope.two'),
-            'Operation'=>config('scope.two'),
-            'Salesphone'=>config('scope.two'),
-            'Statistics'=>config('scope.two'),
             'Coupon'=>config('scope.one'),
             'UserCoupon'=>config('scope.one'),
             'CouponRelation'=>config('scope.one'),
             'Auth'=>config('scope.two'),
+            'PayLog'=>config('scope.two'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){
@@ -55,6 +52,25 @@ class Common{
                 'msg'=>'接口调用错误'
             ]);
         };
+
+        if (isset($data['saveAfter'])) {
+            //token赋值
+            foreach ($data['saveAfter'] as $k1 => $v1) {
+                $data['saveAfter'][$k1]['token'] = $data['token'];
+            };
+            foreach ($data['saveAfter'] as $k2 => $v2) {
+                if(isset($scopeArr[$v2['tableName']])){
+                    if(!empty($scopeArr[$v2['tableName']])){
+                        $scope = $scopeArr[$v2['tableName']];
+                        $data['saveAfter'][$k2] = checkTokenAndScope($data['saveAfter'][$k2],$scope);
+                    }
+                }else{
+                    throw new ErrorMessage([
+                        'msg'=>'接口调用错误'
+                    ]); 
+                };
+            }
+        }
         
         $res = BeforeModel::CommonSave($data['modelName'],$data);
         
@@ -78,8 +94,6 @@ class Common{
             };
         };
 
-
-
     }
 
     
@@ -89,6 +103,7 @@ class Common{
         $scopeArr = [
             'Order'=>config('scope.two'),
             'OrderItem'=>config('scope.two'),
+            'User'=>config('scope.two'),
             'UserInfo'=>config('scope.two'),
             'Product'=>[],
             'Label'=>[],
@@ -98,18 +113,15 @@ class Common{
             'UserAddress'=>config('scope.two'),
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
+            'File'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
-            'Project'=>config('scope.two'),
-            'Process'=>config('scope.two'),
-            'Operation'=>config('scope.two'),
-            'Salesphone'=>config('scope.two'),
-            'Statistics'=>config('scope.two'),
             'Coupon'=>[],
             'UserCoupon'=>config('scope.two'),
             'CouponRelation'=>config('scope.six'),
             'Auth'=>config('scope.two'),
+            'PayLog'=>config('scope.two'),
         ];
 
         
@@ -133,7 +145,36 @@ class Common{
                 'msg'=>'接口调用错误'
             ]); 
         };
-        
+
+        $token = '';
+        if(isset($data['token'])){
+            $token = $data['token'];
+        };
+        if (isset($data['getAfter'])) {
+            //token赋值
+            foreach ($data['getAfter'] as $k1 => $v1) {
+                if (!empty($token)) {
+                    $data['getAfter'][$k1]['token'] = $token;
+                }else{
+                    if (isset($v1['token'])) {
+                        $token = $v1['token'];
+                    }
+                }
+            };
+            foreach ($data['getAfter'] as $k2 => $v2) {
+                if(isset($scopeArr[$v2['tableName']])){
+                    if(!empty($scopeArr[$v2['tableName']])){
+                        $scope = $scopeArr[$v2['tableName']];
+                        $data['getAfter'][$k2] = checkTokenAndScope($data['getAfter'][$k2],$scope);
+                    }
+                }else{
+                    throw new ErrorMessage([
+                        'msg'=>'接口调用错误'
+                    ]); 
+                };
+            }
+        }
+
         $res = BeforeModel::CommonGet($data['modelName'],$data);
        
         if(isset($res['data'])&&count($res['data'])>0){
@@ -172,18 +213,15 @@ class Common{
             'UserAddress'=>config('scope.two'),
             'FlowLog'=>config('scope.two'),
             'Log'=>config('scope.two'),
+            'File'=>config('scope.two'),
             'Distribution'=>config('scope.six'),
             'WxFormId'=>config('scope.two'),
             'Wechat'=>config('scope.two'),
-            'Project'=>config('scope.two'),
-            'Process'=>config('scope.six'),
-            'Operation'=>config('scope.two'),
-            'Salesphone'=>config('scope.two'),
-            'Statistics'=>config('scope.two'),
             'Coupon'=>config('scope.one'),
             'UserCoupon'=>config('scope.two'),
             'CouponRelation'=>config('scope.one'),
             'Auth'=>config('scope.two'),
+            'PayLog'=>config('scope.two'),
         ];
         
         if(isset($scopeArr[$data['modelName']])){
@@ -195,6 +233,26 @@ class Common{
                 'msg'=>'接口调用错误'
             ]); 
         };
+
+        if (isset($data['saveAfter'])) {
+            //token赋值
+            foreach ($data['saveAfter'] as $k1 => $v1) {
+                $data['saveAfter'][$k1]['token'] = $data['token'];
+            };
+            foreach ($data['saveAfter'] as $k2 => $v2) {
+                if(isset($scopeArr[$v2['tableName']])){
+                    if(!empty($scopeArr[$v2['tableName']])){
+                        $scope = $scopeArr[$v2['tableName']];
+                        $data['saveAfter'][$k2] = checkTokenAndScope($data['saveAfter'][$k2],$scope);
+                    }
+                }else{
+                    throw new ErrorMessage([
+                        'msg'=>'接口调用错误'
+                    ]); 
+                };
+            }
+        }
+
         $res = BeforeModel::CommonSave($data['modelName'],$data);
         if($inner){
             return $res;
@@ -260,7 +318,7 @@ class Common{
             checkTokenAndScope($data,$scope);
         };
         
-        $res =  BeforeModel::CommonDelete($data['modelName'],$data);
+        $res = CommonModel::CommonDelete($data['modelName'],$data);
         if($inner){
             return $res;
         }else{

@@ -95,13 +95,47 @@ class FtpFile{
 
                 if ($res>0) {
 
+                    //修改图片名称
+                    $oldName = ROOT_PATH.'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$saveName;
+
+                    $spot = strrpos($saveName, '.');
+
+                    $total = strlen($saveName);
+
+                    $postion = $total-$spot;
+
+                    $filename = substr($saveName, 0,-$postion);
+
+                    $newname = $filename.'id'.$res.$ext;
+
+                    $newName = ROOT_PATH.'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
+
+                    $changeName = rename($oldName, $newName);
+
+                    if ($changeName) {
+
+                        $newUrl = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
+                        
+                        $modelData = [];
+
+                        $modelData['FuncName'] = 'update';
+
+                        $modelData['searchItem']['id'] = $res;
+
+                        $modelData['data']['title'] = $newname;
+
+                        $modelData['data']['path'] = $newUrl;
+
+                        $upImg = BeforeModel::CommonSave('File',$modelData);
+                    }
+
                     if(!$inner){
 
                         throw new SuccessMessage([
 
                             'msg'=>'图片上传成功',
 
-                            'info'=>['url'=>$url,'id'=>$res]
+                            'info'=>['url'=>$newUrl],
 
                         ]);
 

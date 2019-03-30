@@ -24,20 +24,14 @@ use app\api\model\User;
 use app\api\model\UserAddress;
 use app\api\model\UserInfo;
 use app\api\model\WxFormId;
-use app\api\model\Project;
-use app\api\model\Process;
-use app\api\model\Operation;
-use app\api\model\Salesphone;
-use app\api\model\Statistics;
 use app\api\model\Coupon;
 use app\api\model\UserCoupon;
 use app\api\model\CouponRelation;
 use app\api\model\Auth;
+use app\api\model\PayLog;
 
 
 class Common extends Model{
-
-    
 
 
     public static function CommonGet($dbTable,$data)
@@ -164,7 +158,7 @@ class Common extends Model{
         Db::startTrans();
         try{
             $res = eval($sqlStr);
-            $model->realDeleteData($data);
+            // $model->realDeleteData($data);
             Db::commit(); 
             return $res;
         } catch (\Exception $e) {
@@ -365,32 +359,10 @@ class Common extends Model{
                 };
             };
 
-            
-
         };
-        
 
     }
 
-
-    // public static function CommonCompute($data)
-    // {
-    //     $res = [];
-    //     $data = $data['data'];
-    //     foreach ($data as $key => $value) {
-    //         $new = [];
-    //         $model =self::loaderModel($key);
-    //         foreach ($value['compute'] as $compute_key => $compute_value) {
-    //             if($compute_value!='count'){
-    //                $new[$compute_key.$compute_value] = $model->where($value['searchItem'])->$compute_value($compute_key); 
-    //            }else{
-    //                 $new['count'] = $model->where($value['searchItem'])->count(); 
-    //            };
-    //         };
-    //         $res[$key] = $new;
-    //     };
-    //     return $res;
-    // }
 
     public static function CommonCompute($model,$method,$key,$map)
     {
@@ -447,16 +419,6 @@ class Common extends Model{
             return new UserInfo;
         }else if($dbTable=='WxFormId'){
             return new WxFormId;
-        }else if($dbTable=='Project'){
-            return new Project;
-        }else if($dbTable=='Process'){
-            return new Process;
-        }else if($dbTable=='Operation'){
-            return new Operation;
-        }else if($dbTable=='Salesphone'){
-            return new Salesphone;
-        }else if($dbTable=='Statistics'){
-            return new Statistics;
         }else if($dbTable=='Coupon'){
             return new Coupon;
         }else if($dbTable=='UserCoupon'){
@@ -465,12 +427,13 @@ class Common extends Model{
             return new CouponRelation;
         }else if($dbTable=='Auth'){
             return new Auth;
+        }else if($dbTable=='PayLog'){
+            return new PayLog;
         }else{
             throw new ErrorMessage([
                 'msg' => 'tableName有误',
             ]);
         };
-
     }
 
 
@@ -482,6 +445,12 @@ class Common extends Model{
         $sqlStr = $sqlStr."select();";
         $info = eval($sqlStr);
         $info = $model->dealGet(resDeal($info));
+        if (count($info)==0) {
+            throw new ErrorMessage([
+                'msg' => '权限不足',
+            ]);
+        }
+        
         $info = $info[0];
 
         if ($data['FuncName']=="add") {

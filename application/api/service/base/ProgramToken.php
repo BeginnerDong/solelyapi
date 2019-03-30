@@ -29,7 +29,7 @@ use think\Cache;
 
 
 
-class ProgrameToken {
+class ProgramToken {
     
 
     function __construct($data){
@@ -80,14 +80,9 @@ class ProgrameToken {
         };
         return self::grantToken($wxResult,$data);
 
-
-
     }
 
     
-
-        
-
 
     // 颁发令牌
     // 只要调用登陆就颁发新令牌
@@ -215,13 +210,12 @@ class ProgrameToken {
 
         };
 
-
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
-        $user=BeforeModel::CommonGet('User',$modelData);
+        $user = BeforeModel::CommonGet('User',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
-        $thirdApp=BeforeModel::CommonGet('ThirdApp',$modelData);
+        $thirdApp = BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];
 
@@ -243,12 +237,5 @@ class ProgrameToken {
         ]);
 
     }
-
-
-
-
-
-
-
 
 }

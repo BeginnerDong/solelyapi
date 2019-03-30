@@ -20,7 +20,7 @@ class Coupon extends Model
 
 
         $standard = [
-            'coupon_no'=>'',
+            'coupon_no'=>makeProductNo($data['data']['thirdapp_id']),
             'title'=>'',
             'description'=>'',
             'content'=>'',

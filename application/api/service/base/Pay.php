@@ -18,6 +18,7 @@ use app\api\model\UserCoupon as UserCouponModel;
 use app\api\model\FlowLog;
 
 use app\api\service\beforeModel\Common as BeforeModel;
+use app\api\service\func\FlowLog as FlowLogService;
 use app\api\service\base\WxPay;
 use app\api\service\base\CommonService as CommonService;
 use app\api\validate\CommonValidate as CommonValidate;
@@ -26,7 +27,6 @@ use app\lib\exception\TokenException;
 use app\lib\exception\ErrorException;
 use app\lib\exception\SuccessException;
 
-
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 use think\Exception;
@@ -34,7 +34,6 @@ use think\Loader;
 use think\Log;
 use think\Db;
 use think\Cache;
-//Loader::import('WxPay.WxPay', EXTEND_PATH, '.Api.php');
 
 
 class Pay
@@ -90,9 +89,32 @@ class Pay
             $data['wxPayStatus'] = 0;
         };
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
-            //记录订单的全部信息，回调时执行其它支付方式
+
+            /*判断是否是二次调起支付*/
+            $modelData = [];
+            $modelData['searchItem']['pay_no'] = $data['pay_no'];
+            $payLog = BeforeModel::CommonGet('PayLog',$modelData);
+            if (count($payLog['data'])>0) {
+                $payLog = $payLog['data'][0];
+                if ($payLog['pay_info']['wxPay']['price']!=$data['wxPay']['price']) {
+                    $modelData = [];
+                    $modelData['FuncName'] = "update";
+                    $modelData['searchItem']['id'] = $payLog['id'];
+                    $modelData['data']['status'] = -1;
+                    $upLog = BeforeModel::CommonSave('PayLog',$modelData);
+                    $data['pay_no'] = makePayNo();
+                    $modelData = [];
+                    $modelData['FuncName'] = "update";
+                    $modelData['searchItem']['id'] = $orderInfo['id'];
+                    $modelData['data']['pay_no'] = $data['pay_no'];
+                    $upOrder = BeforeModel::CommonSave('Order',$modelData);
+                }
+            }
+
+            /*记录订单的全部信息，回调时执行其它支付方式*/
             $logData['pay_info'] = $data;
-            return WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData);
+            WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData);
+
         };
 
         Db::startTrans();
@@ -183,6 +205,11 @@ class Pay
         );
         $modelData['FuncName'] = 'add';
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'余额支付失败'
@@ -208,6 +235,10 @@ class Pay
         );
         $modelData['FuncName'] = 'add';
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
         
         if(!$res>0){
             throw new ErrorMessage([
@@ -235,6 +266,11 @@ class Pay
         );
         $modelData['FuncName'] = 'add';
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'积分支付失败'
@@ -248,7 +284,7 @@ class Pay
         $modelData = [];
         $modelData['searchItem']['id'] = $coupon['id'];
         $modelData['searchItem']['user_no'] = $userInfo['user_no'];
-        $couponInfo = BeforeModel::CommonGet('Order',$modelData);
+        $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
         if(count($couponInfo['data'])!=1){
             throw new ErrorMessage([
                 'msg' => '关联优惠券有误',
@@ -256,20 +292,38 @@ class Pay
         };
         $couponInfo = $couponInfo['data'][0];
 
-        if($couponInfo['type']==3){
-            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$couponInfo['products'][0]['snap_product']['discount']){
+        if($couponInfo['type']==1){//抵扣券
+            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']>time())||($coupon['price']>$couponInfo['value'])){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
-        if($couponInfo['type']==4){
-            if((isset($couponInfo['standard'])&&($orderinfo['price']<$couponInfo['standard']))||$coupon['price']>$orderinfo['price']*$couponInfo['products'][0]['snap_product']['discount']['discount']/100){
+        if($couponInfo['type']==2){//折扣券
+            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']>time())||($coupon['price']>$orderinfo['price']*$couponInfo['discount']/100)){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
+
+        //检测使用数量限制
+        if ($couponInfo['use_limit']>0) {
+            
+            $modelData = [];
+            $modelData['searchItem']['pay_no'] = $orderinfo['pay_no'];
+            $modelData['searchItem']['coupon_no'] = $couponInfo['coupon_no'];
+            $modelData['searchItem']['pay_status'] = 1;
+            $modelData['searchItem']['use_type'] = 2;
+            $coupons = BeforeModel::CommonGet('UserCoupon',$modelData);
+            if ($couponInfo['use_limit']<count($coupons['data'])) {
+                throw new ErrorMessage([
+                    'msg' => '优惠券使用数量超限',
+                ]);
+            }
+
+        }
+
         //店铺优惠券检验to do...
         
         $modelData = [];
@@ -288,20 +342,25 @@ class Pay
         );
         
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'核销优惠卷失败'
             ]);
         };
         $modelData = [];
-        $modelData['searchItem']['order_no'] = $couponInfo['order_no'];
-        $modelData['data']['status'] = -1;
-        $modelData['data']['order_step'] = 3;
+        $modelData['searchItem']['id'] = $couponInfo['id'];
+        $modelData['data']['use_step'] = 2;
         $modelData['FuncName'] = 'update';
-        $res = BeforeModel::CommonSave('Order',$modelData);
+        $res = BeforeModel::CommonSave('UserCoupon',$modelData);
         if(!$res>0){
             throw new ErrorMessage([
-                'msg'=>'更新用户信息失败'
+                'msg'=>'更新优惠券信息失败'
             ]);
         };
     }
@@ -340,6 +399,11 @@ class Pay
             'relation_id'=>$cardInfo['order_no'],
         );
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
+
+        $modelData = [];
+        $modelData['searchItem']['id'] = $res;
+        FlowLogService::checkIsPayAll($modelData);
+
         if(!$res>0){
             throw new ErrorMessage([
                 'msg'=>'使用会员卡失败'
@@ -407,51 +471,7 @@ class Pay
         return $orderInfo;
 
     }
-
-    public static function checkIsPayAll($searchItem)
-    {
-        $modelData = [];
-        $modelData['searchItem'] = $searchItem;
-        $orderInfo =BeforeModel::CommonGet('Order',$modelData);
-        if(!count($orderInfo['data'])>0){
-            throw new ErrorMessage([
-                'msg'=>'order信息有误'
-            ]);
-        };
-        $orderInfo = $orderInfo['data'][0];
-        $pass = false;
-
-        $totalPrice = 0;
-        $modelData = [];
-        $modelData['searchItem']['order_no'] = $orderInfo['order_no'];
-        $res =BeforeModel::CommonGet('FlowLog',$modelData);
-
-        if(count($res['data'])>0){
-            foreach ($res['data'] as $key => $value) {
-                $totalPrice += $value['count'];
-            };
-        };
-        
-        $testNum = -floatval($orderInfo['price']);
-        if(bccomp($totalPrice,-floatval($orderInfo['price']),2)==0){
-            $pass = true;
-        };
     
-        if($pass){
-            $modelData = [];
-            $modelData['searchItem']['id'] = $orderInfo['id'];
-            $modelData['data']['pay_status'] = 1;
-            $modelData['data']['update_time'] = time();
-            $modelData['FuncName'] = 'update';
-            if(!empty($orderinfo['payAfter'])){
-                $modelData['saveAfter'] = json_decode($orderinfo['payAfter']);
-            }; 
-            $res = BeforeModel::CommonSave('Order',$modelData);
-
-        };
-        return $pass;
-
-    }
 
     public static function returnPay($data,$inner=false){
         

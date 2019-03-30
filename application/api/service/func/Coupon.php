@@ -34,7 +34,7 @@ class Coupon{
                 $data['pay']['searchItem'] = [
                     'id'=>$couponRes
                 ];
-                return PayService::payCoupon($data['pay'],true);
+                return PayService::couponPay($data['pay'],true);
             }else{
                 throw new SuccessMessage([
                     'msg'=>'领取成功',
@@ -70,6 +70,12 @@ class Coupon{
         };
         $user = $user['data'][0];
         if($user['user_type']>1){
+            throw new ErrorMessage([
+                'msg' => '用户类型不符',
+            ]);
+        };
+
+        if(!isset($data['coupon_id'])){
             throw new ErrorMessage([
                 'msg' => '用户类型不符',
             ]);
