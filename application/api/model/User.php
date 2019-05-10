@@ -86,7 +86,7 @@ class User extends Model{
 
             foreach ($auth as $a_key => $a_value) {
 
-                if ($a_value['user_no'] == $value['user_no']) {
+                if (($a_value['user_no']==$value['user_no'])&&($a_value['status']==1)) {
 
                     array_push($authList,$a_value['path']);
 

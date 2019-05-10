@@ -26,6 +26,11 @@ class Common {
             $final['data'] = [];
             return $final;
         };
+		
+		/*检测过期优惠券*/
+		if($dbTable=="UserCoupon"){
+			self::checkCoupon($dbTable,$data);
+		};
 
     	$final = CommonModel::CommonGet($dbTable,$data);
 
@@ -312,4 +317,25 @@ class Common {
         return $data;
 
     }
+	
+	
+	public static function checkCoupon($dbTable,$data){
+	
+		$coupons = CommonModel::CommonGet($dbTable,$data);
+		
+		foreach($coupons['data'] as $key => $value){
+			
+			if(isset($value['invalid_time'])&&$value['invalid_time']<time()&&$value['use_step']==0){
+				
+				$modelData = [];
+				$modelData['FuncName'] = 'update';
+				$modelData['searchItem']['id'] = $value['id'];
+				$modelData['data']['use_step'] = -1;
+				$upCoupon = CommonModel::CommonSave('UserCoupon',$modelData);
+				
+			}
+			
+		}
+		
+	}
 }

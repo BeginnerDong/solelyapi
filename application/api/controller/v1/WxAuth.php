@@ -176,14 +176,14 @@ class WxAuth
 
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
-        $user=BeforeModel::CommonGet('user',$modelData);
+        $user = BeforeModel::CommonGet('User',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
-        $thirdApp=BeforeModel::CommonGet('ThirdApp',$modelData);
+        $thirdApp = BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];
 
-        $userNo=$user['data'][0]['user_no'];
+        $userNo = $user['data'][0]['user_no'];
 
         $token = generateToken();
         $cacheResult = Cache::set($token,$user['data'][0],3600);

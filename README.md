@@ -11,23 +11,23 @@
 **1\. 功能概述**
 
 &emsp;&emsp;项目主要功能包括：
-多商户api，包含权限管理、用户管理、菜单管理、文章管理、商品管理、优惠券管理等基本模块；
+多商户api，包含权限管理、用户管理、菜单管理、文章管理、商品管理、订单管理等基本模块；
 支持微信支付、公众号文章获取、公众号菜单编辑、小程序模板消息等微信功能；
 支持七牛云在线图片管理；
 
 ---
 **2\. 数据对照表**
 
-通用字段说明
+### 通用字段说明
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------ | 
+| ------ | ------  | ------ | 
 | id | int(11)| 主键：该数据ID |
 | listorder | int(11) | 自定义排序 |
 | img_array | varchar(100) | 图片组 |
 | create_time | int(11) | 创建时间 |
 | update_time | int(11) | 更新时间 |
-| delete_time | bigint(13) | 删除时间 |
+| delete_time | int(11) | 删除时间 |
 | thirdapp_id | int(11) | 关联thirdapp |
 | user_no | varchar(255) | 关联user |
 | user_type | tinyint(2) | 用户类型0.前端2.cms |
@@ -35,32 +35,33 @@
 
 
 
-user表
+### user表
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------ | 
+| ------ | ------  | ------ | 
 | nickname | varchar(255) | 微信昵称 |
-| openid | varchar(255)| 微信openid |
+| openid | varchar(255) | 微信openid |
 | headImgUrl | varchar(9999) | 微信头像 |
-| primary_scope| int(255) | 权限级别：90平台管理员;60超级管理员;30管理员;10用户 |
-| user_type| itinyint(10) | 0,小程序用户;2,cms用户; |
-| user_no| varchar(255)|用户编号|
+| primary_scope | int(255) | 权限级别：90平台管理员;60超级管理员;30管理员;10用户 |
+| user_type | tinyint(2) | 0,小程序用户;2,cms用户; |
+| user_no | varchar(255) | 用户编号|
 
 
-user_info表
+
+### user_info表
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------ | 
+| ------ | ------  | ------ | 
 | gender | tinyint(2) | 性别:1.男;2.女 |
-| level | varchar(30) |  所在国家名称 |
-| address | varchar(255) | 所在城市名称 |
+| address | varchar(255) | 地址 |
 | phone | varchar(255) | 电话 |
 
 
-label表
+
+### label表
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------  | 
+| ------ | ------  | ------  | 
 | title | varchar(40) | 菜单名称 |
 | description| varchar(255) | 描述 |
 | parentid| int(11) | 父级菜单ID |
@@ -68,10 +69,10 @@ label表
 
 
 
-article表
+### article表
 
 | 字段 | 类型 | 说明 |
-| ------    |  :------:  | ------  | 
+| ------ |  :------:  | ------  | 
 | title | varchar(100) | 文章标题 |
 | menu_id | int(11) | 关联label表 |
 | description | varchar((255) | 描述 |
@@ -80,10 +81,10 @@ article表
 
 
 
-message表-留言(type=1)
+### message表-留言(type=1)
 
 | 字段 | 类型 | 说明 |
-| ------    |  :------:  | ------  | 
+| ------ |  :------:  | ------  | 
 | title | varchar(255) | 标题 |
 | description | varchar(255) | 描述 |
 | content | text | 内容 |
@@ -91,20 +92,20 @@ message表-留言(type=1)
 
 
 
-log表
+### log表
 
 | 字段 | 类型 | 说明 |
-| ------    |  :------:  | ------  | 
+| ------ |  :------:  | ------  | 
 | type | int(11) | 类别:4.点赞;5.关注; |
 | order_no | varchar(100) | 关联message |
 | pay_no | varchar(255) | 关联user |
 
 
 
-pay_log表
+### pay_log表
 
 | 字段 | 类型 | 说明 |
-| ------    |  :------:  | ------  | 
+| ------ |  :------:  | ------  | 
 | title | varchar(255) | 标题 |
 | result | varchar(255) | 结果描述 |
 | content | text | 详情 |
@@ -119,10 +120,59 @@ pay_log表
 
 
 
-coupon表
+### product表
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------ | 
+| ------ | ------  | ------ | 
+| product_no | varchar(255) | no |
+| title | varchar(255) | 商品名称 |
+| description | varchar(255) | 描述 |
+| content | text | 详情 |
+| mainImg | text | 主图 |
+| bannerImg | text | banner图 |
+| category_id | int(11) | 关联label表 |
+| price | decimal(10,2) | 价格 |
+| stock | int(11) | 库存 |
+| sale_count | int(11) | 销量 |
+| start_time | bigint(13) | 开启时间 |
+| end_time | bigint(13) | 结束时间 |
+
+
+
+### sku表
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ | 
+| sku_no | varchar(255) | no |
+| product_no | varchar(255) | 关联product表 |
+| title | varchar(255) | 商品名称 |
+| price | decimal(10,2) | 价格 |
+| stock | int(11) | 库存 |
+| sale_count | int(11) | 销量 |
+
+
+
+### order表
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ | 
+| order_no | varchar(255) | no |
+| pay | varchar(255) | pay方式详情 |
+| price | decimal(10,2) | 订单金额 |
+| pay_status | tinyint(2) | 0.未支付1.已支付 |
+| type | tinyint(2) | 1.普通商品,2.会员卡,3.抵扣券,4.折扣券,5.团购商品,6虚拟订单 |
+| order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结,4.团购未成团,5.团购成团 |
+| transport_status | tinyint(2) | 0.未发货；1.配送中；2.已收货 |
+| prepay_id | varchar(255) | 订单微信支付的预订单id |
+| wx_prepay_info | varchar(999) | 储存微信预支付信息 |
+| transaction_id | varchar(999) | 微信交易id，退款需要 |
+
+
+
+### coupon表
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ | 
 | coupon_no | varchar(255) | 优惠券编号 |
 | title | varchar(255) | 标题 |
 | description | varchar(255) | 描述 |
@@ -140,10 +190,10 @@ coupon表
 
 
 
-user_coupon表
+### user_coupon表
 
 | 字段 | 类型 | 说明 |
-| ------    | ------  | ------ | 
+| ------ | ------  | ------ | 
 | type | tinyint(2) | 1.抵扣券2.折扣券 |
 | use_step | tinyint(2) | 1.未使用2.已使用-1.已过期 |
 

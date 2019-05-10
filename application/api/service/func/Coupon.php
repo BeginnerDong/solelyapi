@@ -77,7 +77,7 @@ class Coupon{
 
         if(!isset($data['coupon_id'])){
             throw new ErrorMessage([
-                'msg' => '用户类型不符',
+                'msg' => '没有优惠券信息',
             ]);
         };
 

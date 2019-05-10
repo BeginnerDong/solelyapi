@@ -103,7 +103,7 @@ class WxPay
         
         if($wxOrder['return_code'] != 'SUCCESS' || $wxOrder['result_code'] !='SUCCESS'){
             
-            if ($wxOrder['err_code']=="ORDERPAID") {
+            if (isset($wxOrder['err_code'])&&$wxOrder['err_code']=="ORDERPAID") {
                 //微信已支付
                 return "pass";
             }else{

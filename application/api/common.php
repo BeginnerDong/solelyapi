@@ -493,7 +493,7 @@ use app\lib\exception\ErrorMessage;
 
     function resDeal($data)
     {   
-        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array'];
+        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
         
         
         if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){
@@ -724,7 +724,7 @@ use app\lib\exception\ErrorMessage;
 
         $pass = false;
         $check_no = '';
-        $check_type = $user_type;
+        $check_type = -1;
 
         if(isset($data['data']['user_no'])){
             $check_no = $data['data']['user_no'];
@@ -747,9 +747,15 @@ use app\lib\exception\ErrorMessage;
             };
         };
 
-        if(isset($data['searchItem']['user_type'])){
-            $check_type = $data['searchItem']['user_type'];
-        };
+        if ($check_type<0) {
+            if(isset($data['searchItem']['user_type'])){
+                $check_type = $data['searchItem']['user_type'];
+            }elseif (isset($data['data']['user_type'])) {
+                $check_type = $data['data']['user_type'];
+            }else{
+                $check_type = $user_type;
+            };
+        }
 
         if (is_array($check_type)) {
             
@@ -762,6 +768,7 @@ use app\lib\exception\ErrorMessage;
                     if($check_array==$key){
 
                         if(empty($value)){
+
                             throw new ErrorMessage([
                                 'msg'=>'权限不足',
                             ]);
@@ -808,8 +815,19 @@ use app\lib\exception\ErrorMessage;
                                         $data['data']['user_no'] = $user_no;
                                     };
                                 };
-                                
                             };
+
+                            if($value['auth']=='All'){
+
+                                if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
+                                    $data['data']['user_no'] = $user_no;
+                                };
+
+                                if (isset($data['searchItem']['user_no'])) {
+                                    $data['data']['user_no'] = $data['searchItem']['user_no'];
+                                }
+
+                            }
 
                         }else{
 
@@ -820,7 +838,7 @@ use app\lib\exception\ErrorMessage;
 
                         };
 
-                        if (!empty($value['addLimit'])&&$data['FuncName']=='add') {
+                        if (!empty($value['addLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='add') {
                             
                             foreach ($value['addLimit'] as $key => $value) {
                                 
@@ -834,7 +852,7 @@ use app\lib\exception\ErrorMessage;
 
                         };
 
-                        if (!empty($value['updateLimit'])&&$data['FuncName']=='update') {
+                        if (!empty($value['updateLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='update') {
                             
                             foreach ($value['addLimit'] as $key => $value) {
                                 
@@ -852,6 +870,11 @@ use app\lib\exception\ErrorMessage;
                             
                             $data['getLimit'] = $value['getLimit'];
 
+                        }
+
+                        if (isset($data['FuncName'])&&$data['FuncName']=='add') {
+                            
+                            $data['data']['user_type'] = $v;
                         }
                         
                     };
@@ -918,6 +941,18 @@ use app\lib\exception\ErrorMessage;
                             
                         };
 
+                        if($value['auth']=='All'){
+
+                            if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
+                                $data['data']['user_no'] = $user_no;
+                            };
+
+                            if (isset($data['searchItem']['user_no'])) {
+                                $data['data']['user_no'] = $data['searchItem']['user_no'];
+                            }
+
+                        }
+
                     }else{
 
                         $data['searchItem']['user_no'] = $user_no;
@@ -927,7 +962,7 @@ use app\lib\exception\ErrorMessage;
 
                     };
 
-                    if (!empty($value['addLimit'])&&$data['FuncName']=='add') {
+                    if (!empty($value['addLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='add') {
                         
                         foreach ($value['addLimit'] as $key => $value) {
                             
@@ -941,7 +976,7 @@ use app\lib\exception\ErrorMessage;
 
                     };
 
-                    if (!empty($value['updateLimit'])&&$data['FuncName']=='update') {
+                    if (!empty($value['updateLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='update') {
                         
                         foreach ($value['addLimit'] as $key => $value) {
                             
@@ -960,6 +995,11 @@ use app\lib\exception\ErrorMessage;
                         $data['getLimit'] = $value['getLimit'];
 
                     }
+
+                    if (isset($data['FuncName'])&&$data['FuncName']=='add') {
+                        
+                        $data['data']['user_type'] = $check_type;
+                    }
                     
                 };
 
@@ -967,7 +1007,6 @@ use app\lib\exception\ErrorMessage;
 
         }
 
-        
         if(!$pass){
             throw new ErrorMessage([
                 'msg'=>'权限不足',

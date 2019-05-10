@@ -42,6 +42,14 @@ class Common extends Model{
         if(!isset($data['searchItem']['status'])){
             $data['searchItem']['status'] = 1;
         };
+
+        if ($dbTable=='Distribution'&&isset($data['searchItem'])&&isset($data['searchItem']['user_no'])) {
+            unset($data['searchItem']['user_no']);
+        };
+        if ($dbTable=='Distribution'&&isset($data['searchItem'])&&isset($data['searchItem']['user_type'])) {
+            unset($data['searchItem']['user_type']);
+        };
+
         if(isset($data['paginate'])){  
 
             $pagesize = $data['paginate']['pagesize'];

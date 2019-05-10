@@ -82,7 +82,7 @@ class FlowLog {
                     //执行payAfter
                     if(isset($orderInfo['payAfter'])&&!empty($orderInfo['payAfter'])){
 
-                        $data['saveAfter'] = $orderInfo['payAfter'];
+                        $modelData['saveAfter'] = $orderInfo['payAfter'];
 
                     };
 

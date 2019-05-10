@@ -16,13 +16,15 @@ namespace app\api\service\base;
 
 use think\Cache;
 
+use think\Loader; 
+
 use think\Request as Request; 
 
 use app\api\service\beforeModel\Common as BeforeModel;
 
 use app\api\service\base\QiniuImage as QiniuImageService;
 
-use app\api\service\base\FtpImage as FtpImageService;
+use app\api\service\base\FtpFile as FtpImageService;
 
 use app\api\validate\CommonValidate;
 
@@ -282,6 +284,31 @@ class Qr{
         $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 
         $user_no = Cache::get($data['token'])['user_no'];
+		
+				/*判断图片是否已生成*/
+		$modelData = [];
+		
+		$modelData['searchItem'] = [
+		
+		    'user_no'=>$user_no,
+		
+		    'param'=>$data['param'],
+		
+		];
+		
+		$res = BeforeModel::CommonGet('File',$modelData);
+		
+		if(count($res['data'])>0){
+		
+		    throw new SuccessMessage([
+		
+		        'msg'=>'获取二维码图片成功',
+		
+		        'info'=>['url'=>$res['data'][0]['path']]
+		
+		    ]);
+		
+		};
 
         $value = $data['param'];        //二维码内容
 

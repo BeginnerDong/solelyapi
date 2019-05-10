@@ -21,7 +21,7 @@ class Log extends BaseModel
             'user_no'=>'',
             'thirdapp_id'=>'',
             'type'=>'',
-            'user_type'=>''
+            'user_type'=>'',
             'status'=>1,
             'update_time'=>'',
             'order_no'=>'',
