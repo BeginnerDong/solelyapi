@@ -46,16 +46,8 @@ class Qr{
 
 
 
-    
-
     public static function ProgramQrGet($data)
     {
-
-
-
-       //data需要appid,appsecret,qrInfo,output,thirdapp_id,user_no
-
-
 
         (new CommonValidate())->goCheck('one',$data);
 
@@ -64,8 +56,6 @@ class Qr{
         $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 
         $user_no = Cache::get($data['token'])['user_no'];
-
-
 
         $modelData = [];
 
@@ -81,10 +71,6 @@ class Qr{
 
         $data = Request::instance()->param();
 
-
-
-
-
         $modelData = [];
 
         $modelData['searchItem'] = [
@@ -99,11 +85,7 @@ class Qr{
 
         ];
 
-
-
-        $res = BeforeModel::CommonGet('File',$modelData);
-
-        
+        $res = BeforeModel::CommonGet('File',$modelData);        
 
         if(count($res['data'])>0){
 
@@ -117,15 +99,9 @@ class Qr{
 
         };
 
-
-
-
-
         $tokenurl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$appsecret;
 
         $result = curl_get($tokenurl);
-
-
 
         if ($result) {
 
@@ -136,8 +112,6 @@ class Qr{
             $codeurl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
 
             $stream = curl_post($codeurl,$data['qrInfo']);
-
-
 
             if($data['output']=='url'){
 
@@ -169,11 +143,10 @@ class Qr{
 
             };
 
-            
-
         }
 
     }
+
 
 
     /*调用第三方网站生成二维码*/
@@ -220,8 +193,6 @@ class Qr{
 
         $stream = file_get_contents('http://qr.liantu.com/api.php?text='.$data['param'], 'r');
 
-        //var_dump($stream);
-
         if($data['output']=='url'){
 
             $modelData = [];
@@ -256,8 +227,6 @@ class Qr{
 
             };
 
-        
-
         }else{
 
             $result=self::data_uri($stream,'image/png');
@@ -267,6 +236,7 @@ class Qr{
         };
 
     }
+
 
 
     /**
@@ -285,7 +255,7 @@ class Qr{
 
         $user_no = Cache::get($data['token'])['user_no'];
 		
-				/*判断图片是否已生成*/
+		/*判断图片是否已生成*/
 		$modelData = [];
 		
 		$modelData['searchItem'] = [

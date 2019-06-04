@@ -493,10 +493,10 @@ use app\lib\exception\ErrorMessage;
 
     function resDeal($data)
     {   
-        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
+        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
         
         
-        if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){
+        if(isset($data['data'])&&!empty($data['data'])&&is_array($data['data'])){
             $dealData = $data['data'];
         }else if(!empty($data)&&is_array($data)){
             $dealData = $data;
@@ -725,6 +725,12 @@ use app\lib\exception\ErrorMessage;
         $pass = false;
         $check_no = '';
         $check_type = -1;
+		
+		if(isset($data['data']['user_no'])&&isset($data['searchItem']['user_no'])){
+		    throw new ErrorMessage([
+		        'msg'=>'不允许更新user_no',
+		    ]);
+		};
 
         if(isset($data['data']['user_no'])){
             $check_no = $data['data']['user_no'];
@@ -817,24 +823,12 @@ use app\lib\exception\ErrorMessage;
                                 };
                             };
 
-                            if($value['auth']=='All'){
-
-                                if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
-                                    $data['data']['user_no'] = $user_no;
-                                };
-
-                                if (isset($data['searchItem']['user_no'])) {
-                                    $data['data']['user_no'] = $data['searchItem']['user_no'];
-                                }
-
-                            }
-
                         }else{
 
                             $data['searchItem']['user_no'] = $user_no;
-                            if(isset($data['data'])){
-                                $data['data']['user_no'] = $user_no;
-                            };
+                            // if(isset($data['data'])){
+                            //     $data['data']['user_no'] = $user_no;
+                            // };
 
                         };
 
@@ -941,24 +935,12 @@ use app\lib\exception\ErrorMessage;
                             
                         };
 
-                        if($value['auth']=='All'){
-
-                            if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
-                                $data['data']['user_no'] = $user_no;
-                            };
-
-                            if (isset($data['searchItem']['user_no'])) {
-                                $data['data']['user_no'] = $data['searchItem']['user_no'];
-                            }
-
-                        }
-
                     }else{
 
                         $data['searchItem']['user_no'] = $user_no;
-                        if(isset($data['data'])){
-                            $data['data']['user_no'] = $user_no;
-                        };
+                        // if(isset($data['data'])){
+                        //     $data['data']['user_no'] = $user_no;
+                        // };
 
                     };
 
@@ -1203,10 +1185,16 @@ use app\lib\exception\ErrorMessage;
 
             $file = $file['excel'];
             if($file->getInfo()['tmp_name']){
+				
                 $objReader =\PHPExcel_IOFactory::createReader('Excel2007');
+				
+				if(!$objReader->canRead($file)){
+					$objReader = \PHPExcel_IOFactory::createReader('Excel5');
+				}				
+				
                 $obj_PHPExcel =$objReader->load($file->getInfo()['tmp_name'], $encode = 'utf-8');  
                 //加载文件内容,编码utf-8
-                echo "<pre>";
+
                 $excel_array=$obj_PHPExcel->getsheet(0)->toArray();
                 $tableName = $excel_array[0];
                 array_shift($excel_array); 
@@ -1223,3 +1211,22 @@ use app\lib\exception\ErrorMessage;
         };
         return $data;
     }
+	
+	
+	
+	/**
+	 * 字符串转码GBK
+	 * 传入string,转码后返回
+	 */
+	function strToGBK($strText)
+	{
+	    $encode = mb_detect_encoding($strText, array('UTF-8','GB2312','GBK'));
+	    if($encode == "UTF-8")
+	    {
+	        return @iconv('UTF-8','GB18030',$strText);
+	    }
+	    else
+	    {
+	        return $strText;
+	    }
+	}

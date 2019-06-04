@@ -110,9 +110,17 @@ class FtpFile{
 
                     $newName = ROOT_PATH.'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
 
-                    $changeName = rename($oldName, $newName);
+                    // $changeName = rename($oldName, $newName);
+					
+					$changeName = copy($oldName, $newName);
 
                     if ($changeName) {
+						
+						/*删除旧文件*/
+						unset($info);
+						$fh = fopen($oldName, 'w') or die("can't open file");
+						fclose($fh);
+						$realDel = unlink($oldName);
 
                         $newUrl = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
                         

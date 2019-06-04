@@ -109,7 +109,7 @@ class Coupon{
         $modelData['data']['use_limit'] = $couponInfo['use_limit'];
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
-        $modelData['data']['snap_coupon'] = isset($data['snap_coupon'])?$data['snap_coupon']:'';
+        $modelData['data']['snap_coupon'] = json_encode($couponInfo);
 
         if(isset($data['data'])){
             $modelData['data'] = array_merge($data['data'],$modelData['data']);

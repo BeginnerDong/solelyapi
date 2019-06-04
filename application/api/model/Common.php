@@ -42,6 +42,13 @@ class Common extends Model{
         if(!isset($data['searchItem']['status'])){
             $data['searchItem']['status'] = 1;
         };
+		
+		if (isset($data['compute'])) {
+		    $new = [];
+		    foreach ($data['compute'] as $compute_key => $compute_value) {
+				$new[$compute_key] = self::CommonCompute($dbTable,$compute_value[0],$compute_value[1],$data['searchItem']);
+		    };
+		};	
 
         if ($dbTable=='Distribution'&&isset($data['searchItem'])&&isset($data['searchItem']['user_no'])) {
             unset($data['searchItem']['user_no']);
@@ -78,6 +85,10 @@ class Common extends Model{
             };
             
         };
+		
+		if (isset($data['compute'])) {
+		    $final['compute'] = $new;
+		};
 
         $final['data'] = $res;
         return $final;
