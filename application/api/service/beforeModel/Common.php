@@ -325,7 +325,7 @@ class Common {
 		
 		foreach($coupons['data'] as $key => $value){
 			
-			if(isset($value['invalid_time'])&&$value['invalid_time']<time()&&$value['use_step']==0){
+			if(isset($value['invalid_time'])&&($value['invalid_time']/1000<time())&&$value['use_step']==1){
 				
 				$modelData = [];
 				$modelData['FuncName'] = 'update';

@@ -293,14 +293,14 @@ class Pay
         $couponInfo = $couponInfo['data'][0];
 
         if($couponInfo['type']==1){//抵扣券
-            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']>time())||($coupon['price']>$couponInfo['value'])){
+            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$couponInfo['value'])){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
         if($couponInfo['type']==2){//折扣券
-            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']>time())||($coupon['price']>$orderinfo['price']*$couponInfo['discount']/100)){
+            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$orderinfo['price']*$couponInfo['discount']/100)){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
@@ -314,7 +314,7 @@ class Pay
             $modelData['searchItem']['pay_no'] = $orderinfo['pay_no'];
             $modelData['searchItem']['coupon_no'] = $couponInfo['coupon_no'];
             $modelData['searchItem']['pay_status'] = 1;
-            $modelData['searchItem']['use_type'] = 2;
+            $modelData['searchItem']['use_step'] = 2;
             $coupons = BeforeModel::CommonGet('UserCoupon',$modelData);
             if ($couponInfo['use_limit']<count($coupons['data'])) {
                 throw new ErrorMessage([
@@ -338,7 +338,7 @@ class Pay
             'standard_id'=>isset($coupon['standard_id'])?$coupon['standard_id']:'',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
-            'relation_id'=>$couponInfo['order_no'],
+            'relation_id'=>$orderinfo['order_no'],
         );
         
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
