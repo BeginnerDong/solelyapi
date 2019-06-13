@@ -1,10 +1,16 @@
 <?php
 
-namespace app\api\service\base\SmsTencent;
+namespace app\api\service\base;
 
 use think\Model;
 
+use think\Cache; 
 
+use app\api\validate\CommonValidate;
+
+use app\lib\exception\SuccessMessage;
+
+use app\lib\exception\ErrorMessage;
 
 //腾讯云短信
 
@@ -31,28 +37,22 @@ class SmsTencent {
      */
 
     public function __construct($appid, $appkey)
-
     {
+		
+		$this->appid = $appid;
 
+		$this->appkey = $appkey;
+		
         $this->url = "https://yun.tim.qq.com/v5/tlssmssvr/sendsms";
-
-        
 
     }
 
 
-
-
-
     public function sendMsg($data){
 
+    	// (new CommonValidate())->goCheck('one',$data); 
 
-
-    	(new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-
-       
+        // checkTokenAndScope($data,config('scope.two'));
 
         if (!isset($data['params'])) {
 
@@ -60,25 +60,18 @@ class SmsTencent {
 
                 'msg' => '缺少短信模板信息',
 
-                'solelyCode'=>225005
-
             ]);
 
         }
 
         $param = $data['params'];
 
-        
+        // $this->appid = Cache::get($data['token'])['smsID_tencet'];
+        $this->appid = $this->appid;
 
-
-
-        $this->appid =  Cache::get($data['token'])['smsID_tencet'];
-
-        $this->appkey = Cache::get($data['token'])['smsKey_tencet'];
-
-
-
-
+        // $this->appkey = Cache::get($data['token'])['smsKey_tencet'];
+		
+        $this->appkey = $this->appkey;
 
         $code = createSMSCode(6);
 
@@ -86,17 +79,13 @@ class SmsTencent {
 
         $param = str_ireplace("captcha",$code,$param);
 
-        //验证码放入缓存，时限1小时
+        //验证码放入缓存，时限10分钟
 
         $codeinfo['code'] = $code;
 
         $codeinfo['phone'] = $data['phone'];
 
-        Cache::set('code'.$data['token'],$codeinfo,600);
-
-
-
-
+        Cache::set('smsCode'.$data['phone'],$codeinfo,600);
 
         $result = $this->sendWithParam(
 
@@ -137,37 +126,6 @@ class SmsTencent {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
 
      * 普通单发
@@ -195,7 +153,6 @@ class SmsTencent {
      */
 
     public function send($type, $nationCode, $phoneNumber, $msg,$extend = "", $ext = "")
-
     {
 
         $random = $this->getRandom();
@@ -216,8 +173,6 @@ class SmsTencent {
 
         $tel->mobile = "".$phoneNumber;
 
-
-
         $data->tel = $tel;
 
         $data->type = (int)$type;
@@ -235,8 +190,6 @@ class SmsTencent {
         $data->extend = $extend;
 
         $data->ext = $ext;
-
-
 
         return $this->sendCurlPost($wholeUrl, $data);
 
@@ -311,8 +264,6 @@ class SmsTencent {
         $data->extend = $extend;
 
         $data->ext = $ext;
-
-
 
         return $this->sendCurlPost($wholeUrl, $data);
 

@@ -1,11 +1,20 @@
 <?php
+
 namespace app\api\service\base;
+
 use think\Model;
+
+use think\Cache; 
+
+use app\api\validate\CommonValidate;
+
+use app\lib\exception\SuccessMessage;
+
+use app\lib\exception\ErrorMessage;
+
 
 //阿里短信
 class SmsAli {
-
-
 
 
     public function sendMsg($data){
@@ -13,21 +22,19 @@ class SmsAli {
         (new CommonValidate())->goCheck('one',$data);
         checkTokenAndScope($data,config('scope.two'));
 
-
-
         if (!isset($data['params'])) {
             throw new TokenException([
                 'msg' => '缺少短信模板信息',
-                'solelyCode'=>225005
             ]);
         }
         $params = $data['params'];
-        $accessKeyId = Cache::get($data['token'])['smsKey_ali'];
-        $accessKeySecret = Cache::get($data['token'])['smsSecret_ali'];
+        $accessKeyId = Cache::get($data['token'])['thirdApp']['smsKey_ali'];
+        $accessKeySecret = Cache::get($data['token'])['thirdApp']['smsSecret_ali'];
         $code = createSMSCode(6);
         $codeinfo['code'] = $code;
         $codeinfo['phone'] = $params['PhoneNumbers'];
-        Cache::set('code'.$data['token'],$codeinfo,600);
+        Cache::set('smsCode'.$params['PhoneNumbers'],$codeinfo,600);
+		
         if (!empty($params["TemplateParam"])&&is_array($params["TemplateParam"])) {
             $params['TemplateParam']['code'] = $code;
         }else{

@@ -247,13 +247,25 @@ class Qr{
     public static function PHPQrGet($data,$inner=false)
     {
 
-        (new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-
-        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
-
-        $user_no = Cache::get($data['token'])['user_no'];
+		if(!$inner){
+			
+			(new CommonValidate())->goCheck('one',$data);
+			
+			checkTokenAndScope($data,config('scope.two'));
+			
+			
+			
+			$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+			
+			$user_no = Cache::get($data['token'])['user_no'];
+			
+		}else{
+			
+			$thirdapp_id = $data['thirdapp_id'];
+			
+			$user_no = $data['user_no'];
+			
+		}
 		
 		/*判断图片是否已生成*/
 		$modelData = [];
