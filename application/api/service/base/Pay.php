@@ -66,11 +66,12 @@ class Pay
             if($orderInfo['type']!=6){
                 self::checkStock($orderInfo);
             };
-            if(!$orderInfo['pay_no']&&!isset($data['pay_no'])){
+			
+            if((!isset($orderInfo['pay_no'])||empty($orderInfo['pay_no']))&&!isset($data['pay_no'])){
                 $data['pay_no'] = makePayNo();
-            }else if($orderInfo['pay_no']){
-                $data['pay_no'] = $orderInfo['pay_no'];
+            else if((isset($orderInfo['pay_no'])&&(!empty($orderInfo['pay_no']))){
             }
+			
             $modelData = [];
             $modelData['searchItem'] = [
                 'user_no'=>$orderInfo['user_no']
@@ -82,7 +83,7 @@ class Pay
                 ]);
             };
             $userInfo = $userInfo['data'][0];
-            $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
+            $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo,$inner);
         };
 
         if(!isset($data['wxPayStatus'])){
@@ -421,14 +422,25 @@ class Pay
         };
     }
 
-    public static function checkParamValid($data,$orderInfo,$userInfo)
+    public static function checkParamValid($data,$orderInfo,$userInfo,$inner)
     {  
         if($orderInfo['pay_status'] == '1'){
             throw new ErrorMessage([
                 'msg' => '订单已支付',
             ]);
         };
-        
+		
+		if(!$inner){
+			if($orderInfo['pay_status']==0&&!empty($orderInfo['prepay_id'])){
+				if($orderInfo['invalid_time']>time()){
+					throw new SuccessMessage([
+					    'msg'=>'微信支付发起成功',
+					    'info'=>$orderInfo['wx_prepay_info'],
+					]);
+				}
+			}
+		}
+
         if(isset($data['balance'])){
             if($userInfo['info']['balance']<$data['balance']){
                 throw new ErrorMessage([

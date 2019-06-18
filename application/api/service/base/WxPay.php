@@ -125,6 +125,7 @@ class WxPay
             OrderModel::where('pay_no', $pay_no)->update([
                 'prepay_id' => $wxOrder['prepay_id'],
                 'wx_prepay_info' => json_encode($signature),
+				'invalid_time' => time()+7000,
             ]);
             $modelData = [];
             if($logData){
