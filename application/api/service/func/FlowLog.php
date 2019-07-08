@@ -49,6 +49,9 @@ class FlowLog {
             }else{
                 $orderPrice = -1;
             }
+			
+			//删除订单锁
+			Cache::rm($orderInfo['order_no']);
 
             if ($orderPrice >= 0) {
                 //获取流水信息

@@ -76,7 +76,7 @@ class Common extends Model{
             $sqlStr = $sqlStr."select();";
             $res = eval($sqlStr);
             $res = $model->dealGet(resDeal($res));
-            if($dbTable=='article'){
+            if($dbTable=='Article'){
                 $updateData = [];
                 foreach ($res as $key => $value) {
                     array_push($updateData,['id'=>$value['id'],'view_count'=>$value['view_count']+1]);

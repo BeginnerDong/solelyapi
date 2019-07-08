@@ -69,6 +69,7 @@ class Wx{
         if($accessRes){
             $accessRes = json_decode($accessRes,true);
             $modelData = [];
+            $modelData['FuncName'] = 'update';
             $modelData['searchItem']['appid'] = $config['appid'];
             $modelData['searchItem']['appsecret'] = $config['appsecret'];
             $modelData['data']['access_token'] = $accessRes['access_token'];

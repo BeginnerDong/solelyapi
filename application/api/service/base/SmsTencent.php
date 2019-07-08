@@ -56,7 +56,7 @@ class SmsTencent {
 
         if (!isset($data['params'])) {
 
-            throw new TokenException([
+            throw new ErrorMessage([
 
                 'msg' => '缺少短信模板信息',
 

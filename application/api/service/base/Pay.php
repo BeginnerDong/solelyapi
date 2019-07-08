@@ -69,7 +69,8 @@ class Pay
 			
             if((!isset($orderInfo['pay_no'])||empty($orderInfo['pay_no']))&&!isset($data['pay_no'])){
                 $data['pay_no'] = makePayNo();
-            else if((isset($orderInfo['pay_no'])&&(!empty($orderInfo['pay_no']))){
+			}else if((isset($orderInfo['pay_no']))&&(!empty($orderInfo['pay_no']))){
+				$data['pay_no'] = $orderInfo['pay_no'];
             }
 			
             $modelData = [];
@@ -83,7 +84,17 @@ class Pay
                 ]);
             };
             $userInfo = $userInfo['data'][0];
+			
             $orderInfo = self::checkParamValid($data,$orderInfo,$userInfo,$inner);
+			
+			//订单加锁,防止重复支付
+			if(Cache::get($orderInfo['order_no'])){
+				throw new ErrorMessage([
+				    'msg' => '订单支付中，请稍后',
+				]);
+			}else{
+				Cache::set($orderInfo['order_no'],'lock',7000);
+			}
         };
 
         if(!isset($data['wxPayStatus'])){
@@ -339,7 +350,7 @@ class Pay
             'standard_id'=>isset($coupon['standard_id'])?$coupon['standard_id']:'',
             'thirdapp_id'=>$userInfo['thirdapp_id'],
             'user_no'=>$userInfo['user_no'],
-            'relation_id'=>$orderinfo['order_no'],
+            'relation_id'=>$couponInfo['id'],
         );
         
         $res = BeforeModel::CommonSave('FlowLog',$modelData);
