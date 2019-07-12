@@ -35,7 +35,8 @@ class WXPayReturn extends Controller
             $orderId = $data['OUT_TRADE_NO'];
             $payLog = resDeal([PayLog::get(['pay_no'=>$orderId])])[0];
             if($payLog&&$payLog['transaction_id']==$data['TRANSACTION_ID']){
-                return true;
+				echo 'SUCCESS';
+				return;
             };
             
             $modelData = [];
@@ -53,31 +54,33 @@ class WXPayReturn extends Controller
             $modelData['FuncName'] = 'update';
             $saveLog = BeforeModel::CommonSave('PayLog',$modelData);
 
-            if($payLog['behavior']==1){
-                return true;
-            };
+			if($payLog['behavior']==1){
+				echo 'SUCCESS';
+				return;
+			};
             $TOTAL_FEE = $data['TOTAL_FEE']/100;
 
-            if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['iscoupon'])&&!empty($payLog['pay_info']['iscoupon'])) {
-                $modelData = [];
-                $modelData['searchItem']['pay_no'] = $orderId;
-                $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
-                $this->dealCoupon($data,$couponInfo,$TOTAL_FEE,$payLog);
-                return true;
-            }
+			if (isset($payLog['pay_info'])&&isset($payLog['pay_info']['iscoupon'])&&!empty($payLog['pay_info']['iscoupon'])) {
+				$modelData = [];
+				$modelData['searchItem']['pay_no'] = $orderId;
+				$couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
+				$this->dealCoupon($data,$couponInfo,$TOTAL_FEE,$payLog);
+				echo 'SUCCESS';
+				return;
+			}
 
-            $modelData = [];
-            $modelData['searchItem']['pay_no'] = $orderId;
-            $orderList = BeforeModel::CommonGet('Order',$modelData);
-            if(!count($orderList['data'])>0){
-                $orderinfo = [];
-                $this->dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog);
-            }else{
-                foreach ($orderList['data'] as $key => $value) {
-                    $this->dealOrder($data,$value,$TOTAL_FEE,$payLog);
-                };
-            }
-            return true;
+			$modelData = [];
+			$modelData['searchItem']['pay_no'] = $orderId;
+			$orderList = BeforeModel::CommonGet('Order',$modelData);
+			if(!count($orderList['data'])>0){
+				$orderinfo = [];
+				$this->dealOrder($data,$orderinfo,$TOTAL_FEE,$payLog);
+			}else{
+				foreach ($orderList['data'] as $key => $value) {
+					$this->dealOrder($data,$value,$TOTAL_FEE,$payLog);
+				};
+			}
+			return;
 
         }else{
 

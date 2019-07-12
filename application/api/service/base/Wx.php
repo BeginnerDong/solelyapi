@@ -114,11 +114,12 @@ class Wx{
 
         $send = json_decode($send,true);
 
-        if ($send['errcode']!=0) {
-            throw new ErrorMessage([
-                'msg'=>$send['errmsg'],
-            ]);  
-        }
+		/*模板消息错误不抛出*/
+		// if ($send['errcode']!=0) {
+		// 	throw new ErrorMessage([
+		// 		'msg'=>$send['errmsg'],
+		// 	]);
+		// }
 
     }
 

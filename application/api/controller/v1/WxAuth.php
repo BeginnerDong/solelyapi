@@ -48,7 +48,7 @@ class WxAuth
                 if(isset($this->access_token['errcode'])){
                     throw new ErrorMessage([
                         'msg'=>$this->access_token['errmsg'],
-                        'solelyCode'=>201000,
+                        'solelyCode'=>300000,
                     ]);
                 }else{
                     $wxResult['openid'] = $this->access_token['openid'];
