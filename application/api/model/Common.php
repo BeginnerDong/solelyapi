@@ -117,7 +117,9 @@ class Common extends Model{
         try{
 
             if($FuncName=='update'){
-
+				if(isset($data['data']['user_no'])){
+					unset($data['data']['user_no']);
+				};
                 $data['data']['update_time'] = time();
                 $model->dealUpdate($data);
                 $data['data'] = jsonDeal($data['data']);
