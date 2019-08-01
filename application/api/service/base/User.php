@@ -125,8 +125,10 @@ class User{
         (new CommonValidate())->goCheck('one',$data);
         $data = checkTokenAndScope($data,config('scope.two'));
         unset($data['data']['thirdapp_id']);
-		$data['searchItem']['user_no'] = Cache::get($data['token'])['user_no'];
-       
+		if(!isset($data['searchItem']['user_no'])){
+			$data['searchItem']['user_no'] = Cache::get($data['token'])['user_no'];
+		}
+
         $res = BeforeModel::CommonSave("User",$data);
 
         if($inner){

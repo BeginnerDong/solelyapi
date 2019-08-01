@@ -17,10 +17,24 @@ use app\lib\exception\ErrorMessage;
 class SmsAli {
 
 
-    public function sendMsg($data){
+	/**
+	 * params中包含参数：
+	 * PhoneNumbers手机号
+	 * TemplateCode模板号
+	 * SignName签名
+	 */
+    public function sendMsg($data,$inner=false)
+    {
 
-        (new CommonValidate())->goCheck('one',$data);
-        checkTokenAndScope($data,config('scope.two'));
+		if(!$inner){
+			(new CommonValidate())->goCheck('one',$data);
+			checkTokenAndScope($data,config('scope.two'));
+			$accessKeyId = Cache::get($data['token'])['thirdApp']['smsKey_ali'];
+			$accessKeySecret = Cache::get($data['token'])['thirdApp']['smsSecret_ali'];
+		}else{
+			$accessKeyId = $data['smsKey_ali'];
+			$accessKeySecret = $data['smsSecret_ali'];
+		};
 
         if (!isset($data['params'])) {
             throw new ErrorMessage([

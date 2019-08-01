@@ -26,7 +26,7 @@ class User {
 			$modelData['searchItem']['login_name'] = $data['data']['login_name'];
 			$modelData['searchItem']['status'] = ['in',[-1,0,1]];
 			$user = CommonModel::CommonGet('User',$modelData);
-			if (count($User['data'])>0) {
+			if (count($user['data'])>0) {
 				throw new ErrorMessage([
                     'msg' => '用户名已存在',
                 ]);
