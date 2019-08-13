@@ -16,7 +16,7 @@ namespace app\api\service\base;
 
 use think\Cache;
 
-use think\Loader; 
+use think\Loader;
 
 use think\Request as Request; 
 
@@ -45,17 +45,31 @@ Loader::import('phpqrcode.phpqrcode', EXTEND_PATH, '.php');
 class Qr{
 
 
-
-    public static function ProgramQrGet($data)
+	//data需要appid,appsecret,qrInfo,output,thirdapp_id,user_no
+    public static function ProgramQrGet($data,$inner=false)
     {
+		
+		if(!$inner){
+		
+			$data = Request::instance()->param();
+			
+			(new CommonValidate())->goCheck('one',$data);
 
-        (new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-
-        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
-
-        $user_no = Cache::get($data['token'])['user_no'];
+			checkTokenAndScope($data,config('scope.two'));
+		
+		    $userinfo = Cache::get($data['token']);
+		
+		    $thirdapp_id = $userinfo['thirdapp_id'];
+		
+		    $user_no = $userinfo['user_no'];
+		
+		}else{
+		
+		    $thirdapp_id = $data['thirdapp_id'];
+		
+		    $user_no = $data['user_no'];
+		
+		};
 
         $modelData = [];
 
@@ -68,8 +82,6 @@ class Qr{
         $appid = $ThirdAppInfo['appid'];
 
         $appsecret = $ThirdAppInfo['appsecret'];
-
-        $data = Request::instance()->param();
 
         $modelData = [];
 
@@ -85,17 +97,25 @@ class Qr{
 
         ];
 
-        $res = BeforeModel::CommonGet('File',$modelData);        
-
+        $res = BeforeModel::CommonGet('File',$modelData);
+        
         if(count($res['data'])>0){
-
-            throw new SuccessMessage([
-
-                'msg'=>'获取二维码图片成功',
-
-                'info'=>['url'=>$res['data'][0]['path']]
-
-            ]);
+			
+			if(!$inner){
+				
+				throw new SuccessMessage([
+				
+				    'msg'=>'获取二维码图片成功',
+				
+				    'info'=>['url'=>$res['data'][0]['path']]
+				
+				]);
+				
+			}else{
+				
+				return $res['data'][0]['path'];
+				
+			}
 
         };
 
@@ -131,9 +151,23 @@ class Qr{
 
                 $modelData['param'] = json_encode($data['qrInfo']);
 
-                FtpImageService::uploadStream($modelData,true);
-
-                //QiniuImageService::upload($modelData,true);
+                $url = FtpImageService::uploadStream($modelData,true);
+				
+				if(!$inner){
+					
+					throw new SuccessMessage([
+					
+						'msg'=>'获取二维码图片成功',
+					
+						'info'=>['url'=>$url]
+					
+					]);
+					
+				}else{
+					
+					return $url;
+					
+				};
 
             }else{
 
@@ -146,7 +180,6 @@ class Qr{
         }
 
     }
-
 
 
     /*调用第三方网站生成二维码*/
@@ -193,6 +226,8 @@ class Qr{
 
         $stream = file_get_contents('http://qr.liantu.com/api.php?text='.$data['param'], 'r');
 
+        //var_dump($stream);
+
         if($data['output']=='url'){
 
             $modelData = [];
@@ -227,6 +262,8 @@ class Qr{
 
             };
 
+        
+
         }else{
 
             $result=self::data_uri($stream,'image/png');
@@ -238,7 +275,6 @@ class Qr{
     }
 
 
-
     /**
      * [PHPQrGet 使用phpqrcode本地生成二维码]
      * @param [type]  $data  [token/params/ext目前支持png]
@@ -247,50 +283,13 @@ class Qr{
     public static function PHPQrGet($data,$inner=false)
     {
 
-		if(!$inner){
-			
-			(new CommonValidate())->goCheck('one',$data);
-			
-			checkTokenAndScope($data,config('scope.two'));
-			
-			
-			
-			$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
-			
-			$user_no = Cache::get($data['token'])['user_no'];
-			
-		}else{
-			
-			$thirdapp_id = $data['thirdapp_id'];
-			
-			$user_no = $data['user_no'];
-			
-		}
-		
-		/*判断图片是否已生成*/
-		$modelData = [];
-		
-		$modelData['searchItem'] = [
-		
-		    'user_no'=>$user_no,
-		
-		    'param'=>$data['param'],
-		
-		];
-		
-		$res = BeforeModel::CommonGet('File',$modelData);
-		
-		if(count($res['data'])>0){
-		
-		    throw new SuccessMessage([
-		
-		        'msg'=>'获取二维码图片成功',
-		
-		        'info'=>['url'=>$res['data'][0]['path']]
-		
-		    ]);
-		
-		};
+        (new CommonValidate())->goCheck('one',$data);
+
+        checkTokenAndScope($data,config('scope.two'));
+
+        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+
+        $user_no = Cache::get($data['token'])['user_no'];
 
         $value = $data['param'];        //二维码内容
 

@@ -44,14 +44,15 @@
 | headImgUrl | varchar(9999) | 微信头像 |
 | primary_scope | int(255) | 权限级别：90平台管理员;60超级管理员;30管理员;10用户 |
 | user_type | tinyint(2) | 0,小程序用户;2,cms用户; |
-| user_no | varchar(255) | 用户编号|
+| user_no | varchar(255) | 用户编号 |
 
 
 
 ### user_info表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | ------  | ------ |
+| name | varchar(255) | 名称 |
 | gender | tinyint(2) | 性别:1.男;2.女 |
 | address | varchar(255) | 地址 |
 | phone | varchar(255) | 电话 |
@@ -77,7 +78,7 @@
 | menu_id | int(11) | 关联label表 |
 | description | varchar((255) | 描述 |
 | content | text | 文章内容 |
-| mainImg | varchar(9999) | 文章主图，一般在列表渲染 |
+| mainImg | text | 文章主图，一般在列表渲染 |
 
 
 
@@ -88,7 +89,7 @@
 | title | varchar(255) | 标题 |
 | description | varchar(255) | 描述 |
 | content | text | 内容 |
-| mainImg | varchar(999) | 主图，一般在列表渲染 |
+| mainImg | text | 主图，一般在列表渲染 |
 
 
 

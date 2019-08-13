@@ -19,7 +19,8 @@ class Order{
         
     }
 
-    public static function addVirtualOrder($data){
+    public static function addVirtualOrder($data)
+	{
         (new CommonValidate())->goCheck('one',$data);
         checkTokenAndScope($data,config('scope.two'));
 
@@ -179,7 +180,7 @@ class Order{
             ]);
         };
         $totalPrice = 0;
-        $type = 0;
+        $type = isset($data['type'])?$data['type']:1;
         $order_no = makeOrderNo();
 
         if (!isset($data['product'])&&!isset($data['sku'])) {
@@ -201,9 +202,8 @@ class Order{
 
         $modelData = [];
         $modelData['data']['order_no'] = $order_no;
-        $modelData['data']['product_type'] = $type;
         $modelData['data']['price'] = $totalPrice;
-        $modelData['data']['type'] = isset($data['type'])?$data['type']:1;
+        $modelData['data']['type'] = $type;
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
         $modelData['data']['parentid'] = isset($data['parentid'])?$data['parentid']:0;

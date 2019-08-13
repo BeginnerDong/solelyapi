@@ -678,6 +678,18 @@ use app\lib\exception\ErrorMessage;
             ]);
         };
 
+		$user = Cache::get($data['token']);
+		/*检查用户是否存在*/
+		$userModel = new User();
+		$check['user_no'] = $user['user_no'];
+		$checkUser = $userModel->where($check)->find();
+		if(!$checkUser){
+			throw new ErrorMessage([
+				'msg'=>'token已失效',
+				'solelyCode' => 200000
+			]);
+		};
+
         if(empty($scope)){
            return $data; 
         };
@@ -826,9 +838,6 @@ use app\lib\exception\ErrorMessage;
                         }else{
 
                             $data['searchItem']['user_no'] = $user_no;
-                            // if(isset($data['data'])){
-                            //     $data['data']['user_no'] = $user_no;
-                            // };
 
                         };
 
@@ -938,9 +947,6 @@ use app\lib\exception\ErrorMessage;
                     }else{
 
                         $data['searchItem']['user_no'] = $user_no;
-                        // if(isset($data['data'])){
-                        //     $data['data']['user_no'] = $user_no;
-                        // };
 
                     };
 
