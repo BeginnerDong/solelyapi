@@ -14,13 +14,13 @@ return [
     // 数据库类型
     'type'            => 'mysql',
     // 服务器地址
-    'hostname'        => 'sqld-gz.bcehost.com',
+    'hostname'        => '127.0.0.1',
     // 数据库名
-    'database'        => 'DWmLQzYYeUyPhGdhUICq',
+    'database'        => 'testapi',
     // 用户名
-    'username'        => 'cd789cdb8940408e9633f0dc1efa358f',
+    'username'        => 'root',
     // 密码
-    'password'        => 'a78e6590bad346099c0afc4660ca7172',
+    'password'        => 'root',
     // 端口
     'hostport'        => '3306',
     // 连接dsn

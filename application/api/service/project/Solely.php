@@ -194,7 +194,7 @@ class Solely{
         $user = BeforeModel::CommonGet('User',$data);
         if (count($user['data'])==0) {
             throw new ErrorMessage([
-                'msg' => '用户信息不存在'
+                'msg' => '用户信息不存在',
             ]);
         }
         $user = $user['data'][0];
@@ -218,4 +218,56 @@ class Solely{
         ]);
 
     }
+	
+
+	/**
+	 * 承接前端的参数，依据项目执行特定的方法
+	 * @param saveFunction
+	 */
+	public static function saveFunction($data)
+	{
+		foreach($data as $key => $value){
+			if(isset($value['FuncName'])){
+				if($value['FuncName']=="viewArticle"){
+					$modelData = [];
+					$modelData['searchItem'] = $value['searchItem'];
+					$modelData['getOne'] = 'true';
+					$article = BeforeModel::CommonGet('Article',$modelData);
+					if(count($article['data'])>0){
+						$article = $article['data'][0];
+						$modelData = [];
+						$modelData['FuncName'] = 'update';
+						$modelData['searchItem'] = $value['searchItem'];
+						$modelData['data']['view_count'] = $article['view_count']+1;
+						$article = BeforeModel::CommonSave('Article',$modelData);
+					};
+				};
+				if($value['FuncName']=="viewProduct"){
+					$modelData = [];
+					$modelData['searchItem'] = $value['searchItem'];
+					$modelData['getOne'] = 'true';
+					$product = BeforeModel::CommonGet('Product',$modelData);
+					if(count($product['data'])>0){
+						$product = $product['data'][0];
+						$modelData = [];
+						$modelData['FuncName'] = 'update';
+						$modelData['searchItem'] = $value['searchItem'];
+						$modelData['data']['view_count'] = $product['view_count']+1;
+						$product = BeforeModel::CommonSave('Product',$modelData);
+					};
+				};
+			};
+		};
+
+	}
+
+
+	public static function test()
+	{
+		$modelData = [];
+		$modelData['searchItem']['status'] = 1;
+		$modelData['info'] = ['login_name','user_no'];
+		$test = BeforeModel::CommonGet('User',$modelData);
+		var_dump($test['data']);
+	}
 }

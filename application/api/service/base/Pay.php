@@ -47,7 +47,8 @@ class Pay
     }
 
 
-    public static function pay($data,$inner=false){
+    public static function pay($data,$inner=false)
+	{
         
         if(!$inner){
             self::$token = $data['token'];
@@ -63,15 +64,11 @@ class Pay
             ]);
         }else{
             $orderInfo = $orderInfo['data'][0];
-            if($orderInfo['type']!=6){
+            if($orderInfo['type']!=4){
                 self::checkStock($orderInfo);
             };
 			
-            if((!isset($orderInfo['pay_no'])||empty($orderInfo['pay_no']))&&!isset($data['pay_no'])){
-                $data['pay_no'] = makePayNo();
-			}else if((isset($orderInfo['pay_no']))&&(!empty($orderInfo['pay_no']))){
-				$data['pay_no'] = $orderInfo['pay_no'];
-            }
+			$data['pay_no'] = makePayNo();
 			
             $modelData = [];
             $modelData['searchItem'] = [
@@ -93,7 +90,7 @@ class Pay
 				    'msg' => '订单支付中，请稍后',
 				]);
 			}else{
-				Cache::set($orderInfo['order_no'],'lock',7000);
+				Cache::set($orderInfo['order_no'],'lock',3);
 			}
         };
 
@@ -103,29 +100,34 @@ class Pay
         if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
 
             /*判断是否是二次调起支付*/
-            $modelData = [];
-            $modelData['searchItem']['pay_no'] = $data['pay_no'];
-            $payLog = BeforeModel::CommonGet('PayLog',$modelData);
-            if (count($payLog['data'])>0) {
-                $payLog = $payLog['data'][0];
-                if ($payLog['pay_info']['wxPay']['price']!=$data['wxPay']['price']) {
-                    $modelData = [];
-                    $modelData['FuncName'] = "update";
-                    $modelData['searchItem']['id'] = $payLog['id'];
-                    $modelData['data']['status'] = -1;
-                    $upLog = BeforeModel::CommonSave('PayLog',$modelData);
-                    $data['pay_no'] = makePayNo();
-                    $modelData = [];
-                    $modelData['FuncName'] = "update";
-                    $modelData['searchItem']['id'] = $orderInfo['id'];
-                    $modelData['data']['pay_no'] = $data['pay_no'];
-                    $upOrder = BeforeModel::CommonSave('Order',$modelData);
-                }
-            }
+            // $modelData = [];
+            // $modelData['searchItem']['pay_no'] = $data['pay_no'];
+            // $payLog = BeforeModel::CommonGet('PayLog',$modelData);
+            // if (count($payLog['data'])>0) {
+            //     $payLog = $payLog['data'][0];
+            //     if ($payLog['pay_info']['wxPay']['price']!=$data['wxPay']['price']) {
+            //         $modelData = [];
+            //         $modelData['FuncName'] = "update";
+            //         $modelData['searchItem']['id'] = $payLog['id'];
+            //         $modelData['data']['status'] = -1;
+            //         $upLog = BeforeModel::CommonSave('PayLog',$modelData);
+            //         $data['pay_no'] = makePayNo();
+            //         $modelData = [];
+            //         $modelData['FuncName'] = "update";
+            //         $modelData['searchItem']['id'] = $orderInfo['id'];
+            //         $modelData['data']['pay_no'] = $data['pay_no'];
+            //         $upOrder = BeforeModel::CommonSave('Order',$modelData);
+            //     }
+            // }
 
             /*记录订单的全部信息，回调时执行其它支付方式*/
+			if(isset($data['saveFunction'])){
+				$logData['saveFunction'] = $data['saveFunction'];
+				unset($data['saveFunction']);
+			};
+			
             $logData['pay_info'] = $data;
-            WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData);
+            WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData,$orderInfo);
 
         };
 
@@ -201,13 +203,14 @@ class Pay
     }
 
 
-    public static function balancePay($userInfo,$orderinfo,$balance,$data)
+    public static function balancePay($userInfo,$orderInfo,$balance,$data)
     {
         $modelData = [];
         $modelData['data'] = array(
             'type' => 2,
             'count'=>-$balance,
-            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+            'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'余额支付',
             'relation_table'=>'order',
@@ -230,14 +233,16 @@ class Pay
         
     }
 
-    public static function otherPay($userInfo,$orderinfo,$other,$data)
+
+    public static function otherPay($userInfo,$orderInfo,$other,$data)
     {
         
         $modelData = [];
         $modelData['data'] = array(
             'type' => 7,
             'count'=>-$other['price'],
-            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+            'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
             'relation_table'=>'order',
@@ -261,14 +266,15 @@ class Pay
     }
 
 
-    public static function scorePay($userInfo,$orderinfo,$score,$data)
+    public static function scorePay($userInfo,$orderInfo,$score,$data)
     {  
 
         $modelData = [];
         $modelData['data'] = array(
             'type' => 3,
             'count'=>-$score,
-            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+            'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'积分支付,积分兑付比率为:'.$userInfo['info']['score_ratio'],
             'relation_table'=>'order',
@@ -291,7 +297,8 @@ class Pay
         
     }
 
-    public static function couponPay($userInfo,$orderinfo,$coupon,$data)
+
+    public static function couponPay($userInfo,$orderInfo,$coupon,$data)
     {
         $modelData = [];
         $modelData['searchItem']['id'] = $coupon['id'];
@@ -305,14 +312,14 @@ class Pay
         $couponInfo = $couponInfo['data'][0];
 
         if($couponInfo['type']==1){//抵扣券
-            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$couponInfo['value'])){
+            if((($couponInfo['condition']!=0)&&($orderInfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$couponInfo['value'])){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
             };
         };
         if($couponInfo['type']==2){//折扣券
-            if((($couponInfo['condition']!=0)&&($orderinfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$orderinfo['price']*$couponInfo['discount']/100)){
+            if((($couponInfo['condition']!=0)&&($orderInfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$orderInfo['price']*$couponInfo['discount']/100)){
                 throw new ErrorMessage([
                     'msg' => '优惠券使用不合规',
                 ]);
@@ -323,7 +330,7 @@ class Pay
         if ($couponInfo['use_limit']>0) {
             
             $modelData = [];
-            $modelData['searchItem']['pay_no'] = $orderinfo['pay_no'];
+            $modelData['searchItem']['pay_no'] = $orderInfo['pay_no'];
             $modelData['searchItem']['coupon_no'] = $couponInfo['coupon_no'];
             $modelData['searchItem']['pay_status'] = 1;
             $modelData['searchItem']['use_step'] = 2;
@@ -343,7 +350,8 @@ class Pay
         $modelData['data'] = array(
             'type' => 4,
             'count'=>-$coupon['price'],
-            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'优惠券抵减',
             'relation_table'=>'order',
@@ -378,8 +386,7 @@ class Pay
     }
 
 
-
-    public static function cardPay($userInfo,$orderinfo,$card,$data)
+    public static function cardPay($userInfo,$orderInfo,$card,$data)
     {
         $modelData = [];
         $modelData['searchItem']['order_no'] = $card['card_no'];
@@ -401,7 +408,8 @@ class Pay
         $modelData['data'] = array(
             'type' => 6,//6类型代表会员卡
             'count'=> -$card['price'],
-            'order_no'=>isset($orderinfo['order_no'])?$orderinfo['order_no']:'',
+            'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+            'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
             'pay_no'=>$data['pay_no'],
             'trade_info'=>'使用会员卡',
             'relation_table'=>'order',
@@ -433,24 +441,25 @@ class Pay
         };
     }
 
+
     public static function checkParamValid($data,$orderInfo,$userInfo,$inner)
-    {  
+    {
         if($orderInfo['pay_status'] == '1'){
             throw new ErrorMessage([
                 'msg' => '订单已支付',
             ]);
         };
 		
-		if(!$inner){
-			if($orderInfo['pay_status']==0&&!empty($orderInfo['prepay_id'])){
-				if($orderInfo['invalid_time']>time()){
-					throw new SuccessMessage([
-					    'msg'=>'微信支付发起成功',
-					    'info'=>$orderInfo['wx_prepay_info'],
-					]);
-				}
-			}
-		}
+		// if(!$inner){
+		// 	if($orderInfo['pay_status']==0&&!empty($orderInfo['prepay_id'])){
+		// 		if($orderInfo['invalid_time']>time()){
+		// 			throw new SuccessMessage([
+		// 			    'msg'=>'微信支付发起成功',
+		// 			    'info'=>$orderInfo['wx_prepay_info'],
+		// 			]);
+		// 		}
+		// 	}
+		// }
 
         if(isset($data['balance'])){
             if($userInfo['info']['balance']<$data['balance']){
@@ -496,7 +505,8 @@ class Pay
     }
     
 
-    public static function returnPay($data,$inner=false){
+    public static function returnPay($data,$inner=false)
+	{
         
         if(!$inner){
             self::$token = $data['token'];
@@ -545,4 +555,5 @@ class Pay
         };
 
     }
+
 }

@@ -9,6 +9,8 @@ use app\api\model\Common as CommonModel;
 
 use app\api\service\beforeModel\Func as FuncService;
 
+use app\api\service\project\Solely as SolelyService;
+
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
@@ -29,10 +31,18 @@ class Common {
 		
 		/*检测过期优惠券*/
 		if($dbTable=="UserCoupon"){
+			
 			self::checkCoupon($dbTable,$data);
+			
 		};
 
     	$final = CommonModel::CommonGet($dbTable,$data);
+		
+		if(isset($data['saveFunction'])){
+			
+			SolelyService::saveFunction($data['saveFunction']);
+			
+		};
 
         $final = self::getLimit($data,$final);
 
@@ -69,6 +79,12 @@ class Common {
         }
 
         $finalRes = CommonModel::CommonSave($dbTable,$data);
+		
+		if(isset($data['saveFunction'])){
+			
+			SolelyService::saveFunction($data['saveFunction']);
+			
+		};
 
         if($FuncName=='update'){
 
@@ -98,39 +114,114 @@ class Common {
 
 
 
+	/**
+	 * 前置搜索
+	 * 分三层可以设置交/并集选项
+	 * getBefore多个条件之间，在每个getBefore中设置type==merge为并集，默认交集
+	 * 每个getBefore内的多个searchItem之间，在getBefore中设置searchType==merge为并集，默认交集
+	 * 每个searchItem条件之间，在searchItem中数组每项的第三个参数设置merge为并集，默认交集
+	 */
     public static function CommonGetPro($data)
     {
         if(isset($data['getBefore'])){
+			$getBeforeData = [];
             $newSearchItem = [];
             foreach ($data['getBefore'] as $key => $value) {
+				
+				/*初始化每个getBefore的结果*/
                 $search = [];
+				
                 foreach ($value['searchItem'] as $c_key => $c_value) {
+					
+					/*初始化每个searchItem的结果*/
+					$searchItem = [];
                     foreach ($c_value[1] as $c_current) {
+						
+						/*初始化每个选项的结果*/
                         $c_search = [];
                         $map = [];
-                        if(isset($value['fixSearchItem'])){
-                            $map = $value['fixSearchItem'];
-                        };
-                        $map[$c_key] = [$c_value[0],$c_current];
+						
+						if(is_array($c_value['key'])){
+							$finalItem = '';
+							foreach ($c_value['key'] as $cc_key => $cc_value) {
+							    if($cc_key==0){
+							        $finalItem = $getBeforeData[$c_value['key'][0]];
+							    }else{
+							        if ($finalItem&&isset($finalItem[$c_value['key'][$cc_key]])) {
+										$finalItem = $finalItem[$c_value['key'][$cc_key]];
+							        }else{
+							            $finalItem = '';
+							        };
+							    };
+							};
+							if($finalItem){
+							    $map[$c_key] = [$c_value['condition'],$finalItem];
+							};
+						}else{
+							$map[$c_key] = [$c_value[0],$c_current];
+						};
+
                         $modelData = [];
                         $modelData['searchItem'] = $map;
                         $res = CommonModel::CommonGet($value['tableName'],$modelData);
-
+						/*记录结果复用*/
+						$getBeforeData[$key] = $res;
+						
                         foreach ($res['data'] as $ckey => $cvalue) {
                             array_push($c_search,$cvalue[$value['key']]);
                         };
 
-                        if(empty($search)){
-                            $search = $c_search;
+                        if(empty($searchItem)){
+                            $searchItem = $c_search;
                         }else{
-                            $search = array_intersect($search,$c_search);
-                        };
-
+							/*条件内部求交/并集*/
+							if(isset($c_value[2])&&$c_value[2]=="merge"){
+								array_merge($searchItem,$c_search);
+							}else{
+								$new = [];
+								foreach($searchItem as $s_key => $s_value){
+									if(in_array($s_value,$c_search)){
+										array_push($new,$s_value);
+									};
+								};
+								$searchItem = $new;
+							};
+						};
                     };
+					
+					/*记录结果复用*/
+					$getBeforeData[$value['middleKey']] = [$value['condition'],$searchItem];
+					
+					if(empty($search)){
+						$search = $searchItem;
+					}else{
+						/*多个searchItem之间求交/并集*/
+						if(isset($value['searchType'])&&$value['searchType']=="merge"){
+							array_merge($search,$searchItem);
+						}else{
+							$new = [];
+							foreach($searchItem as $i_key => $i_value){
+								if(in_array($i_value,$search)){
+									array_push($new,$i_value);
+								};
+							};
+							$search = $new;
+						};
+					}
                 };
                 if(!empty($search)){
                     if(isset($newSearchItem[$value['middleKey']])){
-                        $newSearchItem[$value['middleKey']] = [$value['condition'],array_intersect($search,$newSearchItem[$value['middleKey']][1])];
+						if(isset($value['type'])&&$value['type']=="merge"){
+							$newSearchItem[$value['middleKey']] = [$value['condition'],array_merge($search,$newSearchItem[$value['middleKey']][1])];
+						}else{
+							$new = [];
+							foreach($search as $s_key => $s_value){
+								if(in_array($s_value,$newSearchItem[$value['middleKey']][1])){
+									array_push($new,$s_value);
+								};
+							};
+							$newSearchItem[$value['middleKey']] = [$value['condition'],$new];
+						};
                     }else{
                         $newSearchItem[$value['middleKey']] = [$value['condition'],$search];
                     }; 

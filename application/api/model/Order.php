@@ -20,14 +20,12 @@ use app\api\model\Sku;
 
 
 class Order extends BaseModel
-
 {
 
 
 
     public static function dealAdd($data)
-
-    {   
+    {
 
         $standard = [
             'order_no'=>'',
@@ -100,9 +98,7 @@ class Order extends BaseModel
 
 
     public static function dealGet($data)
-
-    {   
-
+    {
 
         foreach ($data as $key => $value) {
             $value = resDeal([$value])[0];
@@ -117,8 +113,7 @@ class Order extends BaseModel
 
 
     public static function dealUpdate($data)
-
-    {   
+    {
 
         if(isset($data['data']['status'])&&$data['data']['status']==-1){
 
@@ -217,20 +212,6 @@ class Order extends BaseModel
 
                 
                 if(isset($data['data']['pay_status'])&&($data['data']['pay_status']==1)){
-
-                    //同步切换子订单支付状态
-                    $childOrders = resDeal((new Order())->where(['parent_id' => $res[$key]['id'],])->select());
-
-                    if (count($childOrders)>0) {
-                       
-                        foreach ($childOrders as $key => $value) {
-                            
-                            (new Order())->save(
-                                ['pay_status'  => 1],
-                                ['id' => $value['id']]
-                            );
-                        };
-                    };
 
                     //检测团购订单
                     if (!empty($res[$key]['group_no'])) {

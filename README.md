@@ -103,7 +103,7 @@
 
 
 
-### pay_log表
+### pay_log表-update
 
 | 字段 | 类型 | 说明 |
 | ------ |  :------:  | ------  | 
@@ -118,6 +118,7 @@
 | pay_info | varchar(999) | 支付信息 |
 | prepay_id | varchar(255) | 订单微信支付的预订单id(用于发送模板消息) |
 | wx_prepay_info | varchar(999) | 储存微信预支付信息，再次调起支付使用 |
+| parent_no | varchar(255) | 父级订单NO |
 
 
 
@@ -125,7 +126,7 @@
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
-| product_no | varchar(255) | no |
+| product_no | varchar(255) | NO |
 | title | varchar(255) | 商品名称 |
 | description | varchar(255) | 描述 |
 | content | text | 详情 |
@@ -144,7 +145,7 @@
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
-| sku_no | varchar(255) | no |
+| sku_no | varchar(255) | NO |
 | product_no | varchar(255) | 关联product表 |
 | title | varchar(255) | 商品名称 |
 | price | decimal(10,2) | 价格 |
@@ -153,20 +154,43 @@
 
 
 
-### order表
+### order表-update
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
-| order_no | varchar(255) | no |
+| order_no | varchar(255) | 订单NO |
 | pay | varchar(255) | pay方式详情 |
 | price | decimal(10,2) | 订单金额 |
 | pay_status | tinyint(2) | 0.未支付1.已支付 |
-| type | tinyint(2) | 1.普通商品,2.会员卡,3.抵扣券,4.折扣券,5.团购商品,6虚拟订单 |
+| type | tinyint(2) | 1.普通商品,2.会员卡,3.团购商品,4.虚拟订单 |
 | order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结,4.团购未成团,5.团购成团 |
 | transport_status | tinyint(2) | 0.未发货；1.配送中；2.已收货 |
-| prepay_id | varchar(255) | 订单微信支付的预订单id |
-| wx_prepay_info | varchar(999) | 储存微信预支付信息 |
-| transaction_id | varchar(999) | 微信交易id，退款需要 |
+| parent | tinyint(2) | 0.无1.父级订单2.子级订单 |
+| parent_no | varchar(255) | 父级订单NO |
+
+
+
+### order_item表-update
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ | 
+| order_no | varchar(255) | 订单NO |
+| product_id | int(11) | 商品id |
+| title | varchar(255) | 商品名称 |
+| price | decimal(10,2) | 商品单价 |
+| count | int(11) | 商品数量 |
+| snap_product | text | 商品信息快照 |
+| isremark | tinyint(2) | 0.未评论；1.已评论 |
+| pay_status | tinyint(2) | 0.未支付1.已支付 |
+
+
+
+### flow_log表-update
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ | 
+| order_no | varchar(255) | 订单NO |
+| parent_no | varchar(255) | 父级订单NO |
 
 
 
@@ -197,7 +221,14 @@
 | ------ | ------  | ------ | 
 | type | tinyint(2) | 1.抵扣券2.折扣券 |
 | use_step | tinyint(2) | 1.未使用2.已使用-1.已过期 |
-| invalid_time | bigint(13) | 过期时间戳，前段记录13位 |
+| invalid_time | bigint(13) | 过期时间戳，前端记录13位 |
 
 
+
+### wx_template表-new
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ |
+| name | varchar(255) | 模板名称 |
+| template_no | varchar(100) | 模板号 |
 ---

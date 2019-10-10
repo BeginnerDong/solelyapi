@@ -20,7 +20,7 @@ class User {
 	public static function deal($data)
 	{
 
-		if ($data['FuncName']=="add"&&isset($data['data']['login_name'])) {
+		if (isset($data['data']['login_name'])) {
 
 			$modelData = [];
 			$modelData['searchItem']['login_name'] = $data['data']['login_name'];

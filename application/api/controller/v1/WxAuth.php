@@ -62,7 +62,10 @@ class WxAuth
     	}
     }
 
-    public function grantToken($wxResult,$data){
+
+
+    public function grantToken($wxResult,$data)
+	{
         
         $openid = $wxResult['openid'];
 
@@ -70,6 +73,7 @@ class WxAuth
         $modelData['searchItem']['openid'] = $openid;
         $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
         $modelData['searchItem']['status'] = 1;
+		$modelData['getOne'] = "true";
         $user=BeforeModel::CommonGet('User',$modelData);
 
         if(isset($wxResult['unionid'])){ 
@@ -176,9 +180,11 @@ class WxAuth
 
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
+		$modelData['getOne'] = "true";
         $user = BeforeModel::CommonGet('User',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
+		$modelData['getOne'] = "true";
         $thirdApp = BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];
@@ -204,10 +210,6 @@ class WxAuth
 
 
 
-
-
-
-
     public function getCode()  
     {  
         if (isset($_GET["code"])) {  
@@ -220,6 +222,7 @@ class WxAuth
     }
 
 
+
     public function getOpenId()  
     {  
         $access_token_url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" . $this->config['appid'] . "&secret=" . $this->config['appsecret'] . "&code=" . $this->code . "&grant_type=authorization_code";  
@@ -227,6 +230,7 @@ class WxAuth
         $access_token_array = json_decode($access_token_json, TRUE);  
         return $access_token_array;  
     }
+
 
 
     public function getUserInfo()  
@@ -238,20 +242,22 @@ class WxAuth
     }
 
 
+
     public function getThirdConfig()
     {
 
     	$modelData = [];
         $modelData['searchItem']['id'] = $this->thirdapp_id;
-        $thirdRes=BeforeModel::CommonGet('ThirdApp',$modelData);
-		$thirdRes = $thirdRes['data'];
-		if(count($thirdRes)>0){
-            $thirdRes = $thirdRes[0];
+		$modelData['getOne'] = "true";
+        $thirdRes = BeforeModel::CommonGet('ThirdApp',$modelData);
+		if(count($thirdResp['data'])>0){
+            $thirdRes = $thirdRes['data'][0];
             return $thirdRes;
 		}else{
 			return false;
 		}
 	}
+
 
 
 	public function saveUser($userInfo)
@@ -267,6 +273,7 @@ class WxAuth
 			return false;
 		}
 	}
+
 
 
 	public function updateThirdApp($thirdInfo)
@@ -290,6 +297,7 @@ class WxAuth
 	}
 
 
+
 	public function https_request($url, $data = null)  
     {
         $curl = curl_init();  
@@ -305,6 +313,8 @@ class WxAuth
         curl_close($curl);  
         return $output;  
     }
+
+
 
     public function getToken($id)
     {

@@ -77,6 +77,8 @@ class Common{
         (new CommonValidate())->goCheck('three',$data);
 
         $modelData = [];
+		
+		$modelData['getOne'] = "true";
 
         $modelData['searchItem']['login_name'] = $data['login_name'];
 
@@ -97,6 +99,8 @@ class Common{
         //根据返回结果查询关联商户信息
 
         $modelData = [];
+		
+		$modelData['getOne'] = "true";
 
         $modelData['searchItem']['id'] = $loginRes['thirdapp_id'];
 

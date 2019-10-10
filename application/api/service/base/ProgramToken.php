@@ -48,11 +48,14 @@ class ProgramToken {
     {
 
         $modelData = [];
+		
+		$modelData['getOne'] = "true";
+		
         $modelData['searchItem']['id'] = $data['thirdapp_id'];
 
         $ThirdAppInfo = BeforeModel::CommonGet('ThirdApp',$modelData);
 
-        if(!count($ThirdAppInfo)>0){
+        if(!count($ThirdAppInfo['data'])>0){
             throw new ErrorMessage([
                 'msg'=>'关联thirdappID错误'
             ]);
@@ -93,7 +96,7 @@ class ProgramToken {
     // 只能延迟自有token的过期时间超过7200秒（目前还无法确定，在express_in时间到期后
     // 还能否进行微信支付
     // 没有刷新令牌会有一个问题，就是用户的操作有可能会被突然中断
-    public static  function grantToken($wxResult,$data){
+    public static function grantToken($wxResult,$data){
         // 此处生成令牌使用的是TP5自带的令牌
         // 如果想要更加安全可以考虑自己生成更复杂的令牌
         // 比如使用JWT并加入盐，如果不加入盐有一定的几率伪造令牌
@@ -101,10 +104,11 @@ class ProgramToken {
         $openid = $wxResult['openid'];
 
         $modelData = [];
+		$modelData['getOne'] = "true";
         $modelData['searchItem']['openid'] = $openid;
         $modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
         $modelData['searchItem']['status'] = 1;
-        $user=BeforeModel::CommonGet('User',$modelData);
+        $user = BeforeModel::CommonGet('User',$modelData);
 
         if(isset($wxResult['unionid'])){ 
             $modelData = [];
@@ -212,9 +216,11 @@ class ProgramToken {
 
         $modelData = [];
         $modelData['searchItem']['id'] = $uid;
+		$modelData['getOne'] = "true";
         $user = BeforeModel::CommonGet('User',$modelData);
         $modelData = [];
         $modelData['searchItem']['id'] = $user['data'][0]['thirdapp_id'];
+		$modelData['getOne'] = "true";
         $thirdApp = BeforeModel::CommonGet('ThirdApp',$modelData);
         
         $user['data'][0]['thirdApp'] = $thirdApp['data'][0];

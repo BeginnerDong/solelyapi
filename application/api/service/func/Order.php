@@ -49,114 +49,57 @@ class Order{
     }
 
 
-    public static function addMultiOrder($data)
-    {
-
-        (new CommonValidate())->goCheck('one',$data);
-
-        //生成父订单
-        $modelData = [];
-        $modelData = self::createVirtualOrderData($data);
-        $modelData['FuncName'] = 'add';
-        $parentOrder = BeforeModel::CommonSave('Order',$modelData);
-
-        $totalPrice = 0;
-        $childOrder = [];
-
-        $modelData = [];
-        foreach ($data['orderList'] as $key => $value) {
-            $value['token'] = $data['token'];
-            $value['parentid'] = $parentOrder;
-            $modelData = self::createOrderData($value);
-            $totalPrice += $modelData['data']['price'];
-            $modelData['FuncName'] = 'add';
-            $oneOrder = BeforeModel::CommonSave('Order',$modelData);
-            array_push($childOrder,$oneOrder);
-        }
-
-        $modelData = [];
-        $modelData['FuncName'] = 'update';
-        $modelData['searchItem'] = [
-            'id'=>$parentOrder
-        ];
-        $modelData['data']['price'] = $totalPrice;
-        $updateParentOrder = BeforeModel::CommonSave('Order',$modelData);
-
-        if($parentOrder>0){
-            if(isset($data['pay'])){
-                $pay = $data['pay'];
-                $pay['searchItem'] = ['id'=>$orderRes];
-                return PayService::pay($pay,true);
-            }else{
-                throw new SuccessMessage([
-                    'msg'=>'下单成功',
-                    'info'=>[
-                        'id'=>$parentOrder,
-                        'childOrder'=>$childOrder
-                    ]      
-                ]);
-            };
-        }else{
-            throw new ErrorMessage([
-                'msg' => '下单失败',
-            ]);
-        };
-    }
-
-
     public static function addOrder($data)
     {
 
         (new CommonValidate())->goCheck('one',$data);
+		$info = [];
 
-        if (!isset($data['orderList'])) {
-            throw new ErrorMessage([
-                'msg' => '缺少订单参数orderList',
-            ]);
-        };
+		/*生成父级订单*/
+		if(isset($data['parent']){
+			$parent_no = makeOrderNo();
+			$orderInfo['order_no'] = $parent_no;
+			$orderInfo['token'] = $data['token'];
+			$orderInfo['parent'] = 1;
+			$modelData = [];
+			$modelData = self::createVirtualOrderData($orderInfo);
+			$modelData['FuncName'] = 'add';
+			$parentOrder = BeforeModel::CommonSave('Order',$modelData);
+			$data['data']['parent'] = 2;
+			$data['data']['parent_no'] = $parent_no;
+			$info['parent_id'] = $parentOrder;
+		};
 
-        $count = count($data['orderList']);
+		$modelData = [];
+		$modelData = self::createOrderData($data);
+		$modelData['FuncName'] = 'add';
+		$orderRes = BeforeModel::CommonSave('Order',$modelData);
+		$info['id'] = $orderRes;
 
-        if ($count>1) {
+		if($orderRes>0){
+			if(isset($data['pay'])){
+				$data['pay']['searchItem'] = [
+					'id'=>$orderRes
+				];
+				return PayService::pay($data['pay'],true);
+			}else{
+				throw new SuccessMessage([
+					'msg'=>'下单成功',
+					'info'=>$info,
+				]);
+			}; 
+		}else{
+			throw new ErrorMessage([
+				'msg' => '下单失败',
+			]);
+		};
 
-            return self::addMultiOrder($data);
-
-        }else if($count==1){
-
-            $data = array_merge($data['orderList'][0],$data);
-            unset($data['orderList']);
-            $modelData = [];
-            $modelData = self::createOrderData($data);
-            $modelData['FuncName'] = 'add';
-            $orderRes = BeforeModel::CommonSave('Order',$modelData);
-
-            if($orderRes>0){
-                if(isset($data['pay'])){
-                    $data['pay']['searchItem'] = [
-                        'id'=>$orderRes
-                    ];
-                    return PayService::pay($data['pay'],true);
-                }else{
-                    throw new SuccessMessage([
-                        'msg'=>'下单成功',
-                        'info'=>[
-                            'id'=>$orderRes
-                        ]      
-                    ]);
-                }; 
-            }else{
-                throw new ErrorMessage([
-                    'msg' => '下单失败',
-                ]);
-            };
-        }else{
-            throw new ErrorMessage([
-                'msg' => '订单参数有误',
-            ]);
-        }
     }
 
-    public static function createOrderData($data){
+
+
+    public static function createOrderData($data)
+	{
         if(!isset($data['data'])){
             $data['data'] = [];
         };
@@ -238,7 +181,10 @@ class Order{
         return $modelData;
     }
 
-    public static function createVirtualOrderData($data){
+
+
+    public static function createVirtualOrderData($data)
+	{
         $user = Cache::get($data['token']);
         if($user['user_type']>1){
             throw new ErrorMessage([
@@ -253,15 +199,17 @@ class Order{
         $order_no = isset($data['order_no'])?$data['order_no']:makeOrderNo();
         
         $modelData['data']['order_no'] = $order_no;
-        $modelData['data']['type'] = 6;
-        $modelData['data']['parentid'] = 0;
+        $modelData['data']['type'] = 4;
         $modelData['data']['pay'] = isset($data['pay'])?json_encode($data['pay']):json_encode([]);
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
         $modelData['data']['user_no'] = $user['user_no'];
         return $modelData;
     }
 
-    public static function checkAndReduceStock($data,$totalPrice,$type,$order_no,$user,$isSku=false){
+
+
+    public static function checkAndReduceStock($data,$totalPrice,$type,$order_no,$user,$isSku=false)
+	{
 
         $modelData = [];
         $modelData['searchItem']['id'] = $data['id'];
@@ -326,6 +274,8 @@ class Order{
             $modelData['data']['sku_id'] = $product['id'];
         };
         
+        $modelData['data']['title'] = $product['title'];
+        $modelData['data']['price'] = $product['price'];
         $modelData['data']['count'] = $data['count'];
         $modelData['data']['snap_product'] = json_encode($product);
         $modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
@@ -344,12 +294,14 @@ class Order{
             'price'=>$product['price'],
             'id'=>$product['id'],
             'title'=>$product['title'],
-        ]; 
+        ];
         
     }
 
 
-    public static function computePrice($data){
+
+    public static function computePrice($data)
+	{
         
         $price = (isset($data['balance'])?$data['balance']:0)+ (isset($data['score'])?floatval($data['score']):0) + (isset($data['wx_pay'])?$data['wx_pay']:0);
         if(isset($data['coupon'])){

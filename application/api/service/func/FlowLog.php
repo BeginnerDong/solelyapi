@@ -39,7 +39,7 @@ class FlowLog {
             $modelData = [];
             $modelData = [
                 'searchItem'=>[
-                    'pay_no'=>$flowInfo['pay_no']
+                    'order_no'=>$flowInfo['order_no']
                 ],
             ];
             $orderInfo = BeforeModel::CommonGet('Order',$modelData);
@@ -51,47 +51,99 @@ class FlowLog {
             }
 			
 			//删除订单锁
-			Cache::rm($orderInfo['order_no']);
+			// Cache::rm($orderInfo['order_no']);
 
             if ($orderPrice >= 0) {
-                //获取流水信息
-                $modelData = [];
-                $modelData = [
-                    'searchItem'=>[
-                        'pay_no'=>$flowInfo['pay_no'],
-                        'status'=>1,
-                    ],
-                ];
-                $flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+				
+				$flowPrice = 0;
+				//获取订单流水信息
+				$modelData = [];
+				$modelData['searchItem']['order_no'] = $flowInfo['order_no'];
+				$modelData['searchItem']['status'] = 1;
+				$flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+				if(count($flowList['data'])>0){
+					foreach ($flowList['data'] as $key => $value) {
+						$flowPrice += abs($value['count']);
+					};
+				};
 
-                $flowPrice = 0;
-                if(count($flowList['data'])>0){
-                    foreach ($flowList['data'] as $key => $value) {
-                        $flowPrice += abs($value['count']);
-                    };
-                };
+				/*父级订单需要加上子级流水*/
+				if($orderInfo['parent']==1){
+					$modelData = [];
+					$modelData['searchItem']['parent_no'] = $flowInfo['order_no'];
+					$modelData['searchItem']['status'] = 1;
+					$childFlow = BeforeModel::CommonGet('FlowLog',$modelData);
+					if(count($childFlow['data'])>0){
+						foreach ($childFlow['data'] as $key_c => $value_c) {
+							$flowPrice += abs($value_c['count']);
+						};
+					};
+				}
 
-                if ($orderPrice == $flowPrice) {
+                if ($orderPrice == $flowPrice){
 
                     $modelData = []; 
-                    $modelData = [
-                        'searchItem'=>[
-                            'id'=>$orderInfo['id']
-                        ],
-                    ];
-                    $modelData['FuncName'] = 'update';
+					$modelData['FuncName'] = 'update';
+                    $modelData['searchItem']['id'] = $orderInfo['id'];
                     $modelData['data']['pay_status'] = 1;
 
                     //执行payAfter
                     if(isset($orderInfo['payAfter'])&&!empty($orderInfo['payAfter'])){
-
                         $modelData['saveAfter'] = $orderInfo['payAfter'];
-
                     };
 
                     $updateOrder = BeforeModel::CommonSave('Order',$modelData);
                 }
-            }
+				
+				/*子级订单检验父级订单支付状态*/
+				if($orderInfo['parent']==2){
+					
+					$modelData = [];
+					$modelData['searchItem']['order_no'] = $orderInfo['parent_no'];
+					$parentOrder = BeforeModel::CommonGet('Order',$modelData);
+					if(count($parentOrder['data'])>0){
+					    $parentOrder = $parentOrder['data'][0];
+						$parentPrice = abs($parentOrder['price']);
+						if($parentPrice>0){
+							$parentFlow = 0;
+							//获取订单流水信息
+							$modelData = [];
+							$modelData['searchItem']['order_no'] = $parentOrder['order_no'];
+							$modelData['searchItem']['status'] = 1;
+							$flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+							if(count($flowList['data'])>0){
+								foreach ($flowList['data'] as $key => $value) {
+									$parentFlow += abs($value['count']);
+								};
+							};
+							/*父级订单需要加上子级流水*/
+							$modelData = [];
+							$modelData['searchItem']['parent_no'] = $parentOrder['order_no'];
+							$modelData['searchItem']['status'] = 1;
+							$childFlow = BeforeModel::CommonGet('FlowLog',$modelData);
+							if(count($childFlow['data'])>0){
+								foreach ($childFlow['data'] as $key_c => $value_c) {
+									$parentFlow += abs($value_c['count']);
+								};
+							};
+							if ($parentPrice == $parentFlow){
+							
+							    $modelData = []; 
+								$modelData['FuncName'] = 'update';
+							    $modelData['searchItem']['id'] = $parentOrder['id'];
+							    $modelData['data']['pay_status'] = 1;
+							
+							    //执行payAfter
+							    if(isset($parentOrder['payAfter'])&&!empty($parentOrder['payAfter'])){
+							        $modelData['saveAfter'] = $parentOrder['payAfter'];
+							    };
+							
+							    $updateOrder = BeforeModel::CommonSave('Order',$modelData);
+							};
+						};
+					};
+				};
+            };
 
 		}
 

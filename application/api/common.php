@@ -409,7 +409,7 @@ use app\lib\exception\ErrorMessage;
     }
 
     function makePayNo(){      
-        $no = 'M'.substr(time(), -5).rand(0, 99); 
+        $no = 'M'.substr(time(), -5).rand(0, 999); 
         return $no;
     }
 
@@ -493,7 +493,7 @@ use app\lib\exception\ErrorMessage;
 
     function resDeal($data)
     {   
-        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
+        $filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter','saveFunction'];
         
         
         if(isset($data['data'])&&!empty($data['data'])&&is_array($data['data'])){
@@ -664,7 +664,6 @@ use app\lib\exception\ErrorMessage;
                 }
             }
         }
-        
     }
 
 
@@ -799,9 +798,11 @@ use app\lib\exception\ErrorMessage;
                             if($value['auth']=='isMe'){
 
                                 $data['searchItem']['user_no'] = $user_no;
-                                if(isset($data['data'])){
-                                    $data['data']['user_no'] = $user_no;
-                                };
+								if(isset($data['data'])&&!isset($data['data']['user_no'])){
+									
+									$data['data']['user_no'] = $user_no;
+									
+								};
                             };
 
                             if($value['auth']=='canChild'){
@@ -829,16 +830,15 @@ use app\lib\exception\ErrorMessage;
                                         $data['searchItem']['user_no'] = $user_no;
                                     };
                                     
-                                    if(isset($data['data'])){
-                                        $data['data']['user_no'] = $user_no;
-                                    };
                                 };
                             };
-
-                        }else{
-
-                            $data['searchItem']['user_no'] = $user_no;
-
+							
+							if(isset($data['FuncName'])&&($data['FuncName']=="add")&&isset($data['data'])&&!isset($data['data']['user_no'])){
+								
+								$data['data']['user_no'] = $user_no;
+								
+							};
+							
                         };
 
                         if (!empty($value['addLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='add') {
@@ -907,9 +907,12 @@ use app\lib\exception\ErrorMessage;
                         if($value['auth']=='isMe'){
 
                             $data['searchItem']['user_no'] = $user_no;
-                            if(isset($data['data'])){
-                                $data['data']['user_no'] = $user_no;
-                            };
+
+							if(isset($data['data'])&&!isset($data['data']['user_no'])){
+								
+								$data['data']['user_no'] = $user_no;
+								
+							};
                         };
 
                         if($value['auth']=='canChild'){
@@ -936,17 +939,16 @@ use app\lib\exception\ErrorMessage;
                                 }else{
                                     $data['searchItem']['user_no'] = $user_no;
                                 };
-                                
-                                if(isset($data['data'])){
-                                    $data['data']['user_no'] = $user_no;
-                                };
+
                             };
                             
                         };
-
-                    }else{
-
-                        $data['searchItem']['user_no'] = $user_no;
+						
+						if(isset($data['FuncName'])&&($data['FuncName']=="add")&&isset($data['data'])&&!isset($data['data']['user_no'])){
+							
+							$data['data']['user_no'] = $user_no;
+							
+						};
 
                     };
 

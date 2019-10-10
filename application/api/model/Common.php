@@ -29,6 +29,7 @@ use app\api\model\UserCoupon;
 use app\api\model\CouponRelation;
 use app\api\model\Auth;
 use app\api\model\PayLog;
+use app\api\model\WxTemplate;
 
 
 class Common extends Model{
@@ -69,9 +70,20 @@ class Common extends Model{
             $final = [
                 'total'=>$res['total'],
             ];
-            $res = $model->dealGet(resDeal($res['data']));
+            $res = $model->dealGet(resDeal($res['data'])); 
             
-        }else{
+        }else if(isset($data['getOne'])){
+			
+			$sqlStr = $sqlStr."find();";
+			$find = eval($sqlStr);
+			if($find){
+				$res[0] = $find;
+				$res = $model->dealGet(resDeal($res));
+			}else{
+				$res = [];
+			}
+			
+		}else{
 
             $sqlStr = $sqlStr."select();";
             $res = eval($sqlStr);
@@ -88,6 +100,17 @@ class Common extends Model{
 		
 		if (isset($data['compute'])) {
 		    $final['compute'] = $new;
+		};
+		
+		/*过滤字段*/
+		if(isset($data['info'])&&count($res)>0){
+			$new = [];
+			foreach($res as $res_key => $res_value){
+				foreach ($data['info'] as $info_key => $info_value) {
+				   $new[$res_key][$info_value] = $res_value[$info_value];
+				};
+			};
+			$res = $new;
 		};
 
         $final['data'] = $res;
@@ -450,6 +473,8 @@ class Common extends Model{
             return new Auth;
         }else if($dbTable=='PayLog'){
             return new PayLog;
+        }else if($dbTable=='WxTemplate'){
+            return new WxTemplate;
         }else{
             throw new ErrorMessage([
                 'msg' => 'tableName有误',

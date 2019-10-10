@@ -32,7 +32,7 @@ class Coupon extends Model
             'discount'=>100,
             'condition'=>0,
             'stock'=>0,
-            'sales_num'=>0,
+            'sale_count'=>0,
             'type'=>'',
             'valid_time'=>'',
             'onShelf'=>'',

@@ -41,6 +41,7 @@ class Common{
             'CouponRelation'=>config('scope.one'),
             'Auth'=>config('scope.two'),
             'PayLog'=>config('scope.two'),
+			'WxTemplate'=>config('scope.one'),
         ];
 
         if(isset($scopeArr[$data['modelName']])){
@@ -122,6 +123,7 @@ class Common{
             'CouponRelation'=>config('scope.six'),
             'Auth'=>config('scope.two'),
             'PayLog'=>config('scope.two'),
+			'WxTemplate'=>[],
         ];
 
         
@@ -222,6 +224,7 @@ class Common{
             'CouponRelation'=>config('scope.one'),
             'Auth'=>config('scope.two'),
             'PayLog'=>config('scope.two'),
+			'WxTemplate'=>config('scope.one'),
         ];
         
         if(isset($scopeArr[$data['modelName']])){

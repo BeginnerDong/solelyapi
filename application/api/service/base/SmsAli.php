@@ -42,8 +42,6 @@ class SmsAli {
             ]);
         }
         $params = $data['params'];
-        $accessKeyId = Cache::get($data['token'])['thirdApp']['smsKey_ali'];
-        $accessKeySecret = Cache::get($data['token'])['thirdApp']['smsSecret_ali'];
         $code = createSMSCode(6);
         $codeinfo['code'] = $code;
         $codeinfo['phone'] = $params['PhoneNumbers'];

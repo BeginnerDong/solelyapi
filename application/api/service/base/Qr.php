@@ -283,13 +283,50 @@ class Qr{
     public static function PHPQrGet($data,$inner=false)
     {
 
-        (new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-
-        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
-
-        $user_no = Cache::get($data['token'])['user_no'];
+		if(!$inner){
+			
+			(new CommonValidate())->goCheck('one',$data);
+			
+			checkTokenAndScope($data,config('scope.two'));
+			
+			
+			
+			$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+			
+			$user_no = Cache::get($data['token'])['user_no'];
+			
+		}else{
+			
+			$thirdapp_id = $data['thirdapp_id'];
+			
+			$user_no = $data['user_no'];
+			
+		}
+		
+		/*判断图片是否已生成*/
+		$modelData = [];
+		
+		$modelData['searchItem'] = [
+		
+		    'user_no'=>$user_no,
+		
+		    'param'=>$data['param'],
+		
+		];
+		
+		$res = BeforeModel::CommonGet('File',$modelData);
+		
+		if(count($res['data'])>0){
+		
+		    throw new SuccessMessage([
+		
+		        'msg'=>'获取二维码图片成功',
+		
+		        'info'=>['url'=>$res['data'][0]['path']]
+		
+		    ]);
+		
+		};
 
         $value = $data['param'];        //二维码内容
 

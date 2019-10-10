@@ -80,7 +80,7 @@ class WxPay
 
     
     // 构建微信支付订单信息
-    public static function pay($userInfo,$pay_no,$price,$logData=[])
+    public static function pay($userInfo,$pay_no,$price,$logData=[],$orderInfo)
     {
         
         $thirdappinfo = ThirdApp::get(['id' => $userInfo['thirdapp_id']]);
@@ -91,12 +91,12 @@ class WxPay
         $wxOrderData->SetBody('solelyService');
         $wxOrderData->SetOpenid($userInfo['openid']);
         $wxOrderData->SetNotify_url(config('secure.pay_back_url'));
-        return self::getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData);
+        return self::getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData,$orderInfo);
         
     }
 
     //向微信请求订单号并生成签名
-    private static function getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData)
+    private static function getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData,$orderInfo)
     {
         
         $wxOrder = \WxPayApi::unifiedOrder($wxOrderData,$thirdappinfo);
@@ -122,16 +122,18 @@ class WxPay
         };
         
         if($pay_no){
-            OrderModel::where('pay_no', $pay_no)->update([
-                'prepay_id' => $wxOrder['prepay_id'],
-                'wx_prepay_info' => json_encode($signature),
-				'invalid_time' => time()+7000,
-            ]);
+    //         OrderModel::where('pay_no', $pay_no)->update([
+    //             'prepay_id' => $wxOrder['prepay_id'],
+    //             'wx_prepay_info' => json_encode($signature),
+				// 'invalid_time' => time()+7000,
+    //         ]);
             $modelData = [];
             if($logData){
                 $modelData['data'] = array_merge(array(
                     'title'=>'微信支付',
                     'pay_no'=>$pay_no,
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+					'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
                     'prepay_id'=>$wxOrder['prepay_id'],
                     'wx_prepay_info' => json_encode($signature),
                     'create_time'=>time(),
@@ -143,6 +145,8 @@ class WxPay
                 $modelData['data'] = array(
                     'title'=>'微信支付',
                     'pay_no'=>$pay_no,
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+					'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
                     'prepay_id'=>$wxOrder['prepay_id'],
                     'wx_prepay_info' => json_encode($signature),
                     'create_time'=>time(),
