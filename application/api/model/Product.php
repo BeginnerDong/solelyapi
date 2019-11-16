@@ -59,6 +59,7 @@ class Product extends BaseModel
             'standard'=>0,
             'group_stock'=>0,
             'balance'=>0,
+			'is_date'=>0,
             'limit'=>'',
             'behavior'=>'',
             'sale_count'=>'',

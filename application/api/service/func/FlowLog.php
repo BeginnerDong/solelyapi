@@ -4,9 +4,11 @@ namespace app\api\service\func;
 
 
 use app\api\service\beforeModel\Common as BeforeModel;
+
 use think\Exception;
 use think\Model;
 use think\Cache;
+
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
@@ -15,189 +17,241 @@ use app\lib\exception\ErrorMessage;
 
 class FlowLog {
 
-	public static function checkIsPayAll($data){
+	public static function checkIsPayAll($data)
+	{
 
-        $flowInfo = BeforeModel::CommonGet('FlowLog',$data);
+		$flowInfo = BeforeModel::CommonGet('FlowLog',$data);
 
-        if (count($flowInfo['data'])==0) {
-            
-            throw new ErrorMessage([
-                'msg'=>'流水信息有误'
-            ]);
+		if (count($flowInfo['data'])==0) {
+			
+			throw new ErrorMessage([
+				'msg'=>'流水信息有误'
+			]);
 
-        }
+		}
 
-        $flowInfo = $flowInfo['data'][0];
+		$flowInfo = $flowInfo['data'][0];
 
-        /**
-         * 检查订单支付是否完成
-         */
+		/**
+		 * 检查订单支付是否完成
+		 */
 		if (isset($flowInfo['relation_table'])&&($flowInfo['relation_table']=='order')) 
-        {
+		{
 			
 			//获取订单信息
-            $modelData = [];
-            $modelData = [
-                'searchItem'=>[
-                    'order_no'=>$flowInfo['order_no']
-                ],
-            ];
-            $orderInfo = BeforeModel::CommonGet('Order',$modelData);
-            if(count($orderInfo['data'])>0){
-                $orderPrice = abs($orderInfo['data'][0]['price']);
-                $orderInfo = $orderInfo['data'][0];
-            }else{
-                $orderPrice = -1;
-            }
+			$modelData = [];
+			$modelData = [
+				'searchItem'=>[
+					'order_no'=>$flowInfo['order_no']
+				],
+			];
+			$orderInfo = BeforeModel::CommonGet('Order',$modelData);
+			if(count($orderInfo['data'])>0){
+				$orderPrice = abs($orderInfo['data'][0]['price']);
+				$orderInfo = $orderInfo['data'][0];
+			}else{
+				$orderPrice = -1;
+			}
 			
 			//删除订单锁
 			// Cache::rm($orderInfo['order_no']);
 
-            if ($orderPrice >= 0) {
+			if ($orderPrice >= 0) {
 				
 				$flowPrice = 0;
 				//获取订单流水信息
 				$modelData = [];
 				$modelData['searchItem']['order_no'] = $flowInfo['order_no'];
 				$modelData['searchItem']['status'] = 1;
+				$modelData['searchItem']['account'] = 1;
 				$flowList = BeforeModel::CommonGet('FlowLog',$modelData);
 				if(count($flowList['data'])>0){
 					foreach ($flowList['data'] as $key => $value) {
 						$flowPrice += abs($value['count']);
 					};
 				};
+				
+				/*float金额转换成int比较大小*/
+				$orderPrice = (int)($orderPrice*100);
+				$flowPrice = (int)($flowPrice*100);
 
-				/*父级订单需要加上子级流水*/
-				if($orderInfo['parent']==1){
+				if ($orderPrice == $flowPrice){
+
+					$modelData = []; 
+					$modelData['FuncName'] = 'update';
+					$modelData['searchItem']['id'] = $orderInfo['id'];
+					$modelData['data']['pay_status'] = 1;
+
+					//执行payAfter
+					if(isset($orderInfo['payAfter'])&&!empty($orderInfo['payAfter'])){
+						$modelData['saveAfter'] = $orderInfo['payAfter'];
+					};
+
+					$updateOrder = BeforeModel::CommonSave('Order',$modelData);
+					
 					$modelData = [];
-					$modelData['searchItem']['parent_no'] = $flowInfo['order_no'];
-					$modelData['searchItem']['status'] = 1;
-					$childFlow = BeforeModel::CommonGet('FlowLog',$modelData);
-					if(count($childFlow['data'])>0){
-						foreach ($childFlow['data'] as $key_c => $value_c) {
-							$flowPrice += abs($value_c['count']);
-						};
+					$modelData['searchItem']['id'] = $orderInfo['id'];
+					/*计算库存*/
+					if($orderInfo['count']>0){
+						BeforeModel::dealStock($modelData,'reduce');
+					};
+					/*团购单判断*/
+					if(!empty($orderInfo['group_no'])){
+						self::dealGroup($modelData);
 					};
 				}
-
-                if ($orderPrice == $flowPrice){
-
-                    $modelData = []; 
-					$modelData['FuncName'] = 'update';
-                    $modelData['searchItem']['id'] = $orderInfo['id'];
-                    $modelData['data']['pay_status'] = 1;
-
-                    //执行payAfter
-                    if(isset($orderInfo['payAfter'])&&!empty($orderInfo['payAfter'])){
-                        $modelData['saveAfter'] = $orderInfo['payAfter'];
-                    };
-
-                    $updateOrder = BeforeModel::CommonSave('Order',$modelData);
-                }
 				
 				/*子级订单检验父级订单支付状态*/
-				if($orderInfo['parent']==2){
+				if(!empty($orderInfo['parent_no'])){
+					
+					$modelData = [];
+					$modelData['searchItem']['parent_no'] = $orderInfo['parent_no'];
+					$childs = BeforeModel::CommonGet('Order',$modelData);
 					
 					$modelData = [];
 					$modelData['searchItem']['order_no'] = $orderInfo['parent_no'];
 					$parentOrder = BeforeModel::CommonGet('Order',$modelData);
-					if(count($parentOrder['data'])>0){
-					    $parentOrder = $parentOrder['data'][0];
-						$parentPrice = abs($parentOrder['price']);
-						if($parentPrice>0){
-							$parentFlow = 0;
-							//获取订单流水信息
-							$modelData = [];
-							$modelData['searchItem']['order_no'] = $parentOrder['order_no'];
-							$modelData['searchItem']['status'] = 1;
-							$flowList = BeforeModel::CommonGet('FlowLog',$modelData);
-							if(count($flowList['data'])>0){
-								foreach ($flowList['data'] as $key => $value) {
-									$parentFlow += abs($value['count']);
-								};
+					
+					if(count($childs['data'])>0&&count($parentOrder['data'])>0){
+						
+						$parentOrder = $parentOrder['data'][0];
+						$pay_all = true;
+						foreach($childs['data'] as $key_c => $value_c){
+							if($value_c['pay_status']!=1){
+								$pay_all = false;
 							};
-							/*父级订单需要加上子级流水*/
-							$modelData = [];
-							$modelData['searchItem']['parent_no'] = $parentOrder['order_no'];
-							$modelData['searchItem']['status'] = 1;
-							$childFlow = BeforeModel::CommonGet('FlowLog',$modelData);
-							if(count($childFlow['data'])>0){
-								foreach ($childFlow['data'] as $key_c => $value_c) {
-									$parentFlow += abs($value_c['count']);
-								};
+						};
+
+						if($pay_all){
+						
+							$modelData = []; 
+							$modelData['FuncName'] = 'update';
+							$modelData['searchItem']['id'] = $parentOrder['id'];
+							$modelData['data']['pay_status'] = 1;
+						
+							//执行payAfter
+							if(isset($parentOrder['payAfter'])&&!empty($parentOrder['payAfter'])){
+								$modelData['saveAfter'] = $parentOrder['payAfter'];
 							};
-							if ($parentPrice == $parentFlow){
+						
+							$updateOrder = BeforeModel::CommonSave('Order',$modelData);
+						};
+					};
+				};
+			};
+
+		}
+
+		/**
+		 * 检查优惠券支付是否完成
+		 */
+		if (isset($flowInfo['relation_table'])&&($flowInfo['relation_table']=='coupon')) 
+		{
+
+			//获取优惠券信息
+			$modelData = [];
+			$modelData = [
+				'searchItem'=>[
+					'id'=>$flowInfo['relation_id']
+				],
+			];
+			$couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
+			if(count($couponInfo['data'])>0){
+				$couponPrice = abs($couponInfo['data'][0]['price']);
+				$couponInfo = $couponInfo['data'][0];
+			}else{
+				$couponPrice = 0;
+			}
+
+			if ($couponPrice > 0) {
+				//获取流水信息
+				$modelData = [];
+				$modelData = [
+					'searchItem'=>[
+						'relation_id'=>$flowInfo['relation_id']
+					],
+				];
+				$flowList = BeforeModel::CommonGet('FlowLog',$modelData);
+
+				$flowPrice = 0;
+				if(count($flowList['data'])>0){
+					foreach ($flowList['data'] as $key => $value) {
+						$flowPrice += abs($value['count']);
+					}
+				}
+
+				if ($couponPrice == $flowPrice) {
+					$modelData = [];
+					$modelData = [
+						'searchItem'=>[
+							'id'=>$couponInfo['id']
+						],
+					];
+					$modelData['FuncName'] = 'update';
+					$modelData['data']['pay_status'] = 1;
+					$upCoupon = BeforeModel::CommonSave('UserCoupon',$modelData);
+					
+					/*子级订单检验父级订单支付状态*/
+					if(!empty($couponInfo['parent_no'])){
+						
+						$modelData = [];
+						$modelData['searchItem']['parent_no'] = $couponInfo['parent_no'];
+						$childs = BeforeModel::CommonGet('UserCoupon',$modelData);
+						
+						$modelData = [];
+						$modelData['searchItem']['id'] = $couponInfo['parent_no'];
+						$parentCoupon = BeforeModel::CommonGet('UserCoupon',$modelData);
+						
+						if(count($childs['data'])>0&&count($parentCoupon['data'])>0){
 							
-							    $modelData = []; 
+							$parentCoupon = $parentCoupon['data'][0];
+							$pay_all = true;
+							foreach($childs['data'] as $key_c => $value_c){
+								if($value_c['pay_status']!=1){
+									$pay_all = false;
+								};
+							};
+					
+							if($pay_all){
+								$modelData = [];
 								$modelData['FuncName'] = 'update';
-							    $modelData['searchItem']['id'] = $parentOrder['id'];
-							    $modelData['data']['pay_status'] = 1;
-							
-							    //执行payAfter
-							    if(isset($parentOrder['payAfter'])&&!empty($parentOrder['payAfter'])){
-							        $modelData['saveAfter'] = $parentOrder['payAfter'];
-							    };
-							
-							    $updateOrder = BeforeModel::CommonSave('Order',$modelData);
+								$modelData['searchItem']['id'] = $parentCoupon['id'];
+								$modelData['data']['pay_status'] = 1;
+								$updateCoupon = BeforeModel::CommonSave('UserCoupon',$modelData);
 							};
 						};
 					};
 				};
-            };
+			};
+		};
+	}
 
-		}
 
-        /**
-         * 检查优惠券支付是否完成
-         */
-        if (isset($flowInfo['relation_table'])&&($flowInfo['relation_table']=='coupon')) 
-        {
-
-            //获取优惠券信息
-            $modelData = [];
-            $modelData = [
-                'searchItem'=>[
-                    'pay_no'=>$flowInfo['pay_no']
-                ],
-            ];
-            $couponInfo = BeforeModel::CommonGet('UserCoupon',$modelData);
-            if(count($couponInfo['data'])>0){
-                $couponPrice = abs($couponInfo['data'][0]['price']);
-            }else{
-                $couponPrice = 0;
-            }
-
-            if ($couponPrice > 0) {
-                //获取流水信息
-                $modelData = [];
-                $modelData = [
-                    'searchItem'=>[
-                        'pay_no'=>$flowInfo['pay_no']
-                    ],
-                ];
-                $flowList = BeforeModel::CommonGet('FlowLog',$modelData);
-
-                $flowPrice = 0;
-                if(count($flowList['data'])>0){
-                    foreach ($flowList['data'] as $key => $value) {
-                        $flowPrice += abs($value['count']);
-                    }
-                }
-
-                if ($couponPrice == $flowPrice) {
-                    $modelData = [];
-                    $modelData = [
-                        'searchItem'=>[
-                            'id'=>$couponInfo['data'][0]['id']
-                        ],
-                    ];
-                    $modelData['FuncName'] = 'update';
-                    $modelData['data']['pay_status'] = 1;
-                    $upCoupon = BeforeModel::CommonSave('UserCoupon',$modelData);
-                }
-            }
-        }
-
+	/*团购逻辑判断*/
+	public static function dealGroup($data)
+	{
+		
+		$orderInfo = BeforeModel::CommonGet('Order',$data);
+		$orderInfo = $orderInfo['data'][0];
+		
+		$modelData = [];
+		$modelData['searchItem']['group_no'] = $orderInfo['group_no'];
+		$modelData['searchItem']['pay_status'] = 1;
+		$modelData['searchItem']['order_step'] = ['in',[4,5]];
+		$groups = BeforeModel::CommonGet('Order',$modelData);
+		if(count($groups['data'])>=$orderInfo['standard']){
+			/*成团*/
+			foreach($groups['data'] as $key => $value){
+				if($value['order_step']==4){
+					$modelData = [];
+					$modelData['FuncName'] = 'update';
+					$modelData['searchItem']['id'] = $value['id'];
+					$modelData['data']['order_step'] = 5;
+					$upOrder = BeforeModel::CommonSave('Order',$modelData);
+				};
+			};
+		};
+	
 	}
 
 }

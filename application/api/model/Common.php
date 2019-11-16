@@ -30,6 +30,7 @@ use app\api\model\CouponRelation;
 use app\api\model\Auth;
 use app\api\model\PayLog;
 use app\api\model\WxTemplate;
+use app\api\model\ProductDate;
 
 
 class Common extends Model{
@@ -475,6 +476,8 @@ class Common extends Model{
             return new PayLog;
         }else if($dbTable=='WxTemplate'){
             return new WxTemplate;
+        }else if($dbTable=='ProductDate'){
+            return new ProductDate;
         }else{
             throw new ErrorMessage([
                 'msg' => 'tableName有误',
