@@ -8,6 +8,8 @@ use think\Cache;
 use app\api\model\Common as CommonModel;
 
 use app\api\service\beforeModel\User as UserService;
+use app\api\service\beforeModel\Product as ProductService;
+use app\api\service\beforeModel\Sku as SkuService;
 
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
@@ -25,9 +27,21 @@ class Func {
 			$data = UserService::deal($data);
 		
 		};
+		
+		if ($dbTable=="Product") {
+		
+			$data = ProductService::deal($data);
+		
+		};
+		
+		if ($dbTable=="Sku") {
+		
+			$data = SkuService::deal($data);
+		
+		};
 
-        return $data;
+		return $data;
 
-	}   
+	}
 
 }

@@ -31,6 +31,7 @@ class Order extends BaseModel
 			'wx_prepay_info'=>[],
 			'order_step'=>0,
 			'transport_status'=>0,
+			'group_status'=>0,
 			'transaction_id'=>'',
 			'refund_no'=>'',
 			'isrefund'=>'',

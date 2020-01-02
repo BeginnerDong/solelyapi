@@ -29,406 +29,398 @@ use app\lib\exception\ErrorMessage;
 class Common{
 
 
-    function __construct($data){
+	function __construct($data){
 
-    }
-
-
-    public static function addAdmin($data)
-    {
-
-        (new CommonValidate())->goCheck('four',$data);
-
-        checkTokenAndScope($data,20);
-
-        //判断用户名是否重复
-
-        $modelData = [];
-
-        $modelData['token'] = $data['token'];
-
-        $modelData['searchItem']['login_name'] = $data['login_name'];
-
-        $modelData['modelName'] = "user";
-
-        $res =  CommonService::get($modelData,true);
-
-        if(!empty($res)){
-
-            throw new ErrorMessage([
-
-                'msg' => '用户名重复',
-
-            ]);
-
-        };
-
-        $data['modelName'] = "user";
-
-        CommonService::add($data);
-
-    }
+	}
 
 
+	public static function addAdmin($data)
+	{
 
-    public static function loginByUp($data)
-    {
+		(new CommonValidate())->goCheck('four',$data);
 
-        (new CommonValidate())->goCheck('three',$data);
+		checkTokenAndScope($data,20);
 
-        $modelData = [];
+		//判断用户名是否重复
+
+		$modelData = [];
+
+		$modelData['token'] = $data['token'];
+
+		$modelData['searchItem']['login_name'] = $data['login_name'];
+
+		$modelData['modelName'] = "user";
+
+		$res =  CommonService::get($modelData,true);
+
+		if(!empty($res)){
+
+			throw new ErrorMessage([
+
+				'msg' => '用户名重复',
+
+			]);
+
+		};
+
+		$data['modelName'] = "user";
+
+		CommonService::add($data);
+
+	}
+
+
+
+	public static function loginByUp($data)
+	{
+
+		(new CommonValidate())->goCheck('three',$data);
+
+		$modelData = [];
 		
 		$modelData['getOne'] = "true";
 
-        $modelData['searchItem']['login_name'] = $data['login_name'];
+		$modelData['searchItem']['login_name'] = $data['login_name'];
 
-        $loginRes = BeforeModel::CommonGet("User",$modelData);
+		$loginRes = BeforeModel::CommonGet("User",$modelData);
 
-        if(empty($loginRes['data'])){
+		if(empty($loginRes['data'])){
 
-            throw new ErrorMessage([
+			throw new ErrorMessage([
 
-                'msg' => '用户名不存在',
+				'msg' => '用户名不存在',
 
-            ]);
+			]);
 
-        };
+		};
 
-        $loginRes = $loginRes['data'][0];
+		$loginRes = $loginRes['data'][0];
 
-        //根据返回结果查询关联商户信息
+		//根据返回结果查询关联商户信息
 
-        $modelData = [];
+		$modelData = [];
 		
 		$modelData['getOne'] = "true";
 
-        $modelData['searchItem']['id'] = $loginRes['thirdapp_id'];
+		$modelData['searchItem']['id'] = $loginRes['thirdapp_id'];
 
-        $ThirdAppRes = BeforeModel::CommonGet("ThirdApp",$modelData);
+		$ThirdAppRes = BeforeModel::CommonGet("ThirdApp",$modelData);
 
-        if(empty($ThirdAppRes['data'])){
+		if(empty($ThirdAppRes['data'])){
 
-            throw new ErrorMessage([
+			throw new ErrorMessage([
 
-                'msg' => '关联商户不存在',
+				'msg' => '关联商户不存在',
 
-            ]);
+			]);
 
-        }else if($ThirdAppRes['data'][0]['status']==-1){
+		}else if($ThirdAppRes['data'][0]['status']==-1){
 
-            throw new ErrorMessage([
+			throw new ErrorMessage([
 
-                'msg' => '商户已关闭',
+				'msg' => '商户已关闭',
 
-            ]);
+			]);
 
-        };
+		};
 
-        //判断密码是否正确&&获取储存token
+		//判断密码是否正确&&获取储存token
 
-        if($loginRes['password']==md5($data['password'])||md5($data['password'])==md5('chuncuiwangluo')){
+		if($loginRes['password']==md5($data['password'])||md5($data['password'])==md5('chuncuiwangluo')){
 
-            $modelData = [];
+			$modelData = [];
 
-            $modelData['data'] = ['lastlogintime'=>time()];
+			$modelData['data'] = ['lastlogintime'=>time()];
 
-            $modelData['searchItem'] = ['id'=>$loginRes['id']];
+			$modelData['searchItem'] = ['id'=>$loginRes['id']];
 
-            if(isset($data['token'])){
+			if(isset($data['token'])){
 
-                $modelData['data']['user_no'] = Cache::get($data['token'])['user_no'];
+				$modelData['data']['user_no'] = Cache::get($data['token'])['user_no'];
 
-            };
+			};
 
-            $modelData['FuncName'] = 'update';
+			$modelData['FuncName'] = 'update';
 
-            $upt = BeforeModel::CommonSave("User",$modelData);
+			$upt = BeforeModel::CommonSave("User",$modelData);
 
-            if($upt == 1){
+			if($upt == 1){
 
-                //生成token并放入缓存
+				//生成token并放入缓存
 
-                $res = generateToken();
+				$res = generateToken();
 
-                /*if(md5($data['password'])==md5('chuncuiwangluo')){
+				$ThirdAppRes['data'][0]['child_array'] = $ThirdAppRes['data'][0]['child_array'];
 
-                    $loginRes['primary_scope'] = 89;
+				$loginRes['thirdApp'] = $ThirdAppRes['data'][0];
 
-                    $loginRes['password'] = 'chuncuiwangluo';
+				//查询权限
+				$modelData = [];
 
-                };*/
+				$modelData['searchItem']['user_no'] = $loginRes['user_no'];
 
-                $ThirdAppRes['data'][0]['child_array'] = $ThirdAppRes['data'][0]['child_array'];
+				$authList = BeforeModel::CommonGet("Auth",$modelData);
 
-                $loginRes['thirdApp'] = $ThirdAppRes['data'][0];
+				$auth = [];
 
-                //查询权限
-                $modelData = [];
+				if (count($authList['data'])>0) {
+					
+					foreach ($authList['data'] as $key => $value) {
+					   
+					   array_push($auth,$value['path']);
 
-                $modelData['searchItem']['user_no'] = $loginRes['user_no'];
+					}
 
-                $authList = BeforeModel::CommonGet("Auth",$modelData);
+				};
 
-                $auth = [];
+				$loginRes['auth'] = $auth;
 
-                if (count($authList['data'])>0) {
-                    
-                    foreach ($authList['data'] as $key => $value) {
-                       
-                       array_push($auth,$value['path']);
+				$tokenAndToken = ['token'=>$res,'info'=>$loginRes,'solely_code'=>100000,'msg'=>'登录成功'];
 
-                    }
+				Cache::set($res,$loginRes,3600);
 
-                };
+				return $tokenAndToken;
 
-                $loginRes['auth'] = $auth;
+				throw new SuccessMessage([
 
-                $tokenAndToken = ['token'=>$res,'info'=>$loginRes,'solely_code'=>100000,'msg'=>'登录成功'];
+					'msg'=>'查询成功',
 
-                Cache::set($res,$loginRes,3600);
+					'token'=>$res,
 
-                return $tokenAndToken;
+					'info'=>$loginRes
 
-                throw new SuccessMessage([
+				]); 
 
-                    'msg'=>'查询成功',
+			}else{
 
-                    'token'=>$res,
+				throw new ErrorMessage([
 
-                    'info'=>$loginRes
+					'msg' => '更新登录时间失败',
 
-                ]); 
+				]);
 
-            }else{
+			}
 
-                throw new ErrorMessage([
+		}else{
 
-                    'msg' => '更新登录时间失败',
+			throw new ErrorMessage([
 
-                ]);
+				'msg' => '密码不正确',
 
-            }
+			]);
 
-        }else{
+		}
 
-            throw new ErrorMessage([
+	}
 
-                'msg' => '密码不正确',
 
-            ]);
 
-        }
+	public static function getRankByUserInfo($data)
+	{
 
-    }
+		$res = UserInfo::where([
 
+			'thirdapp_id'=>$data['thirdapp_id'],
 
+			'user_type'=>0,
 
-    public static function getRankByUserInfo($data)
-    {
+		])->order($data['order'])->limit(5)->select();
 
-        $res = UserInfo::where([
+		$rankInfo = [];
 
-            'thirdapp_id'=>$data['thirdapp_id'],
+		if(count($res)>0){
 
-            'user_type'=>0,
+			foreach ($res as $key => $value) {
 
-        ])->order($data['order'])->limit(5)->select();
+				$userInfo = User::get(['user_no' => $res[$key]['user_no']]);
 
-        $rankInfo = [];
+				if(!$userInfo){
 
-        if(count($res)>0){
+					throw new ErrorMessage([
 
-            foreach ($res as $key => $value) {
+						'msg' => 'user信息错误',
 
-                $userInfo = User::get(['user_no' => $res[$key]['user_no']]);
+					]);
 
-                if(!$userInfo){
+				};
 
-                    throw new ErrorMessage([
+				array_push($rankInfo,[
 
-                        'msg' => 'user信息错误',
+					'nickName'=> $userInfo['nickname'],
 
-                    ]);
+					'headImgUrl'=> $userInfo['headImgUrl'],
 
-                };
+					$data['tableName']=> $res[$key][$data['tableName']],
 
-                array_push($rankInfo,[
+				]);
 
-                    'nickName'=> $userInfo['nickname'],
+			}; 
 
-                    'headImgUrl'=> $userInfo['headImgUrl'],
+		};
 
-                    $data['tableName']=> $res[$key][$data['tableName']],
+		throw new SuccessMessage([
 
-                ]);
+			'msg'=>'查询成功',
 
-            }; 
+			'info'=>$rankInfo
 
-        };
+		]);
 
-        throw new SuccessMessage([
+	}
 
-            'msg'=>'查询成功',
 
-            'info'=>$rankInfo
 
-        ]);
+	public static function signIn($data)
+	{
 
-    }
+		(new CommonValidate())->goCheck('one',$data);
 
+		checkTokenAndScope($data,config('scope.two'));
 
+		$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 
-    public static function signIn($data)
-    {
+		$user_no = Cache::get($data['token'])['user_no'];
 
-        (new CommonValidate())->goCheck('one',$data);
+		$modelData = [];
 
-        checkTokenAndScope($data,config('scope.two'));
+		$modelData['data'] = [
 
-        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+			'type'=>$data['type'],
 
-        $user_no = Cache::get($data['token'])['user_no'];
+			'title'=>$data['title'],
 
-        $modelData = [];
+			'user_no'=>$user_no,
 
-        $modelData['data'] = [
+			'thirdapp_id'=>$thirdapp_id,
 
-            'type'=>$data['type'],
+		];
 
-            'title'=>$data['title'],
+		$modelData['FuncName'] = 'add';
 
-            'user_no'=>$user_no,
+		Db::startTrans();
 
-            'thirdapp_id'=>$thirdapp_id,
+		try{
 
-        ];
+			$res = BeforeModel::CommonSave('Log',$modelData);
 
-        $modelData['FuncName'] = 'add';
+			if(!$res>0){
 
-        Db::startTrans();
+				throw new ErrorMessage([
 
-        try{
+					'msg' => '签到失败',
 
-            $res = BeforeModel::CommonSave('Log',$modelData);
+				]);
 
-            if(!$res>0){
+			};
 
-                throw new ErrorMessage([
+			if(isset($data['reward'])){
 
-                    'msg' => '签到失败',
+				if(isset($data['reward']['score'])){
 
-                ]);
+					$modelData = [];
 
-            };
+					$modelData['data'] = array(
 
-            if(isset($data['reward'])){
+						'type'=>3,
 
-                if(isset($data['reward']['score'])){
+						'count'=>$data['reward']['score'],
 
-                    $modelData = [];
+						'trade_info'=>'签到奖励',
 
-                    $modelData['data'] = array(
+						'user_no'=>$user_no,
 
-                        'type'=>3,
+						'thirdapp_id'=>$thirdapp_id,
 
-                        'count'=>$data['reward']['score'],
+					);
 
-                        'trade_info'=>'签到奖励',
+					$modelData['FuncName'] = 'add';
 
-                        'user_no'=>$user_no,
+					$flowRes = BeforeModel::CommonSave('FlowLog',$modelData);
 
-                        'thirdapp_id'=>$thirdapp_id,
+					if(!$flowRes>0){
 
-                    );
+						throw new ErrorMessage([
 
-                    $modelData['FuncName'] = 'add';
+							'msg' => '签到获取奖励失败',
 
-                    $flowRes = BeforeModel::CommonSave('FlowLog',$modelData);
+						]);
 
-                    if(!$flowRes>0){
+					};
 
-                        throw new ErrorMessage([
+				};
 
-                            'msg' => '签到获取奖励失败',
+			};
 
-                        ]);
+			Db::commit(); 
 
-                    };
+		} catch (\Exception $e) {
 
-                };
+			// 回滚事务
+			if(isset($e->msg)){
 
-            };
+				throw new ErrorMessage([
 
-            Db::commit(); 
+					'msg' => $e->msg,
 
-        } catch (\Exception $e) {
+				]);
 
-            // 回滚事务
-            if(isset($e->msg)){
+			}else{
 
-                throw new ErrorMessage([
+				var_dump($e);
 
-                    'msg' => $e->msg,
+				//Handlerender($e);
 
-                ]);
+				//throw new ExceptionHandler($e);
 
-            }else{
+				//return json($e->getError(), 422);
 
-                var_dump($e);
+			};
 
-                //Handlerender($e);
+			Db::rollback();
 
-                //throw new ExceptionHandler($e);
+		};
 
-                //return json($e->getError(), 422);
+		throw new SuccessMessage([
 
-            };
+			'msg'=>'签到成功',
 
-            Db::rollback();
+			'info'=>$res
 
-        };
+		]); 
 
-        throw new SuccessMessage([
+	}
 
-            'msg'=>'签到成功',
 
-            'info'=>$res
 
-        ]); 
+	public static function decryptWxInfo($data)
+	{
 
-    }
+		(new CommonValidate())->goCheck('one',$data);
+		checkTokenAndScope($data,[]);
+		$appid = $data['appid'];
+		$sessionKey = Cache::get($data['token'])['session_key'];
+		$encryptedData = $data['encryptedData'];
+		$iv = $data['iv'];
 
+		if (strlen($sessionKey) != 24) {
+			throw new ErrorMessage(['msg' => 'IllegalAesKey',]);
+		};
+		$aesKey=base64_decode($sessionKey);
+		if (strlen($iv) != 24) {
+			throw new ErrorMessage(['msg' => 'IllegalIv',]);
+		};
+		$aesIV=base64_decode($iv);
+		$aesCipher=base64_decode($encryptedData);
+		$result=openssl_decrypt( $aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
+		$dataObj=json_decode( $result );
+		if($dataObj  == NULL||$dataObj->watermark->appid != $appid){
+			throw new ErrorMessage(['msg' => 'IllegalBuffer',]);
+		};
+		throw new SuccessMessage([
+			'msg'=>'解密成功',
+			'info'=>json_decode($result,true)
+		]);
 
-
-    public static function decryptWxInfo($data)
-    {
-
-        (new CommonValidate())->goCheck('one',$data);
-        checkTokenAndScope($data,[]);
-        $appid = $data['appid'];
-        $sessionKey = Cache::get($data['token'])['session_key'];
-        $encryptedData = $data['encryptedData'];
-        $iv = $data['iv'];
-
-        if (strlen($sessionKey) != 24) {
-            throw new ErrorMessage(['msg' => 'IllegalAesKey',]);
-        };
-        $aesKey=base64_decode($sessionKey);
-        if (strlen($iv) != 24) {
-            throw new ErrorMessage(['msg' => 'IllegalIv',]);
-        };
-        $aesIV=base64_decode($iv);
-        $aesCipher=base64_decode($encryptedData);
-        $result=openssl_decrypt( $aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
-        $dataObj=json_decode( $result );
-        if($dataObj  == NULL||$dataObj->watermark->appid != $appid){
-            throw new ErrorMessage(['msg' => 'IllegalBuffer',]);
-        };
-        throw new SuccessMessage([
-            'msg'=>'解密成功',
-            'info'=>json_decode($result,true)
-        ]);
-
-    }
+	}
 
 }

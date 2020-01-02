@@ -246,7 +246,7 @@ class Order{
 		if(isset($data['isGroup'])&&!isset($data['group_no'])){
 			$modelData['data']['group_no'] = makeGroupNo();
 			$modelData['data']['group_leader'] = "true";
-			$modelData['data']['order_step'] = 4;
+			$modelData['data']['group_status'] = 1;
 			$modelData['data']['standard'] = isset($data['data']['standard'])?$data['data']['standard']:'';
 		}else if(isset($data['isGroup'])&&isset($data['group_no'])) {
 			$c_modelData = [];
@@ -257,7 +257,7 @@ class Order{
 			if (count($groupRes['data'])>0) {
 				$modelData['data']['group_no'] = $data['group_no'];
 				$modelData['data']['standard'] = $groupRes['data'][0]['standard'];
-				$modelData['data']['order_step'] = 4;
+				$modelData['data']['group_status'] = 1;
 			}else{
 				throw new ErrorMessage([
 					'msg' => 'group_no不存在',
@@ -343,7 +343,7 @@ class Order{
 			$stock = BeforeModel::CommonGet('ProductDate',$modelData);
 			if(count($stock['data'])>0){
 				$stock = $stock['data'][0];
-				if((isset($info['isGroup'])&&($stock['group_stock']<$data['count']))||(!isset($info['isGroup'])&&($stock['stock']<$data['count']))){
+				if(($isGroup&&($stock['group_stock']<$data['count']))||($stock['stock']<$data['count'])){
 					throw new ErrorMessage([
 						'msg' => '库存不足',
 						'info'=>$product

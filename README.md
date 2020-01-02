@@ -42,7 +42,7 @@
 | nickname | varchar(255) | 微信昵称 |
 | openid | varchar(255) | 微信openid |
 | headImgUrl | varchar(9999) | 微信头像 |
-| primary_scope | int(255) | 权限级别：90平台管理员;60超级管理员;30管理员;10用户 |
+| primary_scope | int(11) | 权限级别：90.平台管理员;60.项目管理员;30管理员;10用户 |
 | user_type | tinyint(2) | 0,小程序用户;2,cms用户; |
 | user_no | varchar(255) | 用户编号 |
 
@@ -56,6 +56,8 @@
 | gender | tinyint(2) | 性别:1.男;2.女 |
 | address | varchar(255) | 地址 |
 | phone | varchar(255) | 电话 |
+| score | decimal(10,2) | 积分 |
+| balance | decimal(10,2) | 余额 |
 
 
 
@@ -66,7 +68,7 @@
 | title | varchar(40) | 菜单名称 |
 | description| varchar(255) | 描述 |
 | parentid| int(11) | 父级菜单ID |
-| type | tinyint(2) |  1,menu;2,menu_item; |
+| type | tinyint(2) |  1,menu;2,menu_item;3.category;4.coupon;5.sku;6.sku_item |
 
 
 
@@ -76,9 +78,9 @@
 | ------ |  :------:  | ------  | 
 | title | varchar(100) | 文章标题 |
 | menu_id | int(11) | 关联label表 |
-| description | varchar((255) | 描述 |
+| description | varchar(255) | 描述 |
 | content | text | 文章内容 |
-| mainImg | text | 文章主图，一般在列表渲染 |
+| mainImg | text | 文章主图 |
 
 
 
@@ -97,13 +99,14 @@
 
 | 字段 | 类型 | 说明 |
 | ------ |  :------:  | ------  | 
-| type | int(11) | 类别:4.点赞;5.关注; |
-| order_no | varchar(100) | 关联message |
-| pay_no | varchar(255) | 关联user |
+| type | int(11) | 类别:1.点赞;2.收藏;3.签到 |
+| relation_table | varchar(100) | 关联表 |
+| relation_id | varchar(100) | 关联信息 |
+| relation_user | varchar(255) | 关联用户 |
 
 
 
-### pay_log表-update
+### pay_log表
 
 | 字段 | 类型 | 说明 |
 | ------ |  :------:  | ------  | 
@@ -133,11 +136,17 @@
 | mainImg | text | 主图 |
 | bannerImg | text | banner图 |
 | category_id | int(11) | 关联label表 |
+| type | int(11) | 1.普通商品 |
 | price | decimal(10,2) | 价格 |
-| stock | int(11) | 库存 |
+| o_price | decimal(10,2) | 原价 |
+| group_price | decimal(10,2) | 团购价格 |
+| stock | int(11) | 标准库存 |
 | sale_count | int(11) | 销量 |
 | start_time | bigint(13) | 开启时间 |
 | end_time | bigint(13) | 结束时间 |
+| on_shelf | tinyint(2) | 1.上架-1.下架 |
+| is_date | tinyint(2) | 1.日期库存0.非日期库存 |
+| duration | bigint(13) | 有效期 |
 
 
 
@@ -149,12 +158,31 @@
 | product_no | varchar(255) | 关联product表 |
 | title | varchar(255) | 商品名称 |
 | price | decimal(10,2) | 价格 |
-| stock | int(11) | 库存 |
+| group_price | decimal(10,2) | 团购价格 |
+| o_price | decimal(10,2) | 原价 |
+| stock | int(11) | 标准库存 |
 | sale_count | int(11) | 销量 |
+| on_shelf | tinyint(2) | 1.上架-1.下架 |
+| is_date | tinyint(2) | 1.日期库存0.非日期库存 |
 
 
 
-### order表-update
+### product_date表
+
+| 字段 | 类型 | 说明 |
+| ------ | ------  | ------ |
+| type | tinyint(2) | 1.标准库存2.日期库存 |
+| product_no | varchar(255) | 商品NO |
+| sku_no | varchar(255) | SKU NO |
+| price | decimal(10,2) | 价格 |
+| group_price | decimal(10,2) | 团购价格 |
+| day_time | int(11) | 0点时间戳 |
+| stock | int(11) | 库存 |
+| group_stock | int(11) | 团购库存 |
+
+
+
+### order表
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
@@ -162,35 +190,46 @@
 | pay | varchar(255) | pay方式详情 |
 | price | decimal(10,2) | 订单金额 |
 | pay_status | tinyint(2) | 0.未支付1.已支付 |
-| type | tinyint(2) | 1.普通商品,2.会员卡,3.团购商品,4.虚拟订单 |
-| order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结,4.团购未成团,5.团购成团 |
+| type | tinyint(2) | 1.普通商品,2.会员卡,3.团购商品,6.虚拟订单 |
+| order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结 |
+| group_status | tinyint(2) | 0.未成团,1.成团 |
 | transport_status | tinyint(2) | 0.未发货；1.配送中；2.已收货 |
+| level | tinyint(2) | 层级 |
 | parent | tinyint(2) | 0.无1.父级订单2.子级订单 |
 | parent_no | varchar(255) | 父级订单NO |
+| product_id | int(11) | 商品id |
+| sku_id | int(11) | SKU id |
+| title | varchar(255) | 商品名称 |
+| unit_price | decimal(10,2) | 商品单价 |
+| count | int(11) | 商品数量 |
+| isremark | tinyint(2) | 0.未评论；1.已评论 |
+| index | int(11) | 序号 |
 
 
 
-### order_item表-update
+### order_item表
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
 | order_no | varchar(255) | 订单NO |
 | product_id | int(11) | 商品id |
-| title | varchar(255) | 商品名称 |
-| price | decimal(10,2) | 商品单价 |
-| count | int(11) | 商品数量 |
 | snap_product | text | 商品信息快照 |
-| isremark | tinyint(2) | 0.未评论；1.已评论 |
-| pay_status | tinyint(2) | 0.未支付1.已支付 |
 
 
 
-### flow_log表-update
+### flow_log表
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ | 
+| type | int(11) | 1.微信支付2.余额支付3.积分支付 |
+| count | int(11) | 金额 |
+| trade_info | varchar(255) | 说明 |
 | order_no | varchar(255) | 订单NO |
 | parent_no | varchar(255) | 父级订单NO |
+| level | tinyint(2) | 层级 |
+| account | tinyint(2) | 0.不计算1.计算 |
+| withdraw | tinyint(2) | 0.非提现1.提现 |
+| withdraw_status | tinyint(2) | -1.拒绝0.待审核1.同意 |
 
 
 
@@ -225,10 +264,11 @@
 
 
 
-### wx_template表-new
+### wx_template表
 
 | 字段 | 类型 | 说明 |
 | ------ | ------  | ------ |
 | name | varchar(255) | 模板名称 |
 | template_no | varchar(100) | 模板号 |
+
 ---

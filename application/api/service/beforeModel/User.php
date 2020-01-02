@@ -28,8 +28,8 @@ class User {
 			$user = CommonModel::CommonGet('User',$modelData);
 			if (count($user['data'])>0) {
 				throw new ErrorMessage([
-                    'msg' => '用户名已存在',
-                ]);
+					'msg' => '用户名已存在',
+				]);
 			};
 
 		};

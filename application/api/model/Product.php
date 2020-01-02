@@ -20,280 +20,271 @@ use app\lib\exception\ErrorMessage;
 class Product extends BaseModel
 {
 
+	public static function dealAdd($data)
+	{
 
-
-    public static function dealAdd($data)
-    {   
-
-        $standard = [
-            'title'=>'',
-            'description'=>'',
-            'content'=>'',
-            'mainImg'=>[],
-            'bannerImg'=>[],
-            'price'=>0,
-            'stock'=>'',
-            'discount'=>'',
-            'type'=>1,
-            'category_id'=>'',
-            'sku_array'=>[],
-            'sku_item'=>[],
-            'spu_array'=>[],
-            'spu_item'=>[],
-            'passage1'=>'',
-            'passage2'=>'',
-            'passage_array'=>[],
-            'view_count'=>'',
-            'listorder'=>'',
-            'create_time'=>time(),
-            'update_time'=>'',
-            'delete_time'=>'',
-            'start_time'=>'',
-            'end_time'=>'',
-            'thirdapp_id'=>'',
-            'user_no'=>'',
-            'user_type'=>'',
-            'onShelf'=>1,
-            'status'=>1,
-            'product_no'=>makeProductNo($data['data']['category_id']),
-            'standard'=>0,
-            'group_stock'=>0,
-            'balance'=>0,
+		$standard = [
+			'title'=>'',
+			'description'=>'',
+			'content'=>'',
+			'mainImg'=>[],
+			'bannerImg'=>[],
+			'price'=>0,
+			'stock'=>'',
+			'discount'=>'',
+			'type'=>1,
+			'category_id'=>'',
+			'sku_array'=>[],
+			'sku_item'=>[],
+			'spu_array'=>[],
+			'spu_item'=>[],
+			'passage1'=>'',
+			'passage2'=>'',
+			'passage_array'=>[],
+			'view_count'=>0,
+			'listorder'=>'',
+			'create_time'=>time(),
+			'update_time'=>'',
+			'delete_time'=>'',
+			'start_time'=>'',
+			'end_time'=>'',
+			'thirdapp_id'=>'',
+			'user_no'=>'',
+			'user_type'=>'',
+			'on_shelf'=>1,
+			'status'=>1,
+			'product_no'=>makeProductNo($data['data']['category_id']),
+			'standard'=>0,
+			'group_stock'=>0,
+			'balance'=>0,
 			'is_date'=>0,
-            'limit'=>'',
-            'behavior'=>'',
-            'sale_count'=>'',
-            'use_limit'=>'',
-            'duration'=>'',
-            'score'=>'',
-            'img_array'=>[],
-        ];
+			'limit'=>'',
+			'behavior'=>'',
+			'sale_count'=>'',
+			'duration'=>'',
+			'score'=>'',
+			'img_array'=>[],
+		];
 
-        if($data['data']['category_id']!=0){
+		if($data['data']['category_id']!=0){
 
-            $res = Label::get(['id' => $data['data']['category_id']]);
+			$res = Label::get(['id' => $data['data']['category_id']]);
 
-            if(!$res){
+			if(!$res){
 
-                throw new ErrorMessage([
+				throw new ErrorMessage([
 
-                    'msg' => '关联信息有误',
+					'msg' => '关联信息有误',
 
-                ]);
+				]);
 
-            };
+			};
 
-        };
+		};
 
-        $label = [];
+		$label = [];
 
-        if(isset($data['data']['spu_array'])){
-            foreach ($data['data']['spu_array'] as $key => $value) {
-                $data['data']['spu_array'][$key] = (int)$value;
-            };
-            $label = array_keys(array_flip($label) + array_flip(json_decode($data['data']['spu_array'])));
+		if(isset($data['data']['spu_array'])){
+			foreach ($data['data']['spu_array'] as $key => $value) {
+				$data['data']['spu_array'][$key] = (int)$value;
+			};
+			$label = array_keys(array_flip($label) + array_flip(json_decode($data['data']['spu_array'])));
 
-        };
+		};
 
-        if(isset($data['data']['spu_item'])){
-            foreach ($data['data']['spu_item'] as $key => $value) {
-                $data['data']['spu_item'][$key] = (int)$value;
-            };
-            $label = array_keys(array_flip($label) + array_flip(json_decode($data['data']['spu_item'])));
+		if(isset($data['data']['spu_item'])){
+			foreach ($data['data']['spu_item'] as $key => $value) {
+				$data['data']['spu_item'][$key] = (int)$value;
+			};
+			$label = array_keys(array_flip($label) + array_flip(json_decode($data['data']['spu_item'])));
 
-        };
+		};
 
 
-        if(!empty($label)){
+		if(!empty($label)){
 
-            foreach ($label as $key => $value) {
+			foreach ($label as $key => $value) {
 
-                $label[$key] = [];
+				$label[$key] = [];
 
-                $label[$key] = [
+				$label[$key] = [
 
-                    'relation_one'=>$data['data']['product_no'],
+					'relation_one'=>$data['data']['product_no'],
 
-                    'relation_one_table'=>'product',
+					'relation_one_table'=>'product',
 
-                    'relation_two'=>$value,
+					'relation_two'=>$value,
 
-                    'relation_two_table'=>'label',
+					'relation_two_table'=>'label',
 
-                ];
+				];
 
-            }
+			}
 
-            (new Relation())->saveAll($label);
+			(new Relation())->saveAll($label);
 
-        };
-        $data['data'] = chargeBlank($standard,$data['data']);
-        return $data;
+		};
+		$data['data'] = chargeBlank($standard,$data['data']);
+		return $data;
 
-    }
+	}
 
 
 
+	public static function dealGet($data)
+	{
 
+		foreach ($data as $key => $value) {
 
-    public static function dealGet($data)
-    {   
+			if($value['category_id']!=0){
 
-        foreach ($data as $key => $value) {
+				$label = array();
 
-            if($value['category_id']!=0){
+				array_push($label,$value['category_id']);
+				$label = array_keys(array_flip($label) + array_flip($value['sku_array'])+ array_flip($value['sku_item'])+ array_flip($value['spu_array'])+ array_flip($value['spu_item']));
 
-                $label = array();
+				$map['id'] = ['in',$label];
 
-                array_push($label,$value['category_id']);
-                $label = array_keys(array_flip($label) + array_flip($value['sku_array'])+ array_flip($value['sku_item'])+ array_flip($value['spu_array'])+ array_flip($value['spu_item']));
+				$res = resDeal((new label())->where($map)->select());
 
-                $map['id'] = ['in',$label];
+				$res = clist_to_tree($res);
 
-                $res = resDeal((new label())->where($map)->select());
+				$res = changeIndexArray('id',$res);
 
-                $res = clist_to_tree($res);
+				$data[$key]['label'] = $res;
 
-                $res = changeIndexArray('id',$res);
+			};
 
-                $data[$key]['label'] = $res;
+		}; 
 
-            };
+		return $data;
 
-        }; 
+	}
 
-        return $data;
 
-    }
 
+	public static function dealUpdate($data)
+	{
 
+		if(isset($data['data'])&&(isset($data['data']['status'])||isset($data['data']['spu_item']))){
 
+			$product = resDeal((new Product())->where($data['searchItem'])->select());
 
+			if(isset($data['data']['status'])){
 
-    public static function dealUpdate($data)
-    {   
+				$product_no = [];
 
-        if(isset($data['data'])&&(isset($data['data']['status'])||isset($data['data']['spu_item']))){
+				foreach ($product as $key => $value) {
 
-            $product = resDeal((new Product())->where($data['searchItem'])->select());
+					array_push($product_no,$value['product_no']);
 
-            if(isset($data['data']['status'])){
+					$res = (new Relation())->where('relation_one','=',$value['product_no'])->update(['status'=>$data['data']['status']]);
 
-                $product_no = [];
+				};
 
-                foreach ($product as $key => $value) {
+				$res = (new Sku())->where('product_no','in',$product_no)->update(['status'=>$data['data']['status']]);
 
-                    array_push($product_no,$value['product_no']);
+			};
 
-                    $res = (new Relation())->where('relation_one','=',$value['product_no'])->update(['status'=>$data['data']['status']]);
+			if(isset($data['data']['spu_item'])){
 
-                };
+				$new_array = json_decode($data['data']['spu_item']);
 
-                $res = (new Sku())->where('product_no','in',$product_no)->update(['status'=>$data['data']['status']]);
+				foreach ($product as $key => $value) {
 
-            };
+					$label = [];
 
-            if(isset($data['data']['spu_item'])){
+					$map['relation_two'] = ['in',$value['spu_item']];
 
-                $new_array = json_decode($data['data']['spu_item']);
+					$map['relation_one'] = ['=',$value['product_no']];
 
-                foreach ($product as $key => $value) {
+					$res = (new Relation())->where($map)->delete();
 
-                    $label = [];
+					foreach ($new_array as $c_key => $c_value) {
 
-                    $map['relation_two'] = ['in',$value['spu_item']];
+						$label[$c_key] = [];
 
-                    $map['relation_one'] = ['=',$value['product_no']];
+						$label[$c_key] = [
 
-                    $res = (new Relation())->where($map)->delete();
+							'relation_one'=>$value['product_no'],
 
-                    foreach ($new_array as $c_key => $c_value) {
+							'relation_one_table'=>'product',
 
-                        $label[$c_key] = [];
+							'relation_two'=>$c_value,
 
-                        $label[$c_key] = [
+							'relation_two_table'=>'label',
 
-                            'relation_one'=>$value['product_no'],
+						];
 
-                            'relation_one_table'=>'product',
+					};
 
-                            'relation_two'=>$c_value,
+					(new Relation())->saveAll($label);
 
-                            'relation_two_table'=>'label',
+				};
 
-                        ];
+			};
 
-                    };
+			if(isset($data['data']['spu_array'])){
 
-                    (new Relation())->saveAll($label);
+				$new_array = json_decode($data['data']['spu_item']);
 
-                };
+				foreach ($product as $key => $value) {
 
-            };
+					$label = [];
 
-            if(isset($data['data']['spu_array'])){
+					$res = (new Relation())->where('relation_two','in',$value['spu_array'])->delete();
 
-                $new_array = json_decode($data['data']['spu_item']);
+					foreach ($new_array as $c_key => $c_value) {
 
-                foreach ($product as $key => $value) {
+						$label[$c_key] = [];
 
-                    $label = [];
+						$label[$c_key] = [
 
-                    $res = (new Relation())->where('relation_two','in',$value['spu_array'])->delete();
+							'relation_one'=>$value['product_no'],
 
-                    foreach ($new_array as $c_key => $c_value) {
+							'relation_one_table'=>'product',
 
-                        $label[$c_key] = [];
+							'relation_two'=>$c_value,
 
-                        $label[$c_key] = [
+							'relation_two_table'=>'label',
 
-                            'relation_one'=>$value['product_no'],
+						];
 
-                            'relation_one_table'=>'product',
+					};
 
-                            'relation_two'=>$c_value,
+					(new Relation())->saveAll($label);
 
-                            'relation_two_table'=>'label',
+				};
 
-                        ];
+			};  
 
-                    };
+		}
 
-                    (new Relation())->saveAll($label);
+	}
 
-                };
 
-            };  
 
-        }
+	public static function dealRealDelete($data)
+	{
 
-    }
+		$res = (new Product())->where($data['map'])->select();
 
+		$id = [];
 
+		$product_no = [];
 
+		foreach ($res as $key => $value) {
 
+			array_push($id,$value['id']);
 
-    public static function dealRealDelete($data)
-    {
+			array_push($product_no,$value['id']);
 
-    	$res = (new Product())->where($data['map'])->select();
+		};
 
-        $id = [];
+		(new Sku())->where('id','in',$id)->delete();
 
-        $product_no = [];
+		(new Relation())->where('relation_one','in',$product_no)->delete();
 
-        foreach ($res as $key => $value) {
-
-            array_push($id,$value['id']);
-
-            array_push($product_no,$value['id']);
-
-        };
-
-        (new Sku())->where('id','in',$id)->delete();
-
-        (new Relation())->where('relation_one','in',$product_no)->delete();
-
-    }
+	}
 
 }

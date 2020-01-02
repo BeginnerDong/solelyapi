@@ -41,6 +41,8 @@ class FlowLog extends Model
 			'behavior'=>1,
 			'payInfo'=>'',
 			'extra_info'=>'',
+			'withdraw'=>0,
+			'withdraw_status'=>0,
 		];
 
 		if(isset($data['data']['user_no'])){

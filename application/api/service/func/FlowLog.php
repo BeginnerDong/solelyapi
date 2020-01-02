@@ -237,16 +237,16 @@ class FlowLog {
 		$modelData = [];
 		$modelData['searchItem']['group_no'] = $orderInfo['group_no'];
 		$modelData['searchItem']['pay_status'] = 1;
-		$modelData['searchItem']['order_step'] = ['in',[4,5]];
+		$modelData['searchItem']['group_status'] = ['in',[1,2]];
 		$groups = BeforeModel::CommonGet('Order',$modelData);
 		if(count($groups['data'])>=$orderInfo['standard']){
 			/*成团*/
 			foreach($groups['data'] as $key => $value){
-				if($value['order_step']==4){
+				if($value['order_step']==1){
 					$modelData = [];
 					$modelData['FuncName'] = 'update';
 					$modelData['searchItem']['id'] = $value['id'];
-					$modelData['data']['order_step'] = 5;
+					$modelData['data']['order_step'] = 2;
 					$upOrder = BeforeModel::CommonSave('Order',$modelData);
 				};
 			};

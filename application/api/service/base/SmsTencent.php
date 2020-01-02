@@ -16,429 +16,336 @@ use app\lib\exception\ErrorMessage;
 
 class SmsTencent {
 
-    
 
-    private $url;
-    private $appid;
-    private $appkey;
-
+	private $url;
+	private $appid;
+	private $appkey;
 
 
-    /**
+	/**
+	 * 构造函数
+	 *
+	 * @param string $appid  sdkappid
+	 * @param string $appkey sdkappid对应的appkey
+	 */
 
-     * 构造函数
+	public function __construct($appid, $appkey)
+	{
 
-     *
-
-     * @param string $appid  sdkappid
-
-     * @param string $appkey sdkappid对应的appkey
-
-     */
-
-    public function __construct($appid, $appkey)
-    {
-		
 		$this->appid = $appid;
 
 		$this->appkey = $appkey;
 		
-        $this->url = "https://yun.tim.qq.com/v5/tlssmssvr/sendsms";
+		$this->url = "https://yun.tim.qq.com/v5/tlssmssvr/sendsms";
 
-    }
+	}
 
 
-    public function sendMsg($data){
+	public function sendMsg($data){
 
-    	// (new CommonValidate())->goCheck('one',$data); 
+		if (!isset($data['params'])) {
 
-        // checkTokenAndScope($data,config('scope.two'));
+			throw new ErrorMessage([
 
-        if (!isset($data['params'])) {
+				'msg' => '缺少短信模板信息',
 
-            throw new ErrorMessage([
+			]);
 
-                'msg' => '缺少短信模板信息',
+		}
 
-            ]);
+		$param = $data['params'];
 
-        }
+		$this->appid = $this->appid;
 
-        $param = $data['params'];
+		$this->appkey = $this->appkey;
 
-        // $this->appid = Cache::get($data['token'])['smsID_tencet'];
-        $this->appid = $this->appid;
+		$code = createSMSCode(6);
 
-        // $this->appkey = Cache::get($data['token'])['smsKey_tencet'];
-		
-        $this->appkey = $this->appkey;
+		//利用正则替换验证码
 
-        $code = createSMSCode(6);
+		$param = str_ireplace("captcha",$code,$param);
 
-        //利用正则替换验证码
+		//验证码放入缓存，时限10分钟
+		$codeinfo['code'] = $code;
 
-        $param = str_ireplace("captcha",$code,$param);
+		$codeinfo['phone'] = $data['phone'];
 
-        //验证码放入缓存，时限10分钟
+		Cache::set('smsCode'.$data['phone'],$codeinfo,600);
 
-        $codeinfo['code'] = $code;
+		$result = $this->sendWithParam(
 
-        $codeinfo['phone'] = $data['phone'];
+			86,
 
-        Cache::set('smsCode'.$data['phone'],$codeinfo,600);
+			$data['phone'],
 
-        $result = $this->sendWithParam(
+			$data['templId'],
 
-            86,
+			$param
 
-            $data['phone'],
+		);
 
-            $data['templId'],
+		$result = json_decode($result,true);
 
-            $param
+		if (isset($result['result'])) {
 
-        );
+			if($result['result']==0){
 
-        $result = json_decode($result,true);
+				throw new SuccessMessage([
 
-        if (isset($result['result'])) {
+					'msg'=>'发送成功',
 
-            if($result['result']==0){
+				]);
 
-                throw new SuccessMessage([
+			}else{
 
-                    'msg'=>'发送成功',
+				return $result;
 
-                ]);
+			}
 
-            }else{
+		}else{
 
-                return $result;
+			return $result;
 
-            }
+		}   
 
-        }else{
+	}
 
-            return $result;
 
-        }   
+	/**
+	 * 普通单发
+	 *
+	 * 普通单发需明确指定内容，如果有多个签名，请在内容中以【】的方式添加到信息内容中，否则系统将使用默认签名。
+	 *
+	 * @param int    $type        短信类型，0 为普通短信，1 营销短信
+	 * @param string $nationCode  国家码，如 86 为中国
+	 * @param string $phoneNumber 不带国家码的手机号
+	 * @param string $msg         信息内容，必须与申请的模板格式一致，否则将返回错误
+	 * @param string $extend      扩展码，可填空串
+	 * @param string $ext         服务端原样返回的参数，可填空串
+	 * @return string 应答json字符串，详细内容参见腾讯云协议文档
+	 */
 
-    }
+	public function send($type, $nationCode, $phoneNumber, $msg,$extend = "", $ext = "")
+	{
 
+		$random = $this->getRandom();
 
-    /**
+		$curTime = time();
 
-     * 普通单发
+		$wholeUrl = $this->url . "?sdkappid=" . $this->appid . "&random=" . $random;
 
-     *
+		// 按照协议组织 post 包体
 
-     * 普通单发需明确指定内容，如果有多个签名，请在内容中以【】的方式添加到信息内容中，否则系统将使用默认签名。
+		$data = new \stdClass();
 
-     *
+		$tel = new \stdClass();
 
-     * @param int    $type        短信类型，0 为普通短信，1 营销短信
+		$tel->nationcode = "".$nationCode;
 
-     * @param string $nationCode  国家码，如 86 为中国
+		$tel->mobile = "".$phoneNumber;
 
-     * @param string $phoneNumber 不带国家码的手机号
+		$data->tel = $tel;
 
-     * @param string $msg         信息内容，必须与申请的模板格式一致，否则将返回错误
+		$data->type = (int)$type;
 
-     * @param string $extend      扩展码，可填空串
+		$data->msg = $msg;
 
-     * @param string $ext         服务端原样返回的参数，可填空串
+		$data->sig = hash("sha256",
 
-     * @return string 应答json字符串，详细内容参见腾讯云协议文档
+			"appkey=".$this->appkey."&random=".$random."&time="
 
-     */
+			.$curTime."&mobile=".$phoneNumber, FALSE);
 
-    public function send($type, $nationCode, $phoneNumber, $msg,$extend = "", $ext = "")
-    {
+		$data->time = $curTime;
 
-        $random = $this->getRandom();
+		$data->extend = $extend;
 
-        $curTime = time();
+		$data->ext = $ext;
 
-        $wholeUrl = $this->url . "?sdkappid=" . $this->appid . "&random=" . $random;
+		return $this->sendCurlPost($wholeUrl, $data);
 
+	}
 
 
-        // 按照协议组织 post 包体
 
-        $data = new \stdClass();
+	/**
+	 * 指定模板单发
+	 *
+	 * @param string $nationCode  国家码，如 86 为中国
+	 * @param string $phoneNumber 不带国家码的手机号
+	 * @param int    $templId     模板 id
+	 * @param array  $params      模板参数列表，如模板 {1}...{2}...{3}，那么需要带三个参数
+	 * @param string $sign        签名，如果填空串，系统会使用默认签名
+	 * @param string $extend      扩展码，可填空串
+	 * @param string $ext         服务端原样返回的参数，可填空串
+	 * @return string 应答json字符串，详细内容参见腾讯云协议文档
+	 */
 
-        $tel = new \stdClass();
+	public function sendWithParam($nationCode, $phoneNumber, $templId = 0, $params,
+		$sign = "", $extend = "", $ext = "")
+	{
 
-        $tel->nationcode = "".$nationCode;
+		$random = $this->getRandom();
 
-        $tel->mobile = "".$phoneNumber;
+		$curTime = time();
 
-        $data->tel = $tel;
+		$wholeUrl = $this->url . "?sdkappid=" . $this->appid . "&random=" . $random;
 
-        $data->type = (int)$type;
+		// 按照协议组织 post 包体
 
-        $data->msg = $msg;
+		$data = new \stdClass();
 
-        $data->sig = hash("sha256",
+		$tel = new \stdClass();
 
-            "appkey=".$this->appkey."&random=".$random."&time="
+		$tel->nationcode = "".$nationCode;
 
-            .$curTime."&mobile=".$phoneNumber, FALSE);
+		$tel->mobile = "".$phoneNumber;
 
-        $data->time = $curTime;
+		$data->tel = $tel;
 
-        $data->extend = $extend;
+		$data->sig = $this->calculateSigForTempl($this->appkey, $random,
 
-        $data->ext = $ext;
+			$curTime, $phoneNumber);
 
-        return $this->sendCurlPost($wholeUrl, $data);
+		$data->tpl_id = $templId;
 
-    }
+		$data->params = $params;
 
+		$data->sign = $sign;
 
+		$data->time = $curTime;
 
-    /**
+		$data->extend = $extend;
 
-     * 指定模板单发
+		$data->ext = $ext;
 
-     *
+		return $this->sendCurlPost($wholeUrl, $data);
 
-     * @param string $nationCode  国家码，如 86 为中国
+	}
 
-     * @param string $phoneNumber 不带国家码的手机号
 
-     * @param int    $templId     模板 id
 
-     * @param array  $params      模板参数列表，如模板 {1}...{2}...{3}，那么需要带三个参数
+	/**
+	 * 发送请求
+	 *
+	 * @param string $url      请求地址
+	 * @param array  $dataObj  请求内容
+	 * @return string 应答json字符串
+	 */
 
-     * @param string $sign        签名，如果填空串，系统会使用默认签名
+	public function sendCurlPost($url, $dataObj)
+	{
 
-     * @param string $extend      扩展码，可填空串
+		$curl = curl_init();
 
-     * @param string $ext         服务端原样返回的参数，可填空串
+		curl_setopt($curl, CURLOPT_URL, $url);
 
-     * @return string 应答json字符串，详细内容参见腾讯云协议文档
+		curl_setopt($curl, CURLOPT_HEADER, 0);
 
-     */
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
-    public function sendWithParam($nationCode, $phoneNumber, $templId = 0, $params,
+		curl_setopt($curl, CURLOPT_POST, 1);
 
-        $sign = "", $extend = "", $ext = "")
+		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 60);
 
-    {
+		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($dataObj));
 
-        $random = $this->getRandom();
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 
-        $curTime = time();
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-        $wholeUrl = $this->url . "?sdkappid=" . $this->appid . "&random=" . $random;
+		$ret = curl_exec($curl);
 
+		if (false == $ret) {
 
+			// curl_exec failed
 
-        // 按照协议组织 post 包体
+			$result = "{ \"result\":" . -2 . ",\"errmsg\":\"" . curl_error($curl) . "\"}";
 
-        $data = new \stdClass();
+		} else {
 
-        $tel = new \stdClass();
+			$rsp = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-        $tel->nationcode = "".$nationCode;
+			if (200 != $rsp) {
 
-        $tel->mobile = "".$phoneNumber;
+				$result = "{ \"result\":" . -1 . ",\"errmsg\":\"". $rsp . " " . curl_error($curl) ."\"}";
 
+			} else {
 
+				$result = $ret;
 
-        $data->tel = $tel;
+			}
 
-        $data->sig = $this->calculateSigForTempl($this->appkey, $random,
+		}
 
-            $curTime, $phoneNumber);
+		curl_close($curl);
 
-        $data->tpl_id = $templId;
+		return $result;
 
-        $data->params = $params;
+	}
 
-        $data->sign = $sign;
 
-        $data->time = $curTime;
 
-        $data->extend = $extend;
+	/**
+	 * 生成签名
+	 *
+	 * @param string $appid         sdkappid
+	 * @param string $appkey        sdkappid对应的appkey
+	 * @param string $curTime       当前时间
+	 * @param array  $phoneNumbers  手机号码
+	 * @return string  签名结果
+	 */
 
-        $data->ext = $ext;
+	public function calculateSigForTempl($appkey, $random, $curTime, $phoneNumber)
+	{
 
-        return $this->sendCurlPost($wholeUrl, $data);
+		$phoneNumbers = array($phoneNumber);
 
-    }
+		return $this->calculateSigForTemplAndPhoneNumbers($appkey,$random,$curTime,$phoneNumbers);
 
+	}
 
 
-        /**
 
-     * 发送请求
+	/**
+	 * 生成签名
+	 *
+	 * @param string $appid         sdkappid
+	 * @param string $appkey        sdkappid对应的appkey
+	 * @param string $curTime       当前时间
+	 * @param array  $phoneNumbers  手机号码
+	 * @return string  签名结果
+	 */
 
-     *
+	public function calculateSigForTemplAndPhoneNumbers($appkey, $random,
+		$curTime, $phoneNumbers)
+	{
 
-     * @param string $url      请求地址
+		$phoneNumbersString = $phoneNumbers[0];
 
-     * @param array  $dataObj  请求内容
+		for ($i = 1; $i < count($phoneNumbers); $i++) {
 
-     * @return string 应答json字符串
+			$phoneNumbersString .= ("," . $phoneNumbers[$i]);
 
-     */
+		}
 
-    public function sendCurlPost($url, $dataObj)
+		return hash("sha256", "appkey=".$appkey."&random=".$random."&time=".$curTime."&mobile=".$phoneNumbersString);
 
-    {
+	}
 
-        $curl = curl_init();
 
-        curl_setopt($curl, CURLOPT_URL, $url);
 
-        curl_setopt($curl, CURLOPT_HEADER, 0);
+	/**
+	 * 生成随机数
+	 *
+	 * @return int 随机数结果
+	 */
 
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+	public function getRandom()
+	{
 
-        curl_setopt($curl, CURLOPT_POST, 1);
+		return rand(100000, 999999);
 
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 60);
-
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($dataObj));
-
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-
-
-
-        $ret = curl_exec($curl);
-
-        if (false == $ret) {
-
-            // curl_exec failed
-
-            $result = "{ \"result\":" . -2 . ",\"errmsg\":\"" . curl_error($curl) . "\"}";
-
-        } else {
-
-            $rsp = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-            if (200 != $rsp) {
-
-                $result = "{ \"result\":" . -1 . ",\"errmsg\":\"". $rsp
-
-                        . " " . curl_error($curl) ."\"}";
-
-            } else {
-
-                $result = $ret;
-
-            }
-
-        }
-
-
-
-        curl_close($curl);
-
-
-
-        return $result;
-
-    }
-
-
-
-    /**
-
-     * 生成签名
-
-     *
-
-     * @param string $appid         sdkappid
-
-     * @param string $appkey        sdkappid对应的appkey
-
-     * @param string $curTime       当前时间
-
-     * @param array  $phoneNumbers  手机号码
-
-     * @return string  签名结果
-
-     */
-
-    public function calculateSigForTempl($appkey, $random, $curTime, $phoneNumber)
-
-    {
-
-        $phoneNumbers = array($phoneNumber);
-
-
-
-        return $this->calculateSigForTemplAndPhoneNumbers($appkey, $random,
-
-            $curTime, $phoneNumbers);
-
-    }
-
-
-
-    /**
-
-     * 生成签名
-
-     *
-
-     * @param string $appid         sdkappid
-
-     * @param string $appkey        sdkappid对应的appkey
-
-     * @param string $curTime       当前时间
-
-     * @param array  $phoneNumbers  手机号码
-
-     * @return string  签名结果
-
-     */
-
-    public function calculateSigForTemplAndPhoneNumbers($appkey, $random,
-
-        $curTime, $phoneNumbers)
-
-    {
-
-        $phoneNumbersString = $phoneNumbers[0];
-
-        for ($i = 1; $i < count($phoneNumbers); $i++) {
-
-            $phoneNumbersString .= ("," . $phoneNumbers[$i]);
-
-        }
-
-
-
-        return hash("sha256", "appkey=".$appkey."&random=".$random
-
-            ."&time=".$curTime."&mobile=".$phoneNumbersString);
-
-    }
-
-
-
-    /**
-
-     * 生成随机数
-
-     *
-
-     * @return int 随机数结果
-
-     */
-
-    public function getRandom()
-
-    {
-
-        return rand(100000, 999999);
-
-    }
+	}
 
 }
