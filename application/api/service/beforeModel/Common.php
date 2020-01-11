@@ -122,10 +122,9 @@ class Common {
 
 	/**
 	 * 前置搜索
-	 * 分三层可以设置交/并集选项
+	 * 分两层可以设置交/并集选项
 	 * getBefore多个条件之间，在每个getBefore中设置type==merge为并集，默认交集
 	 * 每个getBefore内的多个searchItem之间，在getBefore中设置searchType==merge为并集，默认交集
-	 * 每个searchItem条件之间，在searchItem中数组每项的第三个参数设置merge为并集，默认交集
 	 */
 	public static function CommonGetPro($data)
 	{
@@ -154,56 +153,28 @@ class Common {
 					if($finalItem){
 						$fixSearchItem[$value['middleKey']] = [$value['condition'],$finalItem];
 					};
-				}
+				};
 				
+				$num = 0;
 				foreach ($value['searchItem'] as $c_key => $c_value) {
-					
+					$num += 1;
 					/*初始化每个searchItem的结果*/
 					$searchItem = [];
-					foreach ($c_value[1] as $c_current) {
-						
-						/*初始化每个选项的结果*/
-						
-						$c_search = [];
-						$map = [];
-						
-						if(!empty($fixSearchItem)){
-							$map = $fixSearchItem;
-						};
-						$map[$c_key] = [$c_value[0],$c_current];
-
-						$modelData = [];
-						$modelData['searchItem'] = $map;
-						$res = CommonModel::CommonGet($value['tableName'],$modelData);
-						/*记录结果复用*/
-						$getBeforeData[$key] = $res;
-						
-						foreach ($res['data'] as $ckey => $cvalue) {
-							array_push($c_search,$cvalue[$value['key']]);
-						};
-
-						if(empty($searchItem)){
-							$searchItem = $c_search;
-						}else{
-							/*条件内部求交/并集*/
-							if(isset($c_value[2])&&$c_value[2]=="merge"){
-								array_merge($searchItem,$c_search);
-							}else{
-								$new = [];
-								foreach($searchItem as $s_key => $s_value){
-									if(in_array($s_value,$c_search)){
-										array_push($new,$s_value);
-									};
-								};
-								$searchItem = $new;
-							};
-						};
+					$map = [];
+					if(!empty($fixSearchItem)){
+						$map = $fixSearchItem;
 					};
-					
-					/*记录结果复用*/
-					$getBeforeData[$value['middleKey']] = [$value['condition'],$searchItem];
-					
-					if(empty($search)){
+					$map[$c_key] = [$c_value[0],$c_value[1]];
+					$modelData = [];
+					$modelData['searchItem'] = $map;
+					$res = CommonModel::CommonGet($value['tableName'],$modelData);
+					/*记录结果待复用*/
+					$getBeforeData[$key] = $res;
+					foreach ($res['data'] as $ckey => $cvalue) {
+						array_push($searchItem,$cvalue[$value['key']]);
+					};
+
+					if($num==1){
 						$search = $searchItem;
 					}else{
 						/*多个searchItem之间求交/并集*/
@@ -218,8 +189,9 @@ class Common {
 							};
 							$search = $new;
 						};
-					}
+					};
 				};
+
 				if(!empty($search)){
 					if(isset($newSearchItem[$value['middleKey']])){
 						if(isset($value['type'])&&$value['type']=="merge"){
@@ -244,6 +216,7 @@ class Common {
 				$data = [];
 			};
 		};
+
 		return $data;
 
 	}
@@ -558,8 +531,10 @@ class Common {
 					$modelData['FuncName'] = 'add';
 					if($value['is_date']==1){
 						$modelData['data']['type'] = 2;
+						$modelData['data']['day_time'] = $beginToday;
 					}else{
 						$modelData['data']['type'] = 1;
+						$modelData['data']['day_time'] = 0;
 					};
 					if($dbTable=='Product'){
 						$modelData['data']['product_no'] = $value['product_no'];
@@ -568,7 +543,6 @@ class Common {
 					};
 					$modelData['data']['stock'] = $value['stock'];
 					$modelData['data']['group_stock'] = $value['stock'];
-					$modelData['data']['day_time'] = $beginToday;
 					$addStock = CommonModel::CommonSave('ProductDate',$modelData);
 					$res[$key]['stock'] = $value['stock'];
 					$res[$key]['group_stock'] = $value['stock'];

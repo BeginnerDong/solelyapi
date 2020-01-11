@@ -103,6 +103,7 @@ class ProgramToken {
 		$modelData['searchItem']['openid'] = $openid;
 		$modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
 		$modelData['searchItem']['status'] = 1;
+		$modelData['searchItem']['user_type'] = 0;
 		$user = BeforeModel::CommonGet('User',$modelData);
 
 		if(isset($wxResult['unionid'])){ 
@@ -130,7 +131,7 @@ class ProgramToken {
 			$modelData['data']['nickname'] = isset($data['nickname'])?$data['nickname']:'';
 			$modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
 			$modelData['data']['openid'] = $openid;
-			$modelData['data']['type'] = 0;
+			$modelData['data']['user_type'] = 0;
 			$modelData['data']['thirdapp_id'] = $data['thirdapp_id'];
 			$modelData['FuncName'] = 'add';
 			if(isset($wxResult['unionid'])){
@@ -234,6 +235,63 @@ class ProgramToken {
 			'info'=>$user,
 		]);
 
+	}
+	
+	
+	/**
+	 * 前端以其它方式登录
+	 * 通过code获取并绑定小程序信息
+	 */
+	public static function bindWechat($data)
+	{
+		if(!Cache::get($data['token'])){
+			throw new ErrorMessage([
+				'msg'=>'token已失效',
+				'solelyCode' => 200000
+			]);
+		};
+		$user = Cache::get($data['token']);
+	
+		$modelData = [];		
+		$modelData['getOne'] = "true";
+		$modelData['searchItem']['id'] = $user['thirdapp_id'];
+		$ThirdInfo = BeforeModel::CommonGet('ThirdApp',$modelData);
+		if(!count($ThirdInfo['data'])>0){
+			throw new ErrorMessage([
+				'msg'=>'关联thirdappID错误'
+			]);
+		};
+		$ThirdInfo = $ThirdInfo['data'][0];
+	
+		$wxLoginUrl = sprintf(
+			config('wx.login_url'), $ThirdInfo['appid'], $ThirdInfo['appsecret'], $data['code']);
+		$result = curl_get($wxLoginUrl);
+	
+		$wxResult = json_decode($result, true);
+		if (empty($wxResult)||array_key_exists('errcode', $wxResult)) {
+			// 为什么以empty判断是否错误，这是根据微信返回
+			// 规则摸索出来的
+			// 这种情况通常是由于传入不合法的code
+			// throw new Exception('获取session_key及openID时异常，微信内部错误');
+			throw new ErrorMessage([
+				'msg' => $wxResult['errmsg'],
+				'errorCode' => $wxResult['errcode']
+			]);
+		};
+		$modelData = [];
+		$modelData['FuncName'] = 'update';
+		$modelData['searchItem']['id'] = $user['id'];
+		$modelData['data']['openid'] = $wxResult['openid'];
+		$upUser = BeforeModel::CommonSave('User',$modelData);
+		if($upUser>0){
+			throw new SuccessMessage([
+				'msg'=>'更新成功',
+			]);
+		}else{
+			throw new ErrorMessage([
+				'msg'=>'更新失败',
+			]);
+		};
 	}
 
 }

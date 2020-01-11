@@ -236,7 +236,6 @@ class Order{
 		$modelData['data']['product_id'] = isset($data['product_id'])?$data['product_id']:0;
 		$modelData['data']['sku_id'] = isset($data['sku_id'])?$data['sku_id']:0;
 		$modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
-		$modelData['data']['products'] = isset($data['products'])?$data['products']:'';
 
 		if(isset($data['data'])){
 			$modelData['data'] = array_merge($data['data'],$modelData['data']);
