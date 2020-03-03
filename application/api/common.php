@@ -9,7 +9,6 @@ use think\Cache;
 use app\lib\exception\TokenException;
 use app\api\model\User;
 use app\api\model\Distribution;
-
 use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
@@ -35,6 +34,7 @@ use app\lib\exception\ErrorMessage;
 		return ($data);
 	}
 
+
 	function curl_post_string($url,$string)
 	{
 		$ch = curl_init();
@@ -56,6 +56,7 @@ use app\lib\exception\ErrorMessage;
 		return ($data);
 	}
 
+
 	/**
 	 * post发送数组
 	 * form-data
@@ -72,6 +73,7 @@ use app\lib\exception\ErrorMessage;
 		curl_close($ch);
 		return ($data);
 	}
+
 
 	function curl_post_raw($url, $rawData)
 	{
@@ -93,6 +95,7 @@ use app\lib\exception\ErrorMessage;
 		curl_close($ch);
 		return ($data);
 	}
+
 
 	/**
 	 * @param string $url get请求地址
@@ -116,7 +119,8 @@ use app\lib\exception\ErrorMessage;
 
 
 	//xml格式转化成数组
-	function xml2array($xml){
+	function xml2array($xml)
+	{
 		$p=xml_parser_create();
 		xml_parse_into_struct($p, $xml, $vals, $index);
 		xml_parser_free($p);
@@ -130,8 +134,10 @@ use app\lib\exception\ErrorMessage;
 		return $data;
 	}
 
+
 	//获取随机数
-	function getRandChar($length){
+	function getRandChar($length)
+	{
 		$str=null;
 		$strPol="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
 		$max=strlen($strPol)-1;
@@ -141,8 +147,10 @@ use app\lib\exception\ErrorMessage;
 		return $str;
 	}
 
+
 	//筛选/过滤条件
-	function checkData($data){  
+	function checkData($data)
+	{
 		if(!isset($data['is_page'])){
 			throw new TokenException([
 				'msg'=>'is_page参数只能为true或者false且不能为空',
@@ -190,8 +198,10 @@ use app\lib\exception\ErrorMessage;
 		} 
 	}
 
+
 	//分页/筛选数据
-	function preAll($data){
+	function preAll($data)
+	{
 		if(isset($data['pagesize'])){
 			$size=$data['pagesize'];
 		}
@@ -216,25 +226,15 @@ use app\lib\exception\ErrorMessage;
 		return $res;
 	}
 
-	function preAll2($data){
-		
-		if(isset($data['searchItem'])){
-			$search=$data['searchItem'];
-		}else{
-			$search='';
-		}
-			$res=[
-				'map'=>$search,
-			];
-		return $res;
-	}
 
-	function fromArrayToModel($m,$array){
+	function fromArrayToModel($m,$array)
+	{
 		foreach($array as $key=>$value){
 			$m[$key]=$value;
 		}
 		return $m;
 	}
+
 
 	/**
 	 * @param array $img 多图数组
@@ -250,15 +250,17 @@ use app\lib\exception\ErrorMessage;
 		return $img;
 	}
 
+
 	/**
 	 * @return 短信验证码
 	 */
-
-	function createSMSCode($length){
+	function createSMSCode($length)
+	{
 		$min = pow(10,($length-1));
 		$max = pow(10, $length)-1;
 		return rand($min,$max);
 	}
+
 
 	/**
 	 * 把返回的数据集转换成Tree
@@ -266,7 +268,7 @@ use app\lib\exception\ErrorMessage;
 	 * @param string $pid parent标记字段
 	 * @return array
 	 */
-	function clist_to_tree($list, $pk='id', $pid = 'parentid', $child = 'child', $root = '')
+	function clist_to_tree($list, $pk='id', $pid = 'parentid', $child = 'children', $root = '')
 	{
 		// 创建Tree
 		$tree = array();
@@ -313,6 +315,7 @@ use app\lib\exception\ErrorMessage;
 		return $tree;
 	}
 
+
 	/**
 	 * 将list_to_tree的树还原成列表
 	 * @param  array $tree  原来的树
@@ -322,7 +325,8 @@ use app\lib\exception\ErrorMessage;
 	 * @return array        返回排过序的列表数组
 	 * @author yangweijie <yangweijiester@gmail.com>
 	 */
-	function ctree_to_list($tree, $child = 'child', $order = 'id', &$list = array()){
+	function ctree_to_list($tree, $child = 'child', $order = 'id', &$list = array())
+	{
 		if(is_array($tree)) {
 			foreach ($tree as $key => $value) {
 				$reffer = $value;
@@ -336,6 +340,7 @@ use app\lib\exception\ErrorMessage;
 		}
 		return $list;
 	}
+
 
 	/**
 	 * 对查询结果集进行排序
@@ -351,7 +356,8 @@ use app\lib\exception\ErrorMessage;
 	 * @return array
 	 *
 	 */
-	function list_sort_by($list, $field, $sortby = 'asc') {
+	function list_sort_by($list, $field, $sortby = 'asc')
+	{
 		if (is_array ( $list )) {
 			$refer = $resultSet = array ();
 			foreach ( $list as $i => $data )
@@ -374,6 +380,7 @@ use app\lib\exception\ErrorMessage;
 		return false;
 	}
 
+
 	//生成订单号
 	function makeOrderNo()
 	{
@@ -385,6 +392,8 @@ use app\lib\exception\ErrorMessage;
 		return $orderSn;
 	}
 
+
+	//生成用户NO
 	function makeUserNo()
 	{
 		
@@ -394,71 +403,55 @@ use app\lib\exception\ErrorMessage;
 		return $userSn;
 	}
 
+
+	//生产产品NO
 	function makeProductNo($category)
 	{
-		
 		$productNo ='P'.substr(time(), -5).substr(microtime(), 2, 5).rand(0, 99).$category;
 
 		return $productNo;
 	}
 
-	function makeSkuNo($product){
-			
+
+	//生成SKU NO
+	function makeSkuNo($product)
+	{
 		$no = 'S'.substr(time(), -5).rand(0, 99).$product['id']; 
 		return $no;
 	}
 
-	function makePayNo(){      
-		$no = 'M'.substr(time(), -5).rand(0, 9999); 
+
+	//生成支付NO
+	function makePayNo()
+	{
+		$no = 'M'.substr(time(), -5).rand(0, 99); 
 		return $no;
 	}
 
-	function makeGroupNo(){      
+
+	//生成团购NO
+	function makeGroupNo()
+	{
 		$no = 'G'.substr(time(), -5).rand(0, 99); 
 		return $no;
 	}
 
-	//生产项目编号
-	function makeProjectNo()
-	{
-		$productNo ='Pro'.substr(time(), -5).substr(microtime(), 2, 5).rand(0, 99);
-		return $productNo;
-	}
 
-	function objectToArray ($object) {  
+	//对象转数组
+	function objectToArray ($object)
+	{
 		if(!is_object($object) && !is_array($object)) {  
 			return $object;  
 		}  
-	  
+
 		return array_map('objectToArray', (array) $object);  
-	}  
-
-
-	function preAdd($data){
-		
-		
-		if(isset($data['data']['password'])){
-			$data['data']['password'] = md5($data['data']['password']);
-		};
-		if(!isset($data['data']['thirdapp_id'])){
-			$data['data']['thirdapp_id'] = Cache::get($data['token'])['thirdapp_id'];
-		};
-		if(!isset($data['data']['user_no'])){
-			$data['data']['user_no'] = Cache::get($data['token'])['user_no'];
-		};
-
-		$data['data'] = keepNum($data['data']);
-		$data['data'] = jsonDeal($data['data']);
-
-		return $data;
-
-
-
 	}
 
 
-	//分页/筛选数据
-	function keepNum($data){
+	//数据整理
+	//字符转数字
+	function keepNum($data)
+	{
 
 		$filterArr = ['child_array','sku_array','sku_item','spu_array','spu_item'];
 		foreach ($data as $key => $value) {
@@ -478,9 +471,10 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
-
-	//分页/筛选数据
-	function jsonDeal($data){
+	//写入数据库
+	//数组转json字符串
+	function jsonDeal($data)
+	{
 		foreach ($data as $key => $value) {
 			if(is_array($value)){
 				$data[$key] = json_encode($value,JSON_UNESCAPED_UNICODE);
@@ -491,12 +485,13 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
+	//数据库读取
+	//json字符串转数组
 	function resDeal($data)
-	{   
-		$filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter','saveFunction'];
-		
-		
-		if(isset($data['data'])&&!empty($data['data'])&&is_array($data['data'])){
+	{
+		$filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
+
+		if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){
 			$dealData = $data['data'];
 		}else if(!empty($data)&&is_array($data)){
 			$dealData = $data;
@@ -547,10 +542,9 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
-
-	//分页/筛选数据
-	function dealUpdateRes($res,$name){
-		
+	//返回前端信息模板
+	function dealUpdateRes($res,$name)
+	{
 		if($res!=0){
 			throw new SuccessMessage([
 				'msg'=>$name.'成功'
@@ -563,9 +557,9 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
-
-	//分页/筛选数据
-	function preModelStr($data){
+	//整理搜索与排序参数
+	function preModelStr($data)
+	{
 		
 		$str = "return \$model->";
 		if(isset($data['searchItem'])){
@@ -582,8 +576,9 @@ use app\lib\exception\ErrorMessage;
 		return $str;
 	}
 
-	//分页/筛选数据
-	function after($data,$arr){
+
+	function after($data,$arr)
+	{
 
 		$arr = ['img','mainImg','bannerImg','headImg','child_array'];
 	   
@@ -597,12 +592,14 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
-	//分页/筛选数据
-	function chargeBlank($arr,$data){
-		
+	//数据库写入
+	//检查空字段
+	function chargeBlank($arr,$data)
+	{
+
 		foreach ($arr as $key => $value) {
 		   if(!isset($data[$key])){
-			$data[$key]=$value;
+			$data[$key] = $value;
 		   };
 		};
 
@@ -612,12 +609,11 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
-
 	/**
 	 * @param array 接收到的数据
 	 * @return 检查token参数是否设置
 	 */
-	function checkToken ($data)
+	function checkToken($data)
 	{
 		//$data=Request::instance()->param();
 		if (!isset($data['token'])) {
@@ -625,24 +621,8 @@ use app\lib\exception\ErrorMessage;
 		}
 	}
 
-	/**
-	 * @param array 接收到的数据
-	 * @return 检查thirdappID参数是否设置
-	 */
-	function checkThirdID ()
-	{
-		$data=Request::instance()->param();
-		if (!isset($data['thirdapp_id'])) {
-			throw new TokenException([
-				'msg'=>'缺少参数ThirdID',
-				'solelyCode' => 200002
-			]);
-		}
-	}
 
-
-
-	function checkValue ($data,$check)
+	function checkValue($data,$check)
 	{
 
 		foreach ($check as $key => $value) {
@@ -664,25 +644,14 @@ use app\lib\exception\ErrorMessage;
 				}
 			}
 		}
+		
 	}
 
 
-	function checkTokenAndScope ($data,$scope=[])
+	function checkTokenAndScope($data,$scope=[])
 	{
 		
 		if(!Cache::get($data['token'])){
-			throw new ErrorMessage([
-				'msg'=>'token已失效',
-				'solelyCode' => 200000
-			]);
-		};
-
-		$user = Cache::get($data['token']);
-		/*检查用户是否存在*/
-		$userModel = new User();
-		$check['user_no'] = $user['user_no'];
-		$checkUser = $userModel->where($check)->find();
-		if(!$checkUser){
 			throw new ErrorMessage([
 				'msg'=>'token已失效',
 				'solelyCode' => 200000
@@ -729,7 +698,6 @@ use app\lib\exception\ErrorMessage;
 			}
 			
 		}else{
-
 			$data['data']['thirdapp_id'] = $thirdapp_id;
 		};
 		
@@ -737,12 +705,6 @@ use app\lib\exception\ErrorMessage;
 		$pass = false;
 		$check_no = '';
 		$check_type = -1;
-		
-		if(isset($data['data']['user_no'])&&isset($data['searchItem']['user_no'])){
-			throw new ErrorMessage([
-				'msg'=>'不允许更新user_no',
-			]);
-		};
 
 		if(isset($data['data']['user_no'])){
 			$check_no = $data['data']['user_no'];
@@ -799,10 +761,8 @@ use app\lib\exception\ErrorMessage;
 							if($value['auth']=='isMe'){
 
 								$data['searchItem']['user_no'] = $user_no;
-								if(isset($data['data'])&&!isset($data['data']['user_no'])){
-									
+								if(isset($data['data'])){
 									$data['data']['user_no'] = $user_no;
-									
 								};
 							};
 
@@ -831,15 +791,31 @@ use app\lib\exception\ErrorMessage;
 										$data['searchItem']['user_no'] = $user_no;
 									};
 									
+									if(isset($data['data'])){
+										$data['data']['user_no'] = $user_no;
+									};
 								};
 							};
-							
-							if(isset($data['FuncName'])&&($data['FuncName']=="add")&&isset($data['data'])&&!isset($data['data']['user_no'])){
-								
-								$data['data']['user_no'] = $user_no;
-								
+
+							if($value['auth']=='All'){
+
+								if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
+									$data['data']['user_no'] = $user_no;
+								};
+
+								if (isset($data['searchItem']['user_no'])) {
+									$data['data']['user_no'] = $data['searchItem']['user_no'];
+								}
+
 							};
-							
+
+						}else{
+
+							$data['searchItem']['user_no'] = $user_no;
+							if(isset($data['data'])){
+								$data['data']['user_no'] = $user_no;
+							};
+
 						};
 
 						if (!empty($value['addLimit'])&&isset($data['FuncName'])&&$data['FuncName']=='add') {
@@ -908,11 +884,8 @@ use app\lib\exception\ErrorMessage;
 						if($value['auth']=='isMe'){
 
 							$data['searchItem']['user_no'] = $user_no;
-
-							if(isset($data['data'])&&!isset($data['data']['user_no'])){
-								
+							if(isset($data['data'])){
 								$data['data']['user_no'] = $user_no;
-								
 							};
 						};
 
@@ -940,15 +913,31 @@ use app\lib\exception\ErrorMessage;
 								}else{
 									$data['searchItem']['user_no'] = $user_no;
 								};
-
+								
+								if(isset($data['data'])){
+									$data['data']['user_no'] = $user_no;
+								};
 							};
 							
 						};
-						
-						if(isset($data['FuncName'])&&($data['FuncName']=="add")&&isset($data['data'])&&!isset($data['data']['user_no'])){
-							
+
+						if($value['auth']=='All'){
+
+							if(isset($data['data'])&&!isset($data['data']['user_no'])&&!isset($data['searchItem']['user_no'])){
+								$data['data']['user_no'] = $user_no;
+							};
+
+							if (isset($data['searchItem']['user_no'])) {
+								$data['data']['user_no'] = $data['searchItem']['user_no'];
+							}
+
+						}
+
+					}else{
+
+						$data['searchItem']['user_no'] = $user_no;
+						if(isset($data['data'])){
 							$data['data']['user_no'] = $user_no;
-							
 						};
 
 					};
@@ -1009,6 +998,7 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
+	//生成token
 	function generateToken()
 	{
 		$randChar = getRandChar(32);
@@ -1065,8 +1055,9 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
+	//导出EXCEL
 	function exportExcel($excelOutput,$expTableData)
-	{ 
+	{
 		
 		import('phpexcel.PHPExcel', EXTEND_PATH);
 		import('phpexcel.PHPExcel.IOFactory', EXTEND_PATH);
@@ -1112,8 +1103,7 @@ use app\lib\exception\ErrorMessage;
 					};
 				};
 			};
-			
-			
+
 			if($expCellName[$j]['type']=='string'){
 				$objPHPExcel->getActiveSheet(0)->setCellValue($cellName[$j].($i+2),$finalValue);
 			};
@@ -1146,23 +1136,10 @@ use app\lib\exception\ErrorMessage;
 		$objWriter->save('php://output');
 		$objPHPExcel->disconnectWorksheets();
 
-		/*ob_end_clean();
-		header('Content-type:application/vnd.ms-excel;charset=utf-8;name="'.$xlsTitle.'.xls"');  
-		header("Content-Disposition:attachment;filename=$fileName.xls");
-		header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
-		//Loader::import('phpexcel.PHPExcel.IOFactory'); 
-		$objWriter=\PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007'); 
-		
-		ob_start();
-		$objWriter->save('php://output');*/
-		//$xlsData = ob_get_contents();
-		/*ob_end_clean();*/
-		
-		//return 'data:application/vnd.ms-excel;base64,'.base64_encode($xlsData);
-		
 	}
 
 
+	//检查手机验证码
 	function checkSmsAuth($data)
 	{
 		if(isset($data['smsAuth'])){
@@ -1184,6 +1161,7 @@ use app\lib\exception\ErrorMessage;
 	}
 
 
+	//导入EXCEL
 	function transformExcel($data)
 	{
 		import('phpexcel.PHPExcel', EXTEND_PATH);
@@ -1194,16 +1172,9 @@ use app\lib\exception\ErrorMessage;
 
 			$file = $file['excel'];
 			if($file->getInfo()['tmp_name']){
-				
 				$objReader =\PHPExcel_IOFactory::createReader('Excel2007');
-				
-				if(!$objReader->canRead($file)){
-					$objReader = \PHPExcel_IOFactory::createReader('Excel5');
-				}				
-				
 				$obj_PHPExcel =$objReader->load($file->getInfo()['tmp_name'], $encode = 'utf-8');  
 				//加载文件内容,编码utf-8
-
 				$excel_array=$obj_PHPExcel->getsheet(0)->toArray();
 				$tableName = $excel_array[0];
 				array_shift($excel_array); 
@@ -1219,8 +1190,7 @@ use app\lib\exception\ErrorMessage;
 
 		};
 		return $data;
-	}
-
+	}	
 
 
 	/**
@@ -1238,4 +1208,314 @@ use app\lib\exception\ErrorMessage;
 		{
 			return $strText;
 		}
+	}
+
+
+	function checkSearchAuth($data,$scope=[])
+	{
+
+		if(empty($scope)){
+		   return $data; 
+		};
+		if(!Cache::get($data['token'])){
+			throw new ErrorMessage([
+				'msg'=>'token已失效',
+				'solelyCode' => 200000
+			]);
+		};
+		$primary_scope = Cache::get($data['token'])['primary_scope'];
+		$user_no = Cache::get($data['token'])['user_no'];
+		$parent_no = Cache::get($data['token'])['parent_no'];
+		$user_type = Cache::get($data['token'])['user_type'];
+		$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+		$thirdapp_array = Cache::get($data['token'])['thirdApp']['child_array'];
+		array_push($thirdapp_array,$thirdapp_id);
+		if(isset($data['searchItem']['thirdapp_id'])){
+			if((is_array($data['searchItem']['thirdapp_id'])&&!empty(array_diff($data['searchItem']['thirdapp_id'][1], $thirdapp_array)))
+			||!in_array($data['searchItem']['thirdapp_id'],$thirdapp_array)){
+				if($primary_scope<60){
+				   throw new ErrorMessage([
+						'msg'=>'项目权限不符',
+					]); 
+				};
+			};
+		}else{
+			$data['searchItem']['thirdapp_id'] = ['in',$thirdapp_array];
+		};
+		if(!isset($data['searchItem']['user_type'])&&isset($data['searchItem']['user_no'])){
+			$model = new User();
+			$map['user_no'] = $data['searchItem']['user_no'];
+			$checkUserInfo = $model->where($map)->find(); 
+			if($checkUserInfo){
+				$check_type = $checkUserInfo['user_type'];
+			}else{
+				throw new ErrorMessage([
+					'msg'=>'传递的user_no有误',
+				]);
+			};
+		}else if(isset($data['searchItem']['user_type'])){
+			$check_type = $data['searchItem']['user_type'];
+		}else{
+			$data['searchItem']['user_no'] = $user_no;
+			return $data;
+		};
+
+		$passNo = [];
+		$pass = true;
+		$scope_item = $scope[$user_type.'-'.$primary_scope.'-'.$check_type];
+		
+		if(!isset($scope_item)){
+			throw new ErrorMessage([
+				'msg'=>'权限不足',
+			]);
+		};
+		if($scope_item['auth']=='isMe'){
+			$passNo = [$user_no];
+		};
+		
+		if($scope_item['auth']=='canChild'){
+			if(isset($checkUserInfo)&&$checkUserInfo['parent_no']==$user_no){
+				$passNo = [$user_no];
+			}else if(!isset($checkUserInfo)){
+				$res = (new Distribution())->where('parent_no','=',$user_no)->select();
+				if($res){
+					$user_array = [];
+					foreach ($res as $c_key => $c_value) {
+						array_push($user_array,$c_value['child_no']);
+					};
+					array_push($user_array,$user_no);
+					$passNo = ['in',$user_array];
+				}else{
+					$passNo = [$user_no];
+				};
+			}
+		};
+		
+		if($scope_item['auth']!='All'){
+			if(isset($data['searchItem']['user_no'])){
+				if(is_array($data['searchItem']['user_no'])&&!empty(array_diff($data['searchItem']['user_no'][1], $passNo))){
+					$pass = false;
+				}else{
+					$pass = in_array($data['searchItem']['user_no'],$passNo);
+				};
+			}else{
+				$num = count($passNo);
+				if($num==0){
+					$pass = false;
+				}else if($num==1){
+					$data['searchItem']['user_no'] = $passNo[0];
+				}else{
+					$data['searchItem']['user_no'] = ['in',$passNo];
+				};
+			};
+		};
+
+		if(!$pass){
+			throw new ErrorMessage([
+				'msg'=>'权限不足',
+			]);
+		}else{
+			return $data;
+		};
+		
+	}
+
+
+	function checkDataAuth($data,$scope=[])
+	{
+		
+		if(empty($scope)){
+		   return $data; 
+		};
+		if(!Cache::get($data['token'])){
+			throw new ErrorMessage([
+				'msg'=>'token已失效',
+				'solelyCode' => 200000
+			]);
+		};
+		$primary_scope = Cache::get($data['token'])['primary_scope'];
+		$user_no = Cache::get($data['token'])['user_no'];
+		$parent_no = Cache::get($data['token'])['parent_no'];
+		$user_type = Cache::get($data['token'])['user_type'];
+		$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
+		$thirdapp_array = Cache::get($data['token'])['thirdApp']['child_array'];
+		array_push($thirdapp_array,$thirdapp_id);
+		if(isset($data['data']['thirdapp_id'])){
+			
+			if(!in_array($data['data']['thirdapp_id'],$thirdapp_array)){
+				if($primary_scope<60){
+				   throw new ErrorMessage([
+						'msg'=>'项目权限不符',
+					]); 
+				};
+			};
+			
+		}else if($data['FuncName']=='add'){
+			$data['data']['thirdapp_id'] = $thirdapp_id;
+		};
+		
+		if(!isset($data['data']['user_no'])&&$data['FuncName']=='add'){
+			$data['data']['user_no'] = $user_no;
+			$data['data']['user_type'] = $user_type;
+			return $data;
+		}else if(isset($data['data']['user_no'])&&$data['FuncName']=='update'){
+			
+			
+			$model = new User();
+			$map['user_no'] = $data['data']['user_no'];
+			$checkUserInfo = $model->where($map)->find(); 
+			$data['data']['user_type'] = $checkUserInfo['user_type'];
+			if($checkUserInfo){
+				$check_type = $checkUserInfo['user_type'];
+			}else{
+				throw new ErrorMessage([
+					'msg'=>'传递的user_no有误',
+				]);
+				return;
+			};
+		}else{
+			return $data;
+		};
+
+		$passNo = [];
+		$pass = true;
+		$scope_item = $scope[$user_type.'-'.$primary_scope.'-'.$check_type];
+		
+		if($scope_item['auth']=='isMe'){
+			$passNo = [$user_no];
+		};
+		
+		if($scope_item['auth']=='canChild'&&$checkUserInfo['parent_no']==$user_no){
+			$passNo = [$user_no];	
+		};
+		
+		if($scope_item['auth']!='All'){			
+			$pass = in_array($data['data']['user_no'],$passNo);
+		};
+
+		if(!$pass){
+			throw new ErrorMessage([
+				'msg'=>'权限不足',
+			]);
+		}else{
+			return $data;
+		};
+		
+	}
+
+
+	//随机字符串
+	function get_rand_str($len)
+	{
+		$str = "1234567890asdfghjklqwertyuiopzxcvbnmASDFGHJKLZXCVBNMPOIUYTREWQ";
+		return substr(str_shuffle($str),0,$len);
+	}
+
+
+	function GetBrowser()
+	{
+		if(!empty($_SERVER['HTTP_USER_AGENT'])){
+			$br = $_SERVER['HTTP_USER_AGENT'];
+			if (preg_match('/MSIE/i',$br)){
+			 $br = 'MSIE';
+			}elseif (preg_match('/Firefox/i',$br)){
+			 $br = 'Firefox';
+			}elseif (preg_match('/Chrome/i',$br)){
+			 $br = 'Chrome';
+			}elseif (preg_match('/Safari/i',$br)){
+			 $br = 'Safari';
+			}elseif (preg_match('/Opera/i',$br)){
+			 $br = 'Opera';
+			}else {
+			 $br = 'Other';
+			};
+			return json_encode("浏览器为".$br);
+		}else{
+			return "获取浏览器信息失败！";
+		};
+		var_dump(999999);   
+	}
+
+
+	function Getip()
+	{
+		if (! empty($_SERVER["HTTP_CLIENT_IP"])) {
+			$ip = $_SERVER["HTTP_CLIENT_IP"];
+		}
+		if (! empty($_SERVER['HTTP_X_FORWARDED_FOR'])) { // 获取代理ip
+			$ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+		}
+		if (isset($ip)) {
+			$ips = array_unshift($ips, $ip);
+		}
+		
+		$count = count($ips);
+		for ($i = 0; $i < $count; $i ++) {
+			if (! preg_match("/^(10|172\.16|192\.168)\./i", $ips[$i])) { // 排除局域网ip
+				$ip = $ips[$i];
+				break;
+			}
+		}
+		$tip = empty($_SERVER['REMOTE_ADDR']) ? $ip : $_SERVER['REMOTE_ADDR'];
+		if ($tip == "127.0.0.1") { // 获得本地真实IP
+			return $this->get_onlineip();
+		} else {
+			return $tip;
+		}
+	}
+
+
+	function Getaddress($ip = '')
+	{
+		if (empty($ip)) {
+			$ip = Getip();
+		}
+		
+		$ipadd = file_get_contents("http://ip.360.cn/IPQuery/ipquery?ip=" . $ip); // 根据新浪api接口获取
+		var_dump($ipadd);
+		if ($ipadd) {
+			$charset = iconv("gbk", "utf-8", $ipadd);
+			preg_match_all("/[\x{4e00}-\x{9fa5}]+/u", $charset, $ipadds);
+			var_dump($charset);
+			return $ipadds; // 返回一个二维数组
+		} else {
+			return "addree is none";
+		}
+	}
+
+
+	function clientOS()
+	{
+
+		$agent = strtolower($_SERVER['HTTP_USER_AGENT']);
+
+		if(strpos($agent, 'windows nt')) {
+			$platform = 'windows';
+		} elseif(strpos($agent, 'macintosh')) {
+			$platform = 'mac';
+		} elseif(strpos($agent, 'ipod')) {
+			$platform = 'ipod';
+		} elseif(strpos($agent, 'ipad')) {
+			$platform = 'ipad';
+		} elseif(strpos($agent, 'iphone')) {
+			$platform = 'iphone';
+		} elseif (strpos($agent, 'android')) {
+			$platform = 'android';
+		} elseif(strpos($agent, 'unix')) {
+			$platform = 'unix';
+		} elseif(strpos($agent, 'linux')) {
+			$platform = 'linux';
+		} else {
+			$platform = 'other';
+		}
+
+		return $platform;
+	}
+
+
+	function takeImgList($content)
+	{
+		$preg = '/<img.*?src=[\"|\']?(.*?)[\"|\']?\s.*?>/i';//匹配img标签的正则表达式
+		preg_match_all($preg, $content, $imgArray);//这里匹配所有的img
+		return $imgArray;
 	}

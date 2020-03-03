@@ -25,4 +25,4 @@ Route::any('api/:version/Common/:modelName/:FuncName', 'api/:version.base.Main/C
 
 
 
-Route::any('api/:version/Project/:serviceName/:FuncName', 'api/:version.base.Main/Project');
+Route::post('api/:version/Project/:serviceName/:FuncName', 'api/:version.base.Main/Project');

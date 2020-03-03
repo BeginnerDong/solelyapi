@@ -12,9 +12,9 @@ use app\lib\exception\ErrorMessage;
 
 class Common{
 
-
+    
 	function __construct($data){
-
+		
 	}
 
 
@@ -28,7 +28,7 @@ class Common{
 			'Article'=>config('scope.one'),
 			'Product'=>config('scope.one'),
 			'Sku'=>config('scope.one'),
-			'Message'=>config('scope.two'),
+			'Message'=>[],
 			'UserInfo'=>config('scope.two'),
 			'UserAddress'=>config('scope.two'),
 			'FlowLog'=>config('scope.two'),
@@ -41,20 +41,21 @@ class Common{
 			'CouponRelation'=>config('scope.one'),
 			'Auth'=>config('scope.two'),
 			'PayLog'=>config('scope.two'),
-			'WxTemplate'=>config('scope.one'),
+			'Role'=>config('scope.one'),
 			'ProductDate'=>config('scope.one'),
 		];
 
 		if(isset($scopeArr[$data['modelName']])){
 			$scope = $scopeArr[$data['modelName']];
 			(new CommonValidate())->goCheck('one',$data);
-			$data = checkTokenAndScope($data,$scope);
+			
+			$data = checkDataAuth($data,$scope);
 		}else{
 			throw new ErrorMessage([
 				'msg'=>'接口调用错误'
 			]);
 		};
-
+		
 		if (isset($data['saveAfter'])) {
 			//token赋值
 			foreach ($data['saveAfter'] as $k1 => $v1) {
@@ -95,7 +96,6 @@ class Common{
 				]);
 			};
 		};
-
 	}
 
 
@@ -107,7 +107,7 @@ class Common{
 			'Order'=>config('scope.two'),
 			'OrderItem'=>config('scope.two'),
 			'User'=>config('scope.two'),
-			'UserInfo'=>config('scope.two'),
+			'UserInfo'=>config('scope.six'),
 			'Product'=>[],
 			'Label'=>[],
 			'Sku'=>[],
@@ -115,7 +115,7 @@ class Common{
 			'Message'=>[],
 			'UserAddress'=>config('scope.two'),
 			'FlowLog'=>config('scope.two'),
-			'Log'=>[],
+			'Log'=>config('scope.two'),
 			'File'=>config('scope.two'),
 			'Distribution'=>config('scope.six'),
 			'WxFormId'=>config('scope.two'),
@@ -125,10 +125,11 @@ class Common{
 			'CouponRelation'=>config('scope.six'),
 			'Auth'=>config('scope.two'),
 			'PayLog'=>config('scope.two'),
+			'Role'=>[],
 			'WxTemplate'=>[],
 			'ProductDate'=>[],
+			'VisitorLogs'=>[],
 		];
-
 		
 		$notArray = ['modelName','token','FuncName'];
 		foreach ($data as $key => $value) {
@@ -138,19 +139,18 @@ class Common{
 		};
 		
 		if(isset($scopeArr[$data['modelName']])){
-			if(!empty($scopeArr[$data['modelName']])){
-				$scope = $scopeArr[$data['modelName']];
-				(new CommonValidate())->goCheck('one',$data);
-				$data = checkTokenAndScope($data,$scope);
-			}else if(isset($data['token'])){
-				$data = checkTokenAndScope($data,config('scope.six'));
+			$scope = $scopeArr[$data['modelName']];
+			if(!empty($scope)){
+			   (new CommonValidate())->goCheck('one',$data);
+			   $data = checkSearchAuth($data,$scope);
 			};
+					
 		}else{
 			throw new ErrorMessage([
 				'msg'=>'接口调用错误'
 			]); 
 		};
-
+	   
 		$token = '';
 		if(isset($data['token'])){
 			$token = $data['token'];
@@ -171,15 +171,14 @@ class Common{
 					if(!empty($scopeArr[$v2['tableName']])){
 						$scope = $scopeArr[$v2['tableName']];
 						$data['getAfter'][$k2] = checkTokenAndScope($data['getAfter'][$k2],$scope);
-					};
+					}
 				}else{
 					throw new ErrorMessage([
 						'msg'=>'接口调用错误'
 					]); 
 				};
-			};
-		};
-
+			}
+		}
 		$res = BeforeModel::CommonGet($data['modelName'],$data);
 	   
 		if(isset($res['data'])&&count($res['data'])>0){
@@ -201,6 +200,7 @@ class Common{
 				'info'=>$res
 			]);
 		};
+		
 	}
 
 
@@ -214,7 +214,7 @@ class Common{
 			'Article'=>config('scope.one'),
 			'Product'=>config('scope.one'),
 			'Sku'=>config('scope.one'),
-			'Message'=>config('scope.two'),
+			'Message'=>[],
 			'UserInfo'=>config('scope.two'),
 			'UserAddress'=>config('scope.two'),
 			'FlowLog'=>config('scope.two'),
@@ -228,14 +228,17 @@ class Common{
 			'CouponRelation'=>config('scope.one'),
 			'Auth'=>config('scope.two'),
 			'PayLog'=>config('scope.two'),
+			'Role'=>config('scope.one'),
 			'WxTemplate'=>config('scope.one'),
 			'ProductDate'=>config('scope.one'),
+			'VisitorLogs'=>[],
 		];
-		
+	   
 		if(isset($scopeArr[$data['modelName']])){
 			$scope = $scopeArr[$data['modelName']];
 			(new CommonValidate())->goCheck('one',$data);
-			$data = checkTokenAndScope($data,$scope);
+			$data = checkSearchAuth($data,$scope);
+			$data = checkDataAuth($data,$scope);
 		}else{
 			throw new ErrorMessage([
 				'msg'=>'接口调用错误'
@@ -260,14 +263,14 @@ class Common{
 				};
 			}
 		}
-
 		$res = BeforeModel::CommonSave($data['modelName'],$data);
+
 		if($inner){
 			return $res;
 		}else{
 			dealUpdateRes($res,$key); 
 		};
-
+		   
 	}
 
 
@@ -332,7 +335,7 @@ class Common{
 		}else{
 			dealUpdateRes($res,$key); 
 		};
-
+		
 	}
 
 
@@ -360,6 +363,6 @@ class Common{
 				'info'=>$res
 			]);
 		};
-
+		
 	}
 }

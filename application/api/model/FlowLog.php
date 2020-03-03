@@ -75,6 +75,7 @@ class FlowLog extends Model
 
 				$where['type'] = 2;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $data['data']['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num + $data['data']['count'];
@@ -85,6 +86,7 @@ class FlowLog extends Model
 
 				$where['type'] = 3;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $data['data']['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num + $data['data']['count'];
@@ -134,6 +136,7 @@ class FlowLog extends Model
 			
 				$where['type'] = 2;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $UserInfo['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num + $FlowLogInfo['count'];
@@ -144,6 +147,7 @@ class FlowLog extends Model
 			
 				$where['type'] = 3;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $UserInfo['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num + $FlowLogInfo['count'];
@@ -161,6 +165,7 @@ class FlowLog extends Model
 			
 				$where['type'] = 2;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $UserInfo['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num - $FlowLogInfo['count'];
@@ -171,6 +176,7 @@ class FlowLog extends Model
 
 				$where['type'] = 3;
 				$where['status'] = 1;
+				$where['account'] = 1;
 				$where['user_no'] = $UserInfo['user_no'];
 				$num = FlowLog::where($where)->sum('count');
 				$num = $num - $FlowLogInfo['count'];

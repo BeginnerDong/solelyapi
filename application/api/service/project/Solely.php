@@ -12,7 +12,6 @@ use think\Model;
 
 use think\Cache; 
 
-
 use app\api\validate\CommonValidate;
 
 use app\lib\exception\SuccessMessage;
@@ -33,6 +32,7 @@ class Solely{
 	 */
 	public static function addMessage($data)
 	{
+		//获取绑定情侣的信息
 		if (!isset($data['data']['user_type'])) {
 			$data['data']['user_type'] = 0;
 		}
@@ -50,6 +50,29 @@ class Solely{
 				'msg' => '留言失败',
 			]);
 		}
+	}
+
+
+	/*CMS获取角色权限*/
+	public static function getAuth($data)
+	{
+		
+		$data = checkTokenAndScope($data,config('scope.two'));
+		
+		$modelData = [];
+		$modelData['searchItem'] = $data['searchItem'];
+		$authList = BeforeModel::CommonGet('Auth',$modelData);
+		$auth = [];
+		if(count($authList['data'])>0){
+			foreach($authList['data'] as $key => $value){
+				array_push($auth,$value['path']);
+			};
+		};
+		throw new SuccessMessage([
+			'msg'=>'获取成功',
+			'info'=>$auth
+		]);
+		
 	}
 
 
@@ -90,7 +113,7 @@ class Solely{
 
 				/*判断是否已删除*/
 				$modelData = [];
-				$modelData['searchItem']['user_no'] = $data['searchItem']['user_no'];
+				$modelData['searchItem']['role'] = $data['searchItem']['role'];
 				$modelData['searchItem']['path'] = $n_value;
 				$modelData['searchItem']['status'] = -1;
 				$check = BeforeModel::CommonGet('Auth',$modelData);
@@ -107,7 +130,8 @@ class Solely{
 
 					$modelData = [];
 					$modelData['FuncName'] = 'add';
-					$modelData['data']['user_no'] = $data['searchItem']['user_no'];
+					$modelData['data']['role'] = $data['searchItem']['role'];
+					$modelData['data']['user_no'] = Cache::get($data['token'])['user_no'];
 					$modelData['data']['thirdapp_id'] = Cache::get($data['token'])['thirdapp_id'];
 					$modelData['data']['path'] = $n_value;
 					$addAuth = BeforeModel::CommonSave('Auth',$modelData);
@@ -125,7 +149,7 @@ class Solely{
 
 				$modelData = [];
 				$modelData['FuncName'] = 'update';
-				$modelData['searchItem']['user_no'] = $data['searchItem']['user_no'];
+				$modelData['searchItem']['role'] = $data['searchItem']['role'];
 				$modelData['searchItem']['path'] = $o_value;
 				$modelData['data']['status'] = -1;
 				$addAuth = BeforeModel::CommonSave('Auth',$modelData);
@@ -193,7 +217,7 @@ class Solely{
 		$user = BeforeModel::CommonGet('User',$data);
 		if (count($user['data'])==0) {
 			throw new ErrorMessage([
-				'msg' => '用户信息不存在',
+				'msg' => '用户信息不存在'
 			]);
 		}
 		$user = $user['data'][0];
@@ -261,6 +285,35 @@ class Solely{
 	}
 
 
+	public static function addVisitorInfo($data)
+	{
+		if(!isset($data['thirdapp_id'])){
+			throw new ErrorMessage([
+				'msg'=>'缺少thirdapp_id',
+			]);
+		};
+		$modelData = [];
+		$modelData['FuncName'] = 'add';
+		$modelData['data'] = [
+			'ip'=>Getip(),
+			'device'=>clientOS(),
+			'address'=>isset($data['address'])?$data['address']:'',
+			'visitor_url'=>isset($data['visitor_url'])?$data['visitor_url']:'',
+			'thirdapp_id'=>$data['thirdapp_id'],
+		];
+		$addVisitor = BeforeModel::CommonSave('VisitorLogs',$modelData);
+		if ($addVisitor>0) {
+			throw new SuccessMessage([
+				'msg'=>'记录成功'
+			]);
+		}else{
+			throw new ErrorMessage([
+				'msg'=>'记录失败'
+			]);
+		}
+	}
+	
+
 	public static function test()
 	{
 		$modelData = [];
@@ -269,4 +322,5 @@ class Solely{
 		$test = BeforeModel::CommonGet('User',$modelData);
 		var_dump($test['data']);
 	}
+
 }

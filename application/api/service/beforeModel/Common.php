@@ -136,6 +136,8 @@ class Common {
 				/*初始化每个getBefore的结果*/
 				$search = [];
 				$fixSearchItem = [];
+				/*前表搜索出的数据结果*/
+				$origin_data = [];
 				
 				if(is_array($value['key'])){
 					$finalItem = '';
@@ -168,10 +170,12 @@ class Common {
 					$modelData = [];
 					$modelData['searchItem'] = $map;
 					$res = CommonModel::CommonGet($value['tableName'],$modelData);
+					$origin_data = array_merge($origin_data,$res['data']);
 					/*记录结果待复用*/
 					$getBeforeData[$key] = $res;
 					foreach ($res['data'] as $ckey => $cvalue) {
-						array_push($searchItem,$cvalue[$value['key']]);
+						/*记录主键ID*/
+						array_push($searchItem,$cvalue['id']);
 					};
 
 					if($num==1){
@@ -179,7 +183,7 @@ class Common {
 					}else{
 						/*多个searchItem之间求交/并集*/
 						if(isset($value['searchType'])&&$value['searchType']=="merge"){
-							array_merge($search,$searchItem);
+							$search = array_merge($search,$searchItem);
 						}else{
 							$new = [];
 							foreach($searchItem as $i_key => $i_value){
@@ -191,6 +195,15 @@ class Common {
 						};
 					};
 				};
+				$target = [];
+				foreach($origin_data as $key_o => $value_o){
+					if(in_array($value_o['id'],$search)){
+						if(!in_array($value_o[$value['key']],$target)){
+							array_push($target,$value_o[$value['key']]);
+						};
+					};
+				};
+				$search = $target;
 
 				if(!empty($search)){
 					if(isset($newSearchItem[$value['middleKey']])){

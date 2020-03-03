@@ -2,8 +2,6 @@
 
 namespace app\api\service\base;
 
-
-
 use think\Exception;
 
 use think\Model;
@@ -11,7 +9,6 @@ use think\Model;
 use think\Cache;
 
 use think\Request as Request; 
-
 
 use app\api\service\beforeModel\Common as BeforeModel;
 
@@ -27,298 +24,182 @@ class FtpFile{
     function __construct(){
 
     }
-
+	
     
     public static function upload($data,$inner=false)
-
     {       
-
-        (new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-        
-
+		(new CommonValidate())->goCheck('one',$data);
         $userinfo = Cache::get($data['token']);
-
-        $file = request()->file();
-
-        $file = $file['file'];
-
-        if($file){
-
-            // 移动到框架应用根目录/public/uploads/ 目录下
-
-            $info = $file->move(ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id']);
-
-            if($info){
-
-                $saveName = $info->getSaveName();
-
-                $pos = strrpos($saveName, '.');
-                $ext = substr($saveName, $pos);
-
-                $saveName = str_replace('\\','/',$saveName);
-
-                $url = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$saveName;
-
-                $modelData = [];
-
-                $modelData['data'] = array(
-
-                    "title" => $saveName,
-
-                    "thirdapp_id" => $userinfo['thirdapp_id'],
-
-                    "user_no" => $userinfo['user_no'],
-
-                    "path" => $url,
-
-                    "prefix"  => 'uploads/'.$userinfo['thirdapp_id'],
-
-                    "size" => $info->getSize(),
-
-                    "type" => $ext,
-
-                    "origin" => 2,
-
-                    "behavior" => isset($data['behavior'])?$data['behavior']:1,
-
-                    "param" => isset($data['param'])?$data['param']:1,
-
-                    "create_time" => time(),
-
-                );
-
-                $modelData['FuncName'] = 'add';
-
-                $res = BeforeModel::CommonSave('File',$modelData);
-
-                if ($res>0) {
-
-                    //修改图片名称
-                    $oldName = ROOT_PATH.'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$saveName;
-
-                    $spot = strrpos($saveName, '.');
-
-                    $total = strlen($saveName);
-
-                    $postion = $total-$spot;
-
-                    $filename = substr($saveName, 0,-$postion);
-
-                    $newname = $filename.'id'.$res.$ext;
-
-                    $newName = ROOT_PATH.'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
-
-                    // $changeName = rename($oldName, $newName);
-					
-					$changeName = copy($oldName, $newName);
-
-                    if ($changeName) {
-						
-						/*删除旧文件*/
-						unset($info);
-						$fh = fopen($oldName, 'w') or die("can't open file");
-						fclose($fh);
-						$realDel = unlink($oldName);
-
-                        $newUrl = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.$newname;
-                        
-                        $modelData = [];
-
-                        $modelData['FuncName'] = 'update';
-
-                        $modelData['searchItem']['id'] = $res;
-
-                        $modelData['data']['title'] = $newname;
-
-                        $modelData['data']['path'] = $newUrl;
-
-                        $upImg = BeforeModel::CommonSave('File',$modelData);
-                    }
-
-                    if(!$inner){
-
-                        throw new SuccessMessage([
-
-                            'msg'=>'图片上传成功',
-
-                            'info'=>['url'=>$newUrl],
-
-                        ]);
-
-                    }else{
-
-                        return $url;
-
-                    };
-
-                }else{
-
-                    throw new ErrorMessage([
-
-                        'msg' => '图片信息写入数据库失败',
-
-                    ]);
-
-                }
-
-            }else{
-
-                // 上传失败获取错误信息
-                echo $file->getError();
-
-            }    
-
-        }
+		
+		if(isset($data['stream'])||isset($data['url'])){
+			if(isset($data['url'])){
+				$data['stream'] = file_get_contents($data['url'], 'r');
+			};
+			$filePath = ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd') .'/';
+			$file_name = get_rand_str(8).time().'.'.$data['ext'];
+			is_dir($filePath) OR mkdir($filePath, 0777, true);
+		    $res = file_put_contents($filePath.$file_name,$data['stream']);
+			if($res){
+				return self::addFileInfo($file_name,$userinfo,$data,$inner);
+			};
+		};
+		
+		
+        $chunkSize = $data['chunkSize'];
+		$md5 = $data['md5'];
+		$totalSize = request()->param()['totalSize'];
+		$start = request()->param()['start'];
+		$chunkNum = ceil($totalSize/$chunkSize);
+		$chunk_index = $start/$chunkSize;
+		$tempPath = ROOT_PATH . 'public' . DS . 'uploads/temp/'.$md5.'/';
+		$unFinishIndex = [];
+		$chunk_start = 0;
+		
+		if($chunkNum==1){
+			$file = request()->file();
+			$file = $file['file'];
+			if($file){
+				$filePath = ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd') .'/';
+				$file_name = get_rand_str(8).time().'.'.$data['ext'];
+				$info = $file->rule('uniqid')->move($filePath,$file_name);
+				return self::addFileInfo($info->getSaveName(),$userinfo,$data,$inner);
+			};
+		};
+		
+		
+		
+		for ( $i =0; $i < $chunkNum; $i ++ ) {
+			if(!file_exists($tempPath . $i . '.'.$data['ext'])){
+				$unFinishIndex[] = $i;
+			}
+		};
+		
+		if(count($unFinishIndex)>0){
+			$key = array_search($chunk_index,$unFinishIndex);
+			if($key !== false){
+				array_splice($unFinishIndex,$key,1);
+				if(count($unFinishIndex)>0){
+					$chunk_start = $unFinishIndex[0]*$chunkSize;
+				};
+			}else{
+				return ['chunk_start'=>$unFinishIndex[0]*$chunkSize,'finishCount'=>($chunkNum-count($unFinishIndex))];
+			}
+		}else{
+			$res = self::merge($md5,$chunkNum,$userinfo['thirdapp_id'],$data['ext']);
+			return self::addFileInfo($res['file_name'],$userinfo,$data,$inner);
+		};
+		
+		$object_info = request()->file('file');
+		$object = $object_info->rule('uniqid')->move($tempPath,$chunk_index.'.'.$data['ext']);
+		$originName = $object->getInfo();
+		$saveName = $object->getSaveName();
+		if($object){
+			if(count($unFinishIndex)==0){
+				$res = self::merge($md5,$chunkNum,$userinfo['thirdapp_id'],$data['ext']);
+				return self::addFileInfo($res['file_name'],$userinfo,$data,$inner);
+			}else{
+				return [
+					'chunk_start'=>$unFinishIndex[0]*$chunkSize,
+					'finishCount'=>($chunkNum-count($unFinishIndex))
+				];
+			};
+		}else{
+		    throw new ErrorMessage([
+		        'msg' => 'chunk上传失败',
+		    ]);
+		};
 
     }
+	
+	
+	//最终合并文件
+	public static function merge($md5,$chunkNum,$thirdapp_id,$ext)
+	{
+	    $md5 = request()->param()['md5'];
+		$tempPath = ROOT_PATH . 'public' . DS . 'uploads/temp/'.$md5.'/';
+		$filePath = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd') .'/';
+		$file_name = get_rand_str(8).time().'.'.$ext;
+	    if(!is_dir($filePath)){
+	        mkdir($filePath);
+	    };
+		if(is_dir($tempPath)) {
+			for ( $i =0; $i < $chunkNum; $i ++ ) {
+				$_file = file_get_contents($tempPath. $i .'.'.$ext);
+				$_res = file_put_contents($filePath .$file_name,$_file,FILE_APPEND);
+				if($_res){
+				    unlink($tempPath. $i .'.'.$ext);
+				}else{
+					throw new ErrorMessage([
+					    'msg' => '合并失败',
+					]);
+				};
+			};
+		};
+		rmdir($tempPath);
+		$_hash = hash_file('sha1', $filePath .$file_name);
+		if($_hash){
+			return [
+				'filePath'=>$filePath,
+				'file_name'=>$file_name,
+			];
+		};
+		
+		
+	
+	}
+	
+	//图片存入数据库
+	public static function addFileInfo($file_name,$userinfo,$data,$inner=false)
+	{
+		
 
-
-
-    public static function uploadStream($data,$inner=false)
-    {       
-
-        if(!$inner){
-
-            (new CommonValidate())->goCheck('one',$data);
-
-            checkTokenAndScope($data,config('scope.two'));
-
-            $userinfo = Cache::get($data['token']);
-
-            $thirdapp_id = $userinfo['thirdapp_id'];
-
-            $user_no = $userinfo['user_no'];
-
-        }else{
-
-            $thirdapp_id = $data['thirdapp_id'];
-
-            $user_no = $data['user_no'];
-
-        };
-
-        $ext = $data['ext'];
-
-        $saveName = substr(md5('streamSolely') , 0, 5). date('YmdH') . rand(0, 100) . '.' . $ext;
-
-        $dir = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd');
-
-        $path = $dir.'/'.$saveName;
-
-        is_dir($dir) OR mkdir($dir, 0777, true); 
-
-        if($data['stream']){
-
-            // 移动到框架应用根目录/public/uploads/ 目录下
-            $res = file_put_contents($path,$data['stream']);
-
-            if($res){
-
-                $url = config('secure.base_url').'/public/uploads/'.$thirdapp_id.'/'.date('Ymd').'/'.$saveName;
-
-                $modelData = [];
-
-                $modelData['data'] = array(
-
-                    "thirdapp_id" => $thirdapp_id,
-
-                    "title" => $saveName,
-
-                    "user_no" => $user_no,
-
-                    "path"        => $url,
-
-                    "prefix"   => 'uploads/'.$thirdapp_id,
-
-                    "size"        => $res,
-
-                    "origin" => 2,
-
-                    "behavior" => isset($data['behavior'])?$data['behavior']:1,
-
-                    "type" => isset($data['type'])?$data['type']:1,
-
-                    "param" => isset($data['param'])?$data['param']:'',
-
-                    "create_time" => time(),
-
-                );
-
-                $modelData['FuncName'] = 'add';
-
-                $res = BeforeModel::CommonSave('File',$modelData);
-
-                if ($res>0) {
-
-                    if(!$inner){
-
-                        throw new SuccessMessage([
-
-                            'msg'=>'图片上传成功',
-
-                            'info'=>['url'=>$url]
-
-                        ]);
-
-                    }else{
-
-                        return $url;
-
-                    };
-
-                }else{
-
-                    throw new ErrorMessage([
-
-                        'msg' => '图片信息写入数据库失败',
-
-                    ]);
-
-                };
-
-            }else{
-
-                throw new ErrorMessage([
-
-                    'msg' => '二进制流为空',
-
-                ]);
-
-            }    
-
-        }
-
-    }
-
-
-    public static function uploadByUrl($data){
-        
-        (new CommonValidate())->goCheck('one',$data);
-        checkTokenAndScope($data,config('scope.two'));
-        
-        $userinfo = Cache::get($data['token']);
-        
-        
-        $stream = file_get_contents($data['url'], 'r');
-        $modelData = [];
-        $modelData['stream'] = $stream;
-        $modelData['thirdapp_id'] = $userinfo['thirdapp_id'];
-        $modelData['user_no'] = $userinfo['user_no'];
-        $modelData['behavior'] = 2;
-        $modelData['type'] = 1;
-        $modelData['param'] = isset($data['param'])?$data['param']:'';
-        $modelData['ext'] = $data['ext'];
-
-        $res = self::uploadStream($modelData,true);
-        //$res = QiniuImageService::upload($modelData,true);
-        if($res){
-            throw new SuccessMessage([
-                'msg'=>'获取二维码图片成功',
-                'info'=>['url'=>$res]
-            ]); 
-        };
-        
-    }
+		
+	    $url = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd').'/'.$file_name;
+	    $modelData = [];
+	    $modelData['data'] = array(
+	    	'origin_name'=>$data['originName'],
+	        "title" => $file_name,
+	        "thirdapp_id" => $userinfo['thirdapp_id'],
+	        "user_no" => $userinfo['user_no'],
+	        "path" => $url,
+	        "prefix"  => 'uploads/'.$userinfo['thirdapp_id'],
+	        "size" => $data['totalSize'],
+	        "type" => $data['ext'],
+	        "origin" => 2,
+	        "behavior" => isset($data['behavior'])?$data['behavior']:1,
+	        "param" => isset($data['param'])?$data['param']:1,
+	        "create_time" => time(),
+	    
+	    );
+	    $modelData['FuncName'] = 'add';
+		
+	    $res = BeforeModel::CommonSave('File',$modelData);
+		if ($res>0) {
+		    if(!$inner){
+				
+		        throw new SuccessMessage([
+		            'msg'=>'图片上传成功',
+		            'info'=>['url'=>$url],
+					'finishCount'=>(ceil($data['totalSize']/$data['chunkSize'])-1)
+		        ]);
+		
+		    }else{
+		        return $url;
+		    };
+		
+		}else{
+		    throw new ErrorMessage([
+		        'msg' => '图片信息写入数据库失败',
+		    ]);
+		};
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 }

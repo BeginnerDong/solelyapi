@@ -19,6 +19,8 @@ use app\api\controller\v1\weFunc\Message as weFuncMessage;
 use app\api\controller\v1\weFunc\Project as weFuncProject;
 use app\api\controller\v1\weFunc\Source as weFuncSource;
 
+
+
 use app\api\service\base\Common;
 use app\api\service\base\CouponPay;
 use app\api\service\base\FtpFile;
@@ -40,6 +42,9 @@ use app\api\service\func\Order;
 use app\api\service\func\Token;
 
 use app\api\service\project\Solely;
+
+
+
 
 //模板相关
 
@@ -132,8 +137,10 @@ class Main extends BaseController{
 
     public static function Common()
     {
-
-        $data = Request::instance()->param();
+		$data = Request::instance()->param();
+		/* var_dump($data);
+		return; */
+        
 
         $data = checkSmsAuth($data);
 
