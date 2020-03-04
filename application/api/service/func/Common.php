@@ -157,7 +157,7 @@ class Common{
 				//查询权限
 				$modelData = [];
 
-				$modelData['searchItem']['user_no'] = $loginRes['user_no'];
+				$modelData['searchItem']['role'] = $loginRes['role'];
 
 				$authList = BeforeModel::CommonGet("Auth",$modelData);
 
