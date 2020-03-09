@@ -138,6 +138,30 @@ class FlowLog {
 						};
 					};
 				};
+				
+				/*父级订单检测子级订单支付状态*/
+				$modelData = [];
+				$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
+				$modelData['searchItem']['pay_status'] = 0;
+				$children = BeforeModel::CommonGet('Order',$modelData);
+				if(count($children['data'])>0){
+					foreach($children['data'] as $key => $value){
+						$modelData = [];
+						$modelData['FuncName'] = 'update';
+						$modelData['searchItem']['id'] = $value['id'];
+						$modelData['data']['pay_status'] = 1;
+						if(isset($value['payAfter'])&&!empty($value['payAfter'])){
+							$modelData['saveAfter'] = $value['payAfter'];
+						};
+						$upChild = BeforeModel::CommonSave('Order',$modelData);
+						/*计算库存*/
+						if($value['count']>0){
+							$modelData = [];
+							$modelData['searchItem']['id'] = $value['id'];
+							BeforeModel::dealStock($modelData,'reduce');
+						};
+					};
+				};
 			};
 
 		}
