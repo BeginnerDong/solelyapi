@@ -82,7 +82,7 @@ class Pay
 			};
 			$userInfo = $userInfo['data'][0];
 			
-			$orderInfo = self::checkParamValid($data,$orderInfo,$userInfo,$inner);
+			$orderInfo = self::checkParamValid($data,$orderInfo,$userInfo);
 			
 			//订单加锁,防止重复支付
 			if(Cache::get($orderInfo['order_no'])){
@@ -804,7 +804,7 @@ class Pay
 
 
 
-	public static function checkParamValid($data,$orderInfo,$userInfo,$inner)
+	public static function checkParamValid($data,$orderInfo,$userInfo)
 	{
 		if($orderInfo['pay_status'] == '1'){
 			throw new ErrorMessage([
@@ -820,7 +820,6 @@ class Pay
 			};
 		};
 		if(isset($data['score'])){
-			
 			if(($data['score']['price']/(int)$userInfo['info']['score_ratio'])>(float)$userInfo['info']['score']){
 				throw new ErrorMessage([
 					'msg' => '积分不足',
