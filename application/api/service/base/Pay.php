@@ -47,7 +47,6 @@ class Pay
 	{
 		
 		if(!$inner){
-			self::$token = $data['token'];
 			(new CommonValidate())->goCheck('one',$data);
 			checkTokenAndScope($data,config('scope.two')); 
 		};
@@ -251,8 +250,7 @@ class Pay
 					'type' => 2,
 					'account' => 1,
 					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
 					'pay_no'=>$data['pay_no'],
 					'trade_info'=>'余额支付',
 					'relation_table'=>'order',
@@ -359,8 +357,7 @@ class Pay
 					'type' => 3,
 					'account' => 1,
 					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
 					'pay_no'=>$data['pay_no'],
 					'trade_info'=>'积分支付',
 					'relation_table'=>'order',
@@ -506,8 +503,7 @@ class Pay
 					'type' => 4,
 					'account' => 1,
 					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
 					'pay_no'=>$data['pay_no'],
 					'trade_info'=>'优惠券抵减',
 					'relation_table'=>'order',
@@ -622,8 +618,7 @@ class Pay
 					'type' => 7,
 					'account' => 1,
 					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
 					'pay_no'=>$data['pay_no'],
 					'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
 					'relation_table'=>'order',
@@ -734,8 +729,7 @@ class Pay
 					'type' => 6,
 					'account' => 1,
 					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
+					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
 					'pay_no'=>$data['pay_no'],
 					'trade_info'=>'使用会员卡',
 					'relation_table'=>'order',
@@ -858,7 +852,6 @@ class Pay
 	{
 		
 		if(!$inner){
-			self::$token = $data['token'];
 			(new CommonValidate())->goCheck('one',$data);
 			checkTokenAndScope($data,config('scope.two')); 
 		};

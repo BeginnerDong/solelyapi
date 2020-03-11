@@ -21,15 +21,23 @@ use app\lib\exception\ErrorMessage;
 
 class FtpFile{
 
-    function __construct(){
+	function __construct(){
 
-    }
-	
-    
-    public static function upload($data,$inner=false)
-    {       
-		(new CommonValidate())->goCheck('one',$data);
-        $userinfo = Cache::get($data['token']);
+	}
+
+
+	public static function upload($data,$inner=false)
+	{
+		if(!$inner){
+			(new CommonValidate())->goCheck('one',$data);
+			$userinfo = Cache::get($data['token']);
+		}else{
+			$modelData = [];
+			$modelData['getOne'] = 'true';
+			$modelData['searchItem']['user_no'] = $data['user_no'];
+			$userinfo = BeforeModel::CommonGet('User',$modelData);
+			$userinfo = $userinfo['data'][0];
+		};
 		
 		if(isset($data['stream'])||isset($data['url'])){
 			if(isset($data['url'])){
@@ -38,14 +46,14 @@ class FtpFile{
 			$filePath = ROOT_PATH . 'public' . DS . 'uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd') .'/';
 			$file_name = get_rand_str(8).time().'.'.$data['ext'];
 			is_dir($filePath) OR mkdir($filePath, 0777, true);
-		    $res = file_put_contents($filePath.$file_name,$data['stream']);
+			$res = file_put_contents($filePath.$file_name,$data['stream']);
 			if($res){
 				return self::addFileInfo($file_name,$userinfo,$data,$inner);
 			};
 		};
 		
 		
-        $chunkSize = $data['chunkSize'];
+		$chunkSize = $data['chunkSize'];
 		$md5 = $data['md5'];
 		$totalSize = request()->param()['totalSize'];
 		$start = request()->param()['start'];
@@ -104,33 +112,33 @@ class FtpFile{
 				];
 			};
 		}else{
-		    throw new ErrorMessage([
-		        'msg' => 'chunk上传失败',
-		    ]);
+			throw new ErrorMessage([
+				'msg' => 'chunk上传失败',
+			]);
 		};
 
-    }
-	
-	
+	}
+
+
 	//最终合并文件
 	public static function merge($md5,$chunkNum,$thirdapp_id,$ext)
 	{
-	    $md5 = request()->param()['md5'];
+		$md5 = request()->param()['md5'];
 		$tempPath = ROOT_PATH . 'public' . DS . 'uploads/temp/'.$md5.'/';
 		$filePath = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd') .'/';
 		$file_name = get_rand_str(8).time().'.'.$ext;
-	    if(!is_dir($filePath)){
-	        mkdir($filePath);
-	    };
+		if(!is_dir($filePath)){
+			mkdir($filePath);
+		};
 		if(is_dir($tempPath)) {
 			for ( $i =0; $i < $chunkNum; $i ++ ) {
 				$_file = file_get_contents($tempPath. $i .'.'.$ext);
 				$_res = file_put_contents($filePath .$file_name,$_file,FILE_APPEND);
 				if($_res){
-				    unlink($tempPath. $i .'.'.$ext);
+					unlink($tempPath. $i .'.'.$ext);
 				}else{
 					throw new ErrorMessage([
-					    'msg' => '合并失败',
+						'msg' => '合并失败',
 					]);
 				};
 			};
@@ -145,61 +153,52 @@ class FtpFile{
 		};
 		
 		
-	
+
 	}
-	
+
 	//图片存入数据库
 	public static function addFileInfo($file_name,$userinfo,$data,$inner=false)
 	{
-		
 
+		$url = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd').'/'.$file_name;
+		$modelData = [];
+		$modelData['data'] = array(
+			'origin_name'=>$data['originName'],
+			"title" => $file_name,
+			"thirdapp_id" => $userinfo['thirdapp_id'],
+			"user_no" => $userinfo['user_no'],
+			"path" => $url,
+			"prefix"  => 'uploads/'.$userinfo['thirdapp_id'],
+			"size" => $data['totalSize'],
+			"type" => $data['ext'],
+			"origin" => 2,
+			"behavior" => isset($data['behavior'])?$data['behavior']:1,
+			"param" => isset($data['param'])?$data['param']:1,
+			"create_time" => time(),
 		
-	    $url = config('secure.base_url').'/public/uploads/'.$userinfo['thirdapp_id'].'/'.date('Ymd').'/'.$file_name;
-	    $modelData = [];
-	    $modelData['data'] = array(
-	    	'origin_name'=>$data['originName'],
-	        "title" => $file_name,
-	        "thirdapp_id" => $userinfo['thirdapp_id'],
-	        "user_no" => $userinfo['user_no'],
-	        "path" => $url,
-	        "prefix"  => 'uploads/'.$userinfo['thirdapp_id'],
-	        "size" => $data['totalSize'],
-	        "type" => $data['ext'],
-	        "origin" => 2,
-	        "behavior" => isset($data['behavior'])?$data['behavior']:1,
-	        "param" => isset($data['param'])?$data['param']:1,
-	        "create_time" => time(),
-	    
-	    );
-	    $modelData['FuncName'] = 'add';
+		);
+		$modelData['FuncName'] = 'add';
 		
-	    $res = BeforeModel::CommonSave('File',$modelData);
+		$res = BeforeModel::CommonSave('File',$modelData);
 		if ($res>0) {
-		    if(!$inner){
+			if(!$inner){
 				
-		        throw new SuccessMessage([
-		            'msg'=>'图片上传成功',
-		            'info'=>['url'=>$url],
+				throw new SuccessMessage([
+					'msg'=>'图片上传成功',
+					'info'=>['url'=>$url],
 					'finishCount'=>(ceil($data['totalSize']/$data['chunkSize'])-1)
-		        ]);
+				]);
 		
-		    }else{
-		        return $url;
-		    };
+			}else{
+				return $url;
+			};
 		
 		}else{
-		    throw new ErrorMessage([
-		        'msg' => '图片信息写入数据库失败',
-		    ]);
+			throw new ErrorMessage([
+				'msg' => '图片信息写入数据库失败',
+			]);
 		};
 		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
+
 }

@@ -46,8 +46,8 @@ class Qr{
 
 
 	//data需要appid,appsecret,qrInfo,output,thirdapp_id,user_no
-    public static function ProgramQrGet($data,$inner=false)
-    {
+	public static function ProgramQrGet($data,$inner=false)
+	{
 		
 		if(!$inner){
 		
@@ -57,57 +57,57 @@ class Qr{
 
 			checkTokenAndScope($data,config('scope.two'));
 		
-		    $userinfo = Cache::get($data['token']);
+			$userinfo = Cache::get($data['token']);
 		
-		    $thirdapp_id = $userinfo['thirdapp_id'];
+			$thirdapp_id = $userinfo['thirdapp_id'];
 		
-		    $user_no = $userinfo['user_no'];
+			$user_no = $userinfo['user_no'];
 		
 		}else{
 		
-		    $thirdapp_id = $data['thirdapp_id'];
+			$thirdapp_id = $data['thirdapp_id'];
 		
-		    $user_no = $data['user_no'];
+			$user_no = $data['user_no'];
 		
 		};
 
-        $modelData = [];
+		$modelData = [];
 
-        $modelData['searchItem']['id'] = $thirdapp_id;
+		$modelData['searchItem']['id'] = $thirdapp_id;
 
-        $ThirdAppInfo=BeforeModel::CommonGet('ThirdApp',$modelData);
+		$ThirdAppInfo=BeforeModel::CommonGet('ThirdApp',$modelData);
 
-        $ThirdAppInfo = $ThirdAppInfo['data'][0];
+		$ThirdAppInfo = $ThirdAppInfo['data'][0];
 
-        $appid = $ThirdAppInfo['appid'];
+		$appid = $ThirdAppInfo['appid'];
 
-        $appsecret = $ThirdAppInfo['appsecret'];
+		$appsecret = $ThirdAppInfo['appsecret'];
 
-        $modelData = [];
+		$modelData = [];
 
-        $modelData['searchItem'] = [
+		$modelData['searchItem'] = [
 
-            'type'=>1,
+			'type'=>1,
 
-            'user_no'=>$user_no,
+			'user_no'=>$user_no,
 
-            'param'=>json_encode($data['qrInfo']),
+			'param'=>json_encode($data['qrInfo']),
 
-            'behavior'=>2
+			'behavior'=>2
 
-        ];
+		];
 
-        $res = BeforeModel::CommonGet('File',$modelData);
-        
-        if(count($res['data'])>0){
+		$res = BeforeModel::CommonGet('File',$modelData);
+		
+		if(count($res['data'])>0){
 			
 			if(!$inner){
 				
 				throw new SuccessMessage([
 				
-				    'msg'=>'获取二维码图片成功',
+					'msg'=>'获取二维码图片成功',
 				
-				    'info'=>['url'=>$res['data'][0]['path']]
+					'info'=>['url'=>$res['data'][0]['path']]
 				
 				]);
 				
@@ -117,41 +117,51 @@ class Qr{
 				
 			}
 
-        };
+		};
 
-        $tokenurl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$appsecret;
+		$tokenurl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$appsecret;
 
-        $result = curl_get($tokenurl);
+		$result = curl_get($tokenurl);
 
-        if ($result) {
+		if ($result) {
 
-            $result = json_decode($result,true);
+			$result = json_decode($result,true);
 
-            $access_token = $result['access_token'];
+			$access_token = $result['access_token'];
 
-            $codeurl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
+			$codeurl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
 
-            $stream = curl_post($codeurl,$data['qrInfo']);
+			$stream = curl_post($codeurl,$data['qrInfo']);
 
-            if($data['output']=='url'){
+			if($data['output']=='url'){
 
-                $modelData = [];
+				$modelData = [];
 
-                $modelData['stream'] = $stream;
+				$modelData['stream'] = $stream;
+				
+				$modelData['md5'] = md5($stream);
+				
+				$modelData['chunkSize'] = 2* 1024 * 1024;
+				
+				$modelData['totalSize'] = strlen($stream);
+				
+				$modelData['start'] = 0;
+				
+				$modelData['originName'] = '小程序二维码';
+				
+				$modelData['thirdapp_id'] = $thirdapp_id;
 
-                $modelData['thirdapp_id'] = $thirdapp_id;
+				$modelData['user_no'] = $user_no;
 
-                $modelData['user_no'] = $user_no;
+				$modelData['behavior'] = 2;
 
-                $modelData['behavior'] = 2;
+				$modelData['type'] = 1;
 
-                $modelData['type'] = 1;
+				$modelData['ext'] = $data['ext'];
 
-                $modelData['ext'] = $data['ext'];
+				$modelData['param'] = json_encode($data['qrInfo']);
 
-                $modelData['param'] = json_encode($data['qrInfo']);
-
-                $url = FtpImageService::uploadStream($modelData,true);
+				$url = FtpImageService::upload($modelData,true);
 				
 				if(!$inner){
 					
@@ -169,127 +179,33 @@ class Qr{
 					
 				};
 
-            }else{
+			}else{
 
-                $result=self::data_uri($stream,'image/png');
+				$result=self::data_uri($stream,'image/png');
 
-                return $result;
+				return $result;
 
-            };
+			};
 
-        }
+		}
 
-    }
-
-
-    /*调用第三方网站生成二维码*/
-    public static function CommonQrGet($data)
-    {
-
-        (new CommonValidate())->goCheck('one',$data);
-
-        checkTokenAndScope($data,config('scope.two'));
-
-        $thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
-
-        $user_no = Cache::get($data['token'])['user_no'];
-
-        $modelData = [];
-
-        $modelData['searchItem'] = [
-
-            'type'=>1,
-
-            'user_no'=>$user_no,
-
-            'param'=>$data['param'],
-
-            'behavior'=>2
-
-        ];
-
-        $res = BeforeModel::CommonGet('File',$modelData);
-
-        if(count($res['data'])>0){
-
-            throw new SuccessMessage([
-
-                'msg'=>'获取二维码图片成功',
-
-                'info'=>['url'=>$res['data'][0]['path']]
-
-            ]);
-
-        };
-
-        $url = 'http://qr.liantu.com/api.php?text=solelynet';
-
-        $stream = file_get_contents('http://qr.liantu.com/api.php?text='.$data['param'], 'r');
-
-        //var_dump($stream);
-
-        if($data['output']=='url'){
-
-            $modelData = [];
-
-            $modelData['stream'] = $stream;
-
-            $modelData['thirdapp_id'] = $thirdapp_id;
-
-            $modelData['user_no'] = $user_no;
-
-            $modelData['behavior'] = 2;
-
-            $modelData['type'] = 1;
-
-            $modelData['param'] = $data['param'];
-
-            $modelData['ext'] = $data['ext'];
-
-            $res = FtpImageService::uploadStream($modelData,true);
-
-            //$res = QiniuImageService::upload($modelData,true);
-
-            if($res){
-
-                throw new SuccessMessage([
-
-                    'msg'=>'获取二维码图片成功',
-
-                    'info'=>['url'=>$res]
-
-                ]); 
-
-            };
-
-        
-
-        }else{
-
-            $result=self::data_uri($stream,'image/png');
-
-            return $result;
-
-        };
-
-    }
+	}
 
 
-    /**
-     * [PHPQrGet 使用phpqrcode本地生成二维码]
-     * @param [type]  $data  [token/params/ext目前支持png]
-     * @param boolean $inner [description]
-     */
-    public static function PHPQrGet($data,$inner=false)
-    {
+
+	/**
+	 * [PHPQrGet 使用phpqrcode本地生成二维码]
+	 * @param [type]  $data  [token/params/ext目前支持png]
+	 * @param boolean $inner [description]
+	 */
+	public static function PHPQrGet($data,$inner=false)
+	{
 
 		if(!$inner){
 			
 			(new CommonValidate())->goCheck('one',$data);
 			
 			checkTokenAndScope($data,config('scope.two'));
-			
-			
 			
 			$thirdapp_id = Cache::get($data['token'])['thirdapp_id'];
 			
@@ -308,9 +224,9 @@ class Qr{
 		
 		$modelData['searchItem'] = [
 		
-		    'user_no'=>$user_no,
+			'user_no'=>$user_no,
 		
-		    'param'=>$data['param'],
+			'param'=>$data['param'],
 		
 		];
 		
@@ -318,84 +234,88 @@ class Qr{
 		
 		if(count($res['data'])>0){
 		
-		    throw new SuccessMessage([
+			throw new SuccessMessage([
 		
-		        'msg'=>'获取二维码图片成功',
+				'msg'=>'获取二维码图片成功',
 		
-		        'info'=>['url'=>$res['data'][0]['path']]
+				'info'=>['url'=>$res['data'][0]['path']]
 		
-		    ]);
+			]);
 		
 		};
 
-        $value = $data['param'];        //二维码内容
+		$value = $data['param'];        //二维码内容
 
-        $errorCorrectionLevel = 'L';    //容错级别
+		$errorCorrectionLevel = 'L';    //容错级别
 
-        $matrixPointSize = 5;           //生成图片大小
+		$matrixPointSize = 5;           //生成图片大小
 
-        $ext = $data['ext'];
+		$ext = $data['ext'];
 
-        $saveName = substr(md5('streamSolely') , 0, 5). date('YmdH') . rand(0, 100) . '.' . $ext;
+		$qrCode = new \QRcode();
 
-        $dir = ROOT_PATH . 'public' . DS . 'uploads/'.$thirdapp_id.'/'.date('Ymd');
+		ob_start();
 
-        $path = $dir.'/'.$saveName;
+		$qrCode::png($value);
 
-        $qrCode = new \QRcode();
+		$stream = ob_get_contents();
 
-        ob_start();
+		ob_end_clean();
 
-        $qrCode::png($value);
+		$modelData = [];
 
-        $stream = ob_get_contents();
+		$modelData['stream'] = $stream;
+		
+		$modelData['md5'] = md5($stream);
+		
+		$modelData['chunkSize'] = 2* 1024 * 1024;
+		
+		$modelData['totalSize'] = strlen($stream);
+		
+		$modelData['start'] = 0;
+		
+		$modelData['originName'] = '核销二维码';
+		
+		$modelData['thirdapp_id'] = $thirdapp_id;
 
-        ob_end_clean();
+		$modelData['user_no'] = $user_no;
 
-        $modelData = [];
+		$modelData['behavior'] = 2;
 
-        $modelData['stream'] = $stream;
+		$modelData['type'] = 1;
 
-        $modelData['thirdapp_id'] = $thirdapp_id;
+		$modelData['param'] = $data['param'];
 
-        $modelData['user_no'] = $user_no;
+		$modelData['ext'] = $data['ext'];
 
-        $modelData['behavior'] = 2;
+		$url = FtpImageService::upload($modelData,true);
 
-        $modelData['type'] = 1;
+		if(!$inner){
 
-        $modelData['param'] = $data['param'];
+			throw new SuccessMessage([
 
-        $modelData['ext'] = $data['ext'];
+				'msg'=>'二维码生成成功',
 
-        $url = FtpImageService::uploadStream($modelData,true);
+				'info'=>['url'=>$url]
 
-        if(!$inner){
+			]);
 
-            throw new SuccessMessage([
+		}else{
 
-                'msg'=>'二维码生成成功',
+			return $url;
 
-                'info'=>['url'=>$url]
+		};
 
-            ]);
-
-        }else{
-
-            return $url;
-
-        };
-
-    }
+	}
 
 
-    public static function data_uri($contents, $mime)
-    {
+	public static function data_uri($contents, $mime)
+	{
 
-        $base64   = base64_encode($contents);
+		$base64   = base64_encode($contents);
 
-        return ('data:' . $mime . ';base64,' . $base64);
+		return ('data:' . $mime . ';base64,' . $base64);
 
-    }
+	}
 
 }
