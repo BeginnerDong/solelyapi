@@ -151,7 +151,7 @@ class Pay
 
 	public static function checkStock($orderInfo)
 	{
-		
+
 		$modelData = [];
 		if($orderInfo['sku_id']==0){
 			$modelData['searchItem']['id'] = $orderInfo['product_id'];
@@ -195,7 +195,7 @@ class Pay
 				'info'=>$product
 			]);
 		};
-		
+
 	}
 
 
@@ -207,7 +207,7 @@ class Pay
 				'msg'=>'余额不足'
 			]);
 		};
-		
+
 		/*是否有子订单*/
 		$modelData = [];
 		$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
@@ -273,7 +273,7 @@ class Pay
 				$modelData['searchItem']['id'] = $res;
 				FlowLogService::checkIsPayAll($modelData);
 			};
-		
+
 		}else{
 			
 			$modelData = [];

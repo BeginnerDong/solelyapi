@@ -135,8 +135,8 @@ class Order{
 				$modelData = self::createVirtualOrderData($data);
 				$modelData['FuncName'] = 'add';
 				$parentOrder = BeforeModel::CommonSave('Order',$modelData);
-				$data['orderList'][0]['parent_no'] = $parent_no;
-				$info['parent_id'] = $parentOrder;
+				$data['orderList'][0]['data']['parent_no'] = $parent_no;
+				$info['id'] = $parentOrder;
 			};
 			
 			$data['orderList'][0]['token'] = $data['token'];
@@ -144,7 +144,17 @@ class Order{
 			$modelData = self::createOrderData($data['orderList'][0]);
 			$modelData['FuncName'] = 'add';
 			$orderRes = BeforeModel::CommonSave('Order',$modelData);
-			$info['id'] = $orderRes;
+			if(isset($data['parent'])){
+				/*将子级订单金额赋予父级订单*/
+				$upData = [];
+				$upData['FuncName'] = 'update';
+				$upData['searchItem']['id'] = $parentOrder;
+				$upData['data']['price'] = $modelData['data']['price'];
+				$upParent = BeforeModel::CommonSave('Order',$upData);
+				$info['childOrder'] = $orderRes;
+			}else{
+				$info['id'] = $orderRes;
+			};
 			
 			if($orderRes>0){
 				if(isset($data['pay'])){

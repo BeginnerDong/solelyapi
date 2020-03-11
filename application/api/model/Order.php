@@ -103,11 +103,27 @@ class Order extends BaseModel
 			
 			$value = resDeal([$value])[0];
 			$child = resDeal(Order::all(['parent_no' => $value['order_no']]));
+			
+			foreach($child as $key_i => $value_i){
+				$orderItems = resDeal((new OrderItem())->where([
+								'order_no' => $value_i['order_no'],
+								'status' => 1
+							])->select());
+				$child[$key_i]['orderItem'] =  $orderItems;
+			};
+			
 			foreach($child as $key_c => $value_c){
-				if(empty($data[$key]['child'][$value_c['index']])){
-					$data[$key]['child'][$value_c['index']][0] = $value_c;
+				//组合套餐子级订单分组
+				// if(empty($data[$key]['child'][$value_c['index']])){
+				// 	$data[$key]['child'][$value_c['index']][0] = $value_c;
+				// }else{
+				// 	array_push($data[$key]['child'][$value_c['index']],$value_c);
+				// };
+				//一般项目子级订单拼接
+				if(empty($data[$key]['child'])){
+					$data[$key]['child'][0] = $value_c;
 				}else{
-					array_push($data[$key]['child'][$value_c['index']],$value_c);
+					array_push($data[$key]['child'],$value_c);
 				};
 			};
 		};
