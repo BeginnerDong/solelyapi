@@ -266,11 +266,11 @@ class FlowLog {
 		if(count($groups['data'])>=$orderInfo['standard']){
 			/*成团*/
 			foreach($groups['data'] as $key => $value){
-				if($value['order_step']==1){
+				if($value['group_status']==1){
 					$modelData = [];
 					$modelData['FuncName'] = 'update';
 					$modelData['searchItem']['id'] = $value['id'];
-					$modelData['data']['order_step'] = 2;
+					$modelData['data']['group_status'] = 2;
 					$upOrder = BeforeModel::CommonSave('Order',$modelData);
 				};
 			};

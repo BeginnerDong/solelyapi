@@ -198,8 +198,7 @@
 | order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结 |
 | group_status | tinyint(2) | 0.未成团,1.成团 |
 | transport_status | tinyint(2) | 0.未发货；1.配送中；2.已收货 |
-| level | tinyint(2) | 层级 |
-| parent | tinyint(2) | 0.无1.父级订单2.子级订单 |
+| level | tinyint(2) | 层级：1.父级订单 |
 | parent_no | varchar(255) | 父级订单NO |
 | product_id | int(11) | 商品id |
 | sku_id | int(11) | SKU id |

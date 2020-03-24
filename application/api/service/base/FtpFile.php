@@ -131,19 +131,26 @@ class FtpFile{
 			mkdir($filePath);
 		};
 		if(is_dir($tempPath)) {
-			for ( $i =0; $i < $chunkNum; $i ++ ) {
+			for ( $i = 0; $i < $chunkNum; $i ++ ) {
 				$_file = file_get_contents($tempPath. $i .'.'.$ext);
 				$_res = file_put_contents($filePath .$file_name,$_file,FILE_APPEND);
-				if($_res){
-					unlink($tempPath. $i .'.'.$ext);
-				}else{
+				if(!$_res){
 					throw new ErrorMessage([
 						'msg' => '合并失败',
 					]);
 				};
 			};
 		};
-		rmdir($tempPath);
+
+		/*删除临时文件*/
+		$dir = ROOT_PATH . 'public' . DS . 'uploads/temp/';
+		$a = scandir($dir);
+		for($j = 0; $j < count($a); $j ++){
+			if($a[$j]!=$md5&&$a[$j]!='.'&&$a[$j]!='..'){
+				deldir($dir.$a[$j]);
+			};
+		};
+
 		$_hash = hash_file('sha1', $filePath .$file_name);
 		if($_hash){
 			return [

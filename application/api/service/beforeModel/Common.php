@@ -44,8 +44,6 @@ class Common {
 			
 		};
 
-		$final = self::getLimit($data,$final);
-
 		$final['data'] = self::CommonGetAfter($data,$final['data']);
 
 		$final['data'] = self::getLimit($data,$final['data']);
@@ -399,13 +397,13 @@ class Common {
 
 			$limits = $limit['getLimit'];
 
-			foreach ($data['data'] as $key => $value) {
+			foreach ($data as $key => $value) {
 
-				foreach ($limits as $c_key => $c_value) {
+				foreach ($limits as $c_value) {
 					
-					if ($value['c_value']) {
-						
-						unset($value['c_value']);
+					if (isset($value[$c_value])) {
+	
+						unset($data[$key][$c_value]);
 
 					}
 
