@@ -105,102 +105,33 @@ class WXPayReturn extends Controller
 
 	public function dealOrder($data,$orderInfo,$TOTAL_FEE,$payLog)
 	{
-		
+		//支付流水直接记录关联订单，因为退款逻辑，不再查询记录到子订单上
 		$modelData = [];
-		$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
-		$modelData['searchItem']['pay_status'] = 0;
-		$childs = BeforeModel::CommonGet('Order',$modelData);
+		$modelData['data'] = array(
+			'type' => 1,
+			'account' => 1,
+			'count'=>-$TOTAL_FEE,
+			'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+			'pay_no'=>$payLog['pay_no'],
+			'trade_info'=>'微信支付',
+			'thirdapp_id'=>$payLog['thirdapp_id'],
+			'user_no'=>$payLog['user_no'],
+			'relation_table'=>'order',
+			'payInfo'=>[
+				'appid'=>$data['APPID'],
+				'mch_id'=>$data['MCH_ID'],
+				'transaction_id'=>$data['TRANSACTION_ID'],
+				'out_trade_no'=>$data['OUT_TRADE_NO'],
+			]
+		);
 		
-		if(count($childs['data'])>0){
-			
-			$wxpay = $TOTAL_FEE;
-			foreach($childs['data'] as $order_key => $order_value){
-				$modelData = [];
-				$modelData['searchItem']['order_no'] = $order_value['order_no'];
-				$flows = BeforeModel::CommonGet('FlowLog',$modelData);
-				$flowPrice = 0;
-				if(count($flows['data'])>0){
-					foreach ($flows['data'] as $flow_key => $flow_value) {
-						$flowPrice += abs($flow_value['count']);
-					};
-				};
-				if($wxpay>0){
-					if($flowPrice>0){
-						if($wxpay>=($order_value['price']-$flowPrice)){
-							$count = $order_value['price']-$flowPrice;
-							$wxpay -= $order_value['price']-$flowPrice;
-						}else{
-							$count = $wxpay;
-							$wxpay = 0;
-						}
-					}else{
-						if($wxpay>=$order_value['price']){
-							$count = $order_value['price'];
-							$wxpay -= $order_value['price'];
-						}else{
-							$count = $wxpay;
-							$wxpay = 0;
-						}
-					}
-				};
-				$modelData = [];
-				$modelData['data'] = array(
-					'type' => 1,
-					'account' => 1,
-					'count'=>-$count,
-					'order_no'=>isset($order_value['order_no'])?$order_value['order_no']:'',
-					'parent_no'=>isset($order_value['parent_no'])?$order_value['parent_no']:'',
-					'pay_no'=>$payLog['pay_no'],
-					'trade_info'=>'微信支付',
-					'thirdapp_id'=>$payLog['thirdapp_id'],
-					'user_no'=>$payLog['user_no'],
-					'relation_table'=>'order',
-					'payInfo'=>[
-						'appid'=>$data['APPID'],
-						'mch_id'=>$data['MCH_ID'],
-						'transaction_id'=>$data['TRANSACTION_ID'],
-						'out_trade_no'=>$data['OUT_TRADE_NO'],
-					]
-				);
+		$modelData['FuncName'] = 'add';
+		$res = BeforeModel::CommonSave('FlowLog',$modelData);
 
-				$modelData['FuncName'] = 'add';
-				$res = BeforeModel::CommonSave('FlowLog',$modelData);
-				
-				$modelData = [];
-				$modelData['searchItem']['id'] = $res;
-				FlowLogService::checkIsPayAll($modelData);
-			};
-
-		}else{
-			
-			$modelData = [];
-			$modelData['data'] = array(
-				'type' => 1,
-				'account' => 1,
-				'count'=>-$TOTAL_FEE,
-				'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-				'pay_no'=>$payLog['pay_no'],
-				'trade_info'=>'微信支付',
-				'thirdapp_id'=>$payLog['thirdapp_id'],
-				'user_no'=>$payLog['user_no'],
-				'relation_table'=>'order',
-				'payInfo'=>[
-					'appid'=>$data['APPID'],
-					'mch_id'=>$data['MCH_ID'],
-					'transaction_id'=>$data['TRANSACTION_ID'],
-					'out_trade_no'=>$data['OUT_TRADE_NO'],
-				]
-			);
-			
-			$modelData['FuncName'] = 'add';
-			$res = BeforeModel::CommonSave('FlowLog',$modelData);
-
-			$modelData = [];
-			$modelData['searchItem']['id'] = $res;
-			FlowLogService::checkIsPayAll($modelData);
-			
-		};
+		$modelData = [];
+		$modelData['searchItem']['id'] = $res;
+		FlowLogService::checkIsPayAll($modelData);
 		
 		if(!empty($payLog['saveFunction'])){
 			SolelyService::saveFunction($payLog['saveFunction']);
@@ -222,101 +153,31 @@ class WXPayReturn extends Controller
 
 	public function dealCoupon($data,$couponInfo,$TOTAL_FEE,$payLog)
 	{
+		$modelData = [];
+		$modelData['data'] = array(
+			'type' => 1,
+			'count'=>-$TOTAL_FEE,
+			'relation_id'=>$coupon_value['id'],
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+			'pay_no'=>$payLog['pay_no'],
+			'trade_info'=>'微信支付',
+			'thirdapp_id'=>$payLog['thirdapp_id'],
+			'user_no'=>$payLog['user_no'],
+			'relation_table'=>'coupon',
+			'payInfo'=>[
+				'appid'=>$data['APPID'],
+				'mch_id'=>$data['MCH_ID'],
+				'transaction_id'=>$data['TRANSACTION_ID'],
+				'out_trade_no'=>$data['OUT_TRADE_NO'],
+			]
+		);
+		
+		$modelData['FuncName'] = 'add';
+		$res = BeforeModel::CommonSave('FlowLog',$modelData);
 
 		$modelData = [];
-		$modelData['searchItem']['parent_no'] = $couponInfo['id'];
-		$modelData['searchItem']['pay_status'] = 0;
-		$childs = BeforeModel::CommonGet('Order',$modelData);
-		
-		if(count($childs['data'])>0){
-			
-			$wxpay = $TOTAL_FEE;
-			foreach($childs['data'] as $coupon_key => $coupon_value){
-				$modelData = [];
-				$modelData['searchItem']['relation_id'] = $coupon_value['id'];
-				$modelData['searchItem']['relation_table'] = 'coupon';
-				$flows = BeforeModel::CommonGet('FlowLog',$modelData);
-				$flowPrice = 0;
-				if(count($flows['data'])>0){
-					foreach ($flows['data'] as $flow_key => $flow_value) {
-						$flowPrice += abs($flow_value['count']);
-					};
-				};
-				if($wxpay>0){
-					if($flowPrice>0){
-						if($wxpay>=($coupon_value['price']-$flowPrice)){
-							$count = $coupon_value['price']-$flowPrice;
-							$wxpay -= $coupon_value['price']-$flowPrice;
-						}else{
-							$count = $wxpay;
-							$wxpay = 0;
-						}
-					}else{
-						if($wxpay>=$coupon_value['price']){
-							$count = $coupon_value['price'];
-							$wxpay -= $coupon_value['price'];
-						}else{
-							$count = $wxpay;
-							$wxpay = 0;
-						}
-					}
-				};
-				$modelData = [];
-				$modelData['data'] = array(
-					'type' => 1,
-					'count'=>-$count,
-					'relation_id'=>$coupon_value['id'],
-					'parent_no'=>isset($coupon_value['parent_no'])?$coupon_value['parent_no']:'',
-					'pay_no'=>$payLog['pay_no'],
-					'trade_info'=>'微信支付',
-					'thirdapp_id'=>$payLog['thirdapp_id'],
-					'user_no'=>$payLog['user_no'],
-					'relation_table'=>'coupon',
-					'payInfo'=>[
-						'appid'=>$data['APPID'],
-						'mch_id'=>$data['MCH_ID'],
-						'transaction_id'=>$data['TRANSACTION_ID'],
-						'out_trade_no'=>$data['OUT_TRADE_NO'],
-					]
-				);
-
-				$modelData['FuncName'] = 'add';
-				$res = BeforeModel::CommonSave('FlowLog',$modelData);
-				
-				$modelData = [];
-				$modelData['searchItem']['id'] = $res;
-				FlowLogService::checkIsPayAll($modelData);
-			};
-
-		}else{
-			
-			$modelData = [];
-			$modelData['data'] = array(
-				'type' => 1,
-				'count'=>-$TOTAL_FEE,
-				'relation_id'=>$coupon_value['id'],
-				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-				'pay_no'=>$payLog['pay_no'],
-				'trade_info'=>'微信支付',
-				'thirdapp_id'=>$payLog['thirdapp_id'],
-				'user_no'=>$payLog['user_no'],
-				'relation_table'=>'coupon',
-				'payInfo'=>[
-					'appid'=>$data['APPID'],
-					'mch_id'=>$data['MCH_ID'],
-					'transaction_id'=>$data['TRANSACTION_ID'],
-					'out_trade_no'=>$data['OUT_TRADE_NO'],
-				]
-			);
-			
-			$modelData['FuncName'] = 'add';
-			$res = BeforeModel::CommonSave('FlowLog',$modelData);
-
-			$modelData = [];
-			$modelData['searchItem']['id'] = $res;
-			FlowLogService::checkIsPayAll($modelData);
-			
-		};
+		$modelData['searchItem']['id'] = $res;
+		FlowLogService::checkIsPayAll($modelData);
 
 		$modelData = $payLog;
 		//取出第一次调取支付时记录的信息

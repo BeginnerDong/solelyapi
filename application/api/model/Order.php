@@ -66,6 +66,7 @@ class Order extends BaseModel
 			'unit_price'=>'',
 			'count'=>'',
 			'index'=>0,
+			'day_time'=>0,
 		];
 
 		if(isset($data['data']['user_no'])){

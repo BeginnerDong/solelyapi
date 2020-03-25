@@ -123,18 +123,22 @@ class FlowLog {
 						};
 
 						if($pay_all){
-						
 							$modelData = []; 
 							$modelData['FuncName'] = 'update';
 							$modelData['searchItem']['id'] = $parentOrder['id'];
 							$modelData['data']['pay_status'] = 1;
-						
 							//执行payAfter
 							if(isset($parentOrder['payAfter'])&&!empty($parentOrder['payAfter'])){
 								$modelData['saveAfter'] = $parentOrder['payAfter'];
 							};
-						
 							$updateOrder = BeforeModel::CommonSave('Order',$modelData);
+
+							/*团购单判断*/
+							if(!empty($parentOrder['group_no'])){
+								$modelData = [];
+								$modelData['searchItem']['id'] = $parentOrder['id'];
+								self::dealGroup($modelData);
+							};
 						};
 					};
 				};

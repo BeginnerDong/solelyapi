@@ -184,8 +184,6 @@ class Order{
 	 * @param product_id/sku_id购买商品ID
 	 * @param count购买商品数量
 	 * @param day_time购买指定日期库存，当日时间戳0点
-	 * @param isGroup团购单传递，值为true
-	 * @param group_no团购单传递，团购单号
 	 */
 	public static function createOrderData($data)
 	{
@@ -251,33 +249,16 @@ class Order{
 			$modelData['data'] = array_merge($data['data'],$modelData['data']);
 		};
 
-		//判断是否是团购商品
-		if(isset($data['isGroup'])&&!isset($data['group_no'])){
-			$modelData['data']['group_no'] = makeGroupNo();
-			$modelData['data']['group_leader'] = "true";
-			$modelData['data']['group_status'] = 1;
-			$modelData['data']['standard'] = isset($data['data']['standard'])?$data['data']['standard']:'';
-		}else if(isset($data['isGroup'])&&isset($data['group_no'])) {
-			$c_modelData = [];
-			$c_modelData['searchItem'] = [
-				'group_no'=>$data['group_no']
-			];
-			$groupRes = BeforeModel::CommonGet('Order',$c_modelData);
-			if (count($groupRes['data'])>0) {
-				$modelData['data']['group_no'] = $data['group_no'];
-				$modelData['data']['standard'] = $groupRes['data'][0]['standard'];
-				$modelData['data']['group_status'] = 1;
-			}else{
-				throw new ErrorMessage([
-					'msg' => 'group_no不存在',
-				]);
-			};
-		}
 		return $modelData;
 	}
 
 
 
+	/**
+	 * 生成父级订单数据
+	 * @param isGroup团购单传递，值为true
+	 * @param group_no团购单传递，团购单号
+	 */
 	public static function createVirtualOrderData($data)
 	{
 		$user = Cache::get($data['token']);
@@ -298,6 +279,31 @@ class Order{
 		$modelData['data']['pay'] = isset($data['pay'])?json_encode($data['pay']):json_encode([]);
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];
+		
+		//因订单渲染逻辑，团购信息需要记录到父级订单上
+		//判断是否是团购商品
+		if(isset($data['isGroup'])&&!isset($data['group_no'])){
+			$modelData['data']['group_no'] = makeGroupNo();
+			$modelData['data']['group_leader'] = "true";
+			$modelData['data']['group_status'] = 1;
+			$modelData['data']['standard'] = isset($data['data']['standard'])?$data['data']['standard']:'';
+		}else if(isset($data['isGroup'])&&isset($data['group_no'])){
+			$c_modelData = [];
+			$c_modelData['searchItem'] = [
+				'group_no'=>$data['group_no']
+			];
+			$groupRes = BeforeModel::CommonGet('Order',$c_modelData);
+			if (count($groupRes['data'])>0) {
+				$modelData['data']['group_no'] = $data['group_no'];
+				$modelData['data']['standard'] = $groupRes['data'][0]['standard'];
+				$modelData['data']['group_status'] = 1;
+			}else{
+				throw new ErrorMessage([
+					'msg' => 'group_no不存在',
+				]);
+			};
+		};
+		
 		return $modelData;
 	}
 
