@@ -41,6 +41,7 @@ class UserInfo extends Model
             'idCard'=>'',
             'behavior'=>'',
             'img_array'=>[],
+			'birthday'=>'',
         ];
 
         if(isset($data['data']['user_no'])){

@@ -86,7 +86,7 @@ class Common extends Model{
 
 			$res = $model->dealGet(resDeal($res['data']));
 			
-		}else if(isset($data['getOne'])||isset($data['searchItem']['id'])){
+		}else if(isset($data['getOne'])||(isset($data['searchItem']['id'])&&!is_array($data['searchItem']['id']))){
 			
 			$sqlStr = $sqlStr."find();";
 			$find = eval($sqlStr);

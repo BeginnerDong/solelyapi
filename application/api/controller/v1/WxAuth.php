@@ -250,7 +250,7 @@ class WxAuth
         $modelData['searchItem']['id'] = $this->thirdapp_id;
 		$modelData['getOne'] = "true";
         $thirdRes = BeforeModel::CommonGet('ThirdApp',$modelData);
-		if(count($thirdResp['data'])>0){
+		if(count($thirdRes['data'])>0){
             $thirdRes = $thirdRes['data'][0];
             return $thirdRes;
 		}else{
