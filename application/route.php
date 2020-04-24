@@ -30,6 +30,8 @@ require_once (dirname(__FILE__).'/route/base/cms.Route.php');
 
 Route::post('api/:version/pay/notify','api/:version.WXPayReturn/receiveNotify');
 
+Route::post('api/:version/pay/alinotify','api/:version.AliPayReturn/receiveNotify');
+
 
 
 

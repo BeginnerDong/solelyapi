@@ -94,6 +94,22 @@ class WxPay
 		return self::getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData,$orderInfo);
 		
 	}
+	
+	
+	// 构建APP支付订单信息
+	public static function appPay($userInfo,$pay_no,$price,$logData=[],$orderInfo)
+	{
+	
+		$thirdInfo = ThirdApp::get(['id' => $userInfo['thirdapp_id']]);
+		$wxOrderData = new \WxPayUnifiedOrder();
+		$wxOrderData->SetOut_trade_no($pay_no);
+		$wxOrderData->SetTrade_type('APP');
+		$wxOrderData->SetTotal_fee($price*100);
+		$wxOrderData->SetBody('solelyService');
+		$wxOrderData->SetNotify_url(config('secure.pay_back_url'));
+		return self::getPaySignature($wxOrderData,$thirdInfo,$pay_no,$userInfo,$logData,$orderInfo);
+	
+	}
 
 
 	//向微信请求订单号并生成签名
@@ -123,39 +139,23 @@ class WxPay
 		};
 		
 		if($pay_no){
-
 			$modelData = [];
-			if($logData){
-				$modelData['data'] = array_merge(array(
-					'title'=>'微信支付',
-					'pay_no'=>$pay_no,
-					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-					'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-					'prepay_id'=>$wxOrder['prepay_id'],
-					'wx_prepay_info' => json_encode($signature),
-					'create_time'=>time(),
-					'type'=>2,
-					'user_no'=>$userInfo['user_no'],
-					'thirdapp_id'=>$thirdappinfo['id'],
-				),$logData);
-			}else{
-				$modelData['data'] = array(
-					'title'=>'微信支付',
-					'pay_no'=>$pay_no,
-					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-					'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-					'prepay_id'=>$wxOrder['prepay_id'],
-					'wx_prepay_info' => json_encode($signature),
-					'create_time'=>time(),
-					'type'=>2,
-					'user_no'=>$userInfo['user_no'],
-					'thirdapp_id'=>$thirdappinfo['id'],
-				); 
-			};
+			$modelData['data'] = array_merge(array(
+				'title'=>'微信支付',
+				'pay_no'=>$pay_no,
+				'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+				'prepay_id'=>$wxOrder['prepay_id'],
+				'wx_prepay_info' => json_encode($signature),
+				'create_time'=>time(),
+				'type'=>1,
+				'user_no'=>$userInfo['user_no'],
+				'thirdapp_id'=>$thirdInfo['id'],
+			),$logData);
 			$modelData['FuncName'] = 'add';
 			$saveLog = BeforeModel::CommonSave('PayLog',$modelData);
 		};
-		
+
 		throw new SuccessMessage([
 			'msg'=>'微信支付发起成功',
 			'info'=>$signature

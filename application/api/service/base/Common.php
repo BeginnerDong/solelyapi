@@ -107,7 +107,7 @@ class Common{
 			'Order'=>config('scope.two'),
 			'OrderItem'=>config('scope.two'),
 			'User'=>config('scope.two'),
-			'UserInfo'=>config('scope.six'),
+			'UserInfo'=>config('scope.two'),
 			'Product'=>[],
 			'Label'=>[],
 			'Sku'=>[],

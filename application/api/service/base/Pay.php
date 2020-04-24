@@ -20,6 +20,7 @@ use app\api\model\FlowLog;
 use app\api\service\beforeModel\Common as BeforeModel;
 use app\api\service\func\FlowLog as FlowLogService;
 use app\api\service\base\WxPay;
+use app\api\service\base\AliPay;
 use app\api\service\base\CommonService as CommonService;
 use app\api\validate\CommonValidate as CommonValidate;
 
@@ -93,6 +94,7 @@ class Pay
 			}
 		};
 
+		//微信支付
 		if(!isset($data['wxPayStatus'])){
 			$data['wxPayStatus'] = 0;
 		};
@@ -112,7 +114,32 @@ class Pay
 			
 			$logData['pay_info'] = $data;
 			WxPay::pay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData,$orderInfo);
+			//APP支付
+			//WxPay::appPay($userInfo,$data['pay_no'],$data['wxPay']['price'],$logData,$orderInfo);
 
+		};
+		
+		//支付宝支付
+		if(!isset($data['aliPayStatus'])){
+			$data['aliPayStatus'] = 0;
+		};
+		if(isset($data['aliPay'])&&isset($data['aliPayStatus'])&&$data['aliPayStatus']==0){
+			
+			if($data['aliPay']['price']==0){
+				throw new ErrorMessage([
+					'msg' => '不能支付0元',
+				]);
+			};
+		
+			/*记录订单的全部信息，回调时执行其它支付方式*/
+			if(isset($data['saveFunction'])){
+				$logData['saveFunction'] = $data['saveFunction'];
+				unset($data['saveFunction']);
+			};
+			
+			$logData['pay_info'] = $data;
+			AliPay::pay($userInfo,$data['pay_no'],$data['aliPay']['price'],$logData,$orderInfo);
+		
 		};
 
 		Db::startTrans();
