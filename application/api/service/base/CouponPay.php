@@ -350,14 +350,14 @@ class CouponPay
 			]);
 		};
 		if(isset($data['balance'])){
-			if($userInfo['info']['balance']<$data['balance']){
+			if($data['balance']['price']>(float)$userInfo['info']['balance']){
 				throw new ErrorMessage([
 					'msg' => '余额不足',
 				]);
 			};
 		};
 		if(isset($data['score'])){
-			if(count($userInfo['info'])==0||($userInfo['info']['score']<$data['score']/$userInfo['info']['score_ratio'])){
+			if(($data['score']['price']/(int)$userInfo['info']['score_ratio'])>(float)$userInfo['info']['score']){
 				throw new ErrorMessage([
 					'msg' => '积分不足',
 				]);

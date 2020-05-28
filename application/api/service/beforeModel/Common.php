@@ -350,19 +350,19 @@ class Common {
 		
 		if(isset($data['saveAfter'])){
 
-			if(isset($value['data']['res'])||isset($value['searchItem']['res'])){
-
+			if(isset($data['searchItem']['id'])){
 				$modelData = [];
 				$modelData['searchItem'] = $data['searchItem'];
-				$res = CommonModel::CommonGet($table,$modelData);
+				$info = CommonModel::CommonGet($table,$modelData);
 
-				if(!$res){
+				if(count($info['data'])==0){
 					throw new ErrorMessage([
 						'msg' => '关联saveAfter失败',
 					]);
+				}else{
+					$info = $info['data'][0];
 				};
 			};
-			
 			
 			foreach ($data['saveAfter'] as $value) {
 
@@ -370,14 +370,14 @@ class Common {
 
 				if(isset($value['data']['res'])){
 					foreach ($value['data']['res'] as $data_key => $data_value) {
-						$value['data'][$data_key] = $res[$data_value];
+						$value['data'][$data_key] = $info[$data_value];
 					};
 					unset($value['data']['res']);
 				};
 				
 				if(isset($value['searchItem']['res'])){
 					foreach ($value['searchItem']['res'] as $searchItem_key => $searchItem_value) {
-						$value['searchItem'][$searchItem_key] = $res[$searchItem_value];
+						$value['searchItem'][$searchItem_key] = $info[$searchItem_value];
 					};
 					unset($value['searchItem']['res']); 
 				};

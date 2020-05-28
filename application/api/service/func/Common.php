@@ -181,16 +181,6 @@ class Common{
 
 				return $tokenAndToken;
 
-				throw new SuccessMessage([
-
-					'msg'=>'查询成功',
-
-					'token'=>$res,
-
-					'info'=>$loginRes
-
-				]); 
-
 			}else{
 
 				throw new ErrorMessage([

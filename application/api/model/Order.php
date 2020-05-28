@@ -58,16 +58,18 @@ class Order extends BaseModel
 			'group_leader'=>'',
 			'pay_no'=>'',
 			'limit'=>'',
-			'parent'=>'',
+			'level'=>'',
 			'parent_no'=>'',
-			'isremark'=>'',
 			'product_id'=>'',
 			'sku_id'=>'',
 			'title'=>'',
 			'unit_price'=>'',
 			'count'=>'',
+			'isremark'=>'',
+			'set_no'=>'',
 			'index'=>0,
 			'day_time'=>0,
+			'phone'=>'',
 		];
 
 		if(isset($data['data']['user_no'])){

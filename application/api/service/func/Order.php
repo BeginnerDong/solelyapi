@@ -275,7 +275,7 @@ class Order{
 		$order_no = isset($data['order_no'])?$data['order_no']:makeOrderNo();
 		
 		$modelData['data']['order_no'] = $order_no;
-		$modelData['data']['type'] = 6;
+		$modelData['data']['type'] = isset($data['type'])?$data['type']:6;
 		$modelData['data']['pay'] = isset($data['pay'])?json_encode($data['pay']):json_encode([]);
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];
@@ -327,30 +327,32 @@ class Order{
 		$modelData = [];
 		if($product){
 			$modelData['searchItem']['id'] = $data['product_id'];
-			$product = BeforeModel::CommonGet('Product',$modelData);
+			$info = BeforeModel::CommonGet('Product',$modelData);
 		}else{
 			$modelData['searchItem']['id'] = $data['sku_id'];
-			$product = BeforeModel::CommonGet('Sku',$modelData);
+			$info = BeforeModel::CommonGet('Sku',$modelData);
 		};
 		if(!count($product['data'])>0){
 			throw new ErrorMessage([
 				'msg' => '产品不存在或已下架',
-				'info'=>$product
+				'info'=>$info
 			]); 
 		};
-		$product = $product['data'][0];
+		$info = $info['data'][0];
 
 		/*检测库存*/
 		if($type<4){
 			$modelData = [];
 			$modelData['getOne'] = 'true';
 			if($product){
-				$modelData['searchItem']['product_no'] = $product['product_no'];
+				$modelData['searchItem']['product_no'] = $info['product_no'];
 			}else{
-				$modelData['searchItem']['sku_no'] = $product['sku_no'];
+				$modelData['searchItem']['sku_no'] = $info['sku_no'];
 			};
-			if(isset($data['day_time'])){
-				$modelData['searchItem']['day_time'] = $data['day_time'];
+			//默认判断当天的库存
+			$beginToday = mktime(0,0,0,date('m'),date('d'),date('Y'));
+			if($info['is_date']==1){
+				$modelData['searchItem']['day_time'] = $beginToday;
 				$modelData['searchItem']['type'] = 2;
 			}else{
 				$modelData['searchItem']['type'] = 1;
@@ -361,18 +363,18 @@ class Order{
 				if(($isGroup&&($stock['group_stock']<$data['count']))||($stock['stock']<$data['count'])){
 					throw new ErrorMessage([
 						'msg' => '库存不足',
-						'info'=>$product
+						'info'=>$info
 					]);
 				};
 			}else{
 				throw new ErrorMessage([
 					'msg' => '库存异常',
-					'info'=>$product
+					'info'=>$info
 				]);
 			};
 		};
 
-		if($product['limit']>0){
+		if($info['limit']>0){
 			$modelData = [
 				'searchItem'=>[]
 			];
@@ -384,7 +386,7 @@ class Order{
 			$modelData['searchItem']['user_no'] = $user['user_no'];
 			$modelData['searchItem']['pay_status'] = 1;
 			$limit = BeforeModel::CommonGet('Order',$modelData);
-			if(count($limit['data'])>=$product['limit']){
+			if(count($limit['data'])>=$info['limit']){
 				throw new ErrorMessage([
 					'msg' => '购买数量超限',
 				]);
@@ -396,11 +398,11 @@ class Order{
 			$modelData = [];
 			$modelData['getOne'] = 'true';
 			$modelData['searchItem']['relation_one'] = $data['data']['set_no'];
-			$modelData['searchItem']['relation_two'] = $product['product_no'];
+			$modelData['searchItem']['relation_two'] = $info['product_no'];
 			$relation = BeforeModel::CommonGet('Relation',$modelData);
 			if(count($relation['data'])>0){
 				$relation = $relation['data'][0];
-				$product['price'] = $relation['price'];
+				$info['price'] = $relation['price'];
 			}else{
 				throw new ErrorMessage([
 					'msg' => '套餐不存在',
@@ -410,7 +412,7 @@ class Order{
 
 		$modelData = [];
 		$modelData['data']['order_no'] = $order_no;
-		$modelData['data']['snap_product'] = json_encode($product);
+		$modelData['data']['snap_product'] = json_encode($info);
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];
 		$modelData['FuncName'] = 'add';
@@ -418,13 +420,13 @@ class Order{
 		if(!$orderItemRes>0){
 			throw new ErrorMessage([
 				'msg' => '写入产品失败',
-				'info'=>$product
+				'info'=>$info
 			]);  
 		};
-		$totalPrice = $product['price']*$data['count'];
+		$totalPrice = $info['price']*$data['count'];
 		return [
 			'totalPrice'=>$totalPrice,
-			'productInfo'=>$product,
+			'productInfo'=>$info,
 		];
 	}
 

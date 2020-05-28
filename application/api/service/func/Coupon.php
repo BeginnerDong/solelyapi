@@ -206,7 +206,7 @@ class Coupon{
 		$modelData['data']['value'] = $couponInfo['value'];
 		$modelData['data']['discount'] = $couponInfo['discount'];
 		$modelData['data']['condition'] = $couponInfo['condition'];
-		$modelData['data']['invalid_time'] = time()*1000+$couponInfo['valid_time'];
+		$modelData['data']['invalid_time'] = time()*1000+$couponInfo['valid_time']*86400*1000;
 		$modelData['data']['use_limit'] = $couponInfo['use_limit'];
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];

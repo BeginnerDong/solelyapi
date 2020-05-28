@@ -489,7 +489,7 @@ use app\lib\exception\ErrorMessage;
 	//json字符串转数组
 	function resDeal($data)
 	{
-		$filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','pay','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter'];
+		$filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter','saveFunction'];
 
 		if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){
 			$dealData = $data['data'];
@@ -1563,5 +1563,33 @@ use app\lib\exception\ErrorMessage;
 	    $b = $radLng1 - $radLng2;
 	    $s = 2 * asin(sqrt(pow(sin($a / 2), 2) + cos($radLat1) * cos($radLat2) * pow(sin($b / 2), 2))) * 6378.137 * 1000;
 	    return $s;
-	} 
+	}
+	
+	
+	/**
+	 * 将字符串分割为数组     
+	 * @param  string $str 字符串 
+	 * @return array       分割得到的数组 
+	 */  
+	function mb_str_split($str){  
+	    return preg_split('/(?<!^)(?!$)/u', $str );  
+	}
+	
+	
+	/**
+	 * 二维数组根据某个字段排序
+	 * @param array $array 要排序的数组
+	 * @param string $keys   要排序的键字段
+	 * @param string $sort  排序类型  SORT_ASC     SORT_DESC 
+	 * @return array 排序后的数组
+	 */
+	function arraySort($array, $keys, $sort = SORT_DESC) {
+	    $keysValue = [];
+	    foreach ($array as $k => $v) {
+	        $keysValue[$k] = $v[$keys];
+	    }
+	    array_multisort($keysValue, $sort, $array);
+	    return $array;
+	}
+
 

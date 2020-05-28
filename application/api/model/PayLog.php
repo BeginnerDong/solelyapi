@@ -15,7 +15,7 @@ class PayLog extends BaseModel
 		
 		$standard = [
 			'title'=>'',
-			'price'=>'',
+			'price'=>0,
 			'result'=>'',
 			'content'=>'',
 			'type'=>'',
@@ -34,7 +34,7 @@ class PayLog extends BaseModel
 			'user_no'=>'',
 			'status'=>1,
 			'parent_no'=>'',
-			'saveFunction'=>'',
+			'saveFunction'=>[],
 		];
 		
 		if(isset($data['data']['user_no'])){
@@ -85,5 +85,6 @@ class PayLog extends BaseModel
 		return $data;
 		
 	}
+
 
 }

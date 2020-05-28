@@ -150,7 +150,7 @@
 | end_time | bigint(13) | 结束时间 |
 | on_shelf | tinyint(2) | 1.上架-1.下架 |
 | is_date | tinyint(2) | 1.日期库存0.非日期库存 |
-| duration | bigint(13) | 有效期 |
+| duration | int(11) | 有效天数 |
 
 
 
@@ -254,6 +254,7 @@
 | stock | int(11) | 库存 |
 | sale_count | int(11) | 销量 |
 | type | int(11) | 1.抵扣券2.折扣券 |
+| valid_time | int(11) | 有效期（天） |
 
 
 

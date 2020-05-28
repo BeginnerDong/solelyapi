@@ -234,13 +234,21 @@ class Qr{
 		
 		if(count($res['data'])>0){
 		
-			throw new SuccessMessage([
-		
-				'msg'=>'获取二维码图片成功',
-		
-				'info'=>['url'=>$res['data'][0]['path']]
-		
-			]);
+			if(!$inner){
+				
+				throw new SuccessMessage([
+						
+					'msg'=>'获取二维码图片成功',
+						
+					'info'=>['url'=>$res['data'][0]['path']]
+						
+				]);
+				
+			}else{
+				
+				return $res['data'][0]['path'];
+				
+			}
 		
 		};
 

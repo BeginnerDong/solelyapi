@@ -32,7 +32,6 @@ class Solely{
 	 */
 	public static function addMessage($data)
 	{
-		//获取绑定情侣的信息
 		if (!isset($data['data']['user_type'])) {
 			$data['data']['user_type'] = 0;
 		}

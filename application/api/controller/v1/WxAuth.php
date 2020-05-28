@@ -13,6 +13,9 @@ use think\Controller;
 use think\Db;
 use think\Request as Request;
 use think\Loader;
+
+use app\api\model\Distribution;
+
 use app\api\service\Token as TokenService;
 use app\api\service\beforeModel\Common as BeforeModel;
 use app\lib\exception\SuccessMessage;

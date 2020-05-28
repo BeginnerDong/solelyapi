@@ -90,6 +90,7 @@ class FlowLog {
 					$updateOrder = BeforeModel::CommonSave('Order',$modelData);
 					
 					$modelData = [];
+					$modelData['getOne'] = 'true';
 					$modelData['searchItem']['id'] = $orderInfo['id'];
 					/*计算库存*/
 					if($orderInfo['count']>0){

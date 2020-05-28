@@ -15,85 +15,86 @@ class Coupon extends Model
 {
 
 
-    public static function dealAdd($data)
-    {
+	public static function dealAdd($data)
+	{
+
+		$standard = [
+			'coupon_no'=>makeProductNo($data['data']['thirdapp_id']),
+			'title'=>'',
+			'description'=>'',
+			'content'=>'',
+			'mainImg'=>[],
+			'bannerImg'=>[],
+			'price'=>0,
+			'score'=>0,
+			'value'=>0,
+			'discount'=>100,
+			'condition'=>0,
+			'stock'=>0,
+			'sale_count'=>0,
+			'type'=>'',
+			'valid_time'=>'',
+			'onShelf'=>'',
+			'limit'=>'',
+			'use_limit'=>'',
+			'user_no'=>'',
+			'status'=>1,
+			'create_time'=>time(),
+			'update_time'=>time(),
+			'delete_time'=>'',
+			'thirdapp_id'=>'',
+			'user_type'=>'',
+			'img_array'=>[],
+		];
+
+		if(isset($data['data']['user_no'])){
+
+			$res = User::get(['user_no' => $data['data']['user_no']]);
+
+			if($res){
+
+				$data['data']['user_type'] = $res['user_type'];
+
+			}else{
+
+				throw new ErrorMessage([
+
+					'msg' => '关联user信息有误',
+
+				]);
+
+			};
+
+		};
 
 
-        $standard = [
-            'coupon_no'=>makeProductNo($data['data']['thirdapp_id']),
-            'title'=>'',
-            'description'=>'',
-            'content'=>'',
-            'mainImg'=>[],
-            'bannerImg'=>[],
-            'price'=>0,
-            'score'=>0,
-            'value'=>0,
-            'discount'=>100,
-            'condition'=>0,
-            'stock'=>0,
-            'sale_count'=>0,
-            'type'=>'',
-            'valid_time'=>'',
-            'onShelf'=>'',
-            'limit'=>'',
-            'use_limit'=>'',
-            'user_no'=>'',
-            'status'=>1,
-            'create_time'=>time(),
-            'thirdapp_id'=>'',
-            'user_type'=>'',
-            'img_array'=>[],
-        ];
+		$data['data'] = chargeBlank($standard,$data['data']);
 
-        if(isset($data['data']['user_no'])){
+		return $data;
 
-            $res = User::get(['user_no' => $data['data']['user_no']]);
-
-            if($res){
-
-                $data['data']['user_type'] = $res['user_type'];
-
-            }else{
-
-                throw new ErrorMessage([
-
-                    'msg' => '关联user信息有误',
-
-                ]);
-
-            };
-
-        };
+	}
 
 
-        $data['data'] = chargeBlank($standard,$data['data']);
+	public static function dealGet($data)
+	{
 
-        return $data;
+		return $data;
 
-    }
-
-
-    public static function dealGet($data)
-    {   
-
-        return $data;
-
-    }
+	}
 
 
-    public static function dealUpdate($data)
-    {   
+	public static function dealUpdate($data)
+	{
 
-    	return $data;
+		return $data;
 
-    }
+	}
 
 
-    public static function dealRealDelete($data)
-    {   
+	public static function dealRealDelete($data)
+	{
 
-    	return $data;
+		return $data;
 
-    }
+	}
 }

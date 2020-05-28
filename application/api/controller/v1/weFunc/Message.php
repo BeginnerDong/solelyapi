@@ -61,7 +61,10 @@ class Message extends Controller{
 
 		};
 
-		$url = "https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=".$access_token;
+		// $url = "https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=".$access_token;
+		
+		//订阅消息接口
+		$url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=".$access_token;
 
 		$res = WxBase::curl_wxpost($url,$post_data);
 

@@ -83,7 +83,7 @@ class WxPay
 	public static function pay($userInfo,$pay_no,$price,$logData=[],$orderInfo)
 	{
 		
-		$thirdappinfo = ThirdApp::get(['id' => $userInfo['thirdapp_id']]);
+		$thirdInfo = ThirdApp::get(['id' => $userInfo['thirdapp_id']]);
 		$wxOrderData = new \WxPayUnifiedOrder();
 		$wxOrderData->SetOut_trade_no($pay_no);
 		$wxOrderData->SetTrade_type('JSAPI');
@@ -91,7 +91,7 @@ class WxPay
 		$wxOrderData->SetBody('solelyService');
 		$wxOrderData->SetOpenid($userInfo['openid']);
 		$wxOrderData->SetNotify_url(config('secure.pay_back_url'));
-		return self::getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData,$orderInfo);
+		return self::getPaySignature($wxOrderData,$thirdInfo,$pay_no,$userInfo,$logData,$orderInfo);
 		
 	}
 	
@@ -113,10 +113,10 @@ class WxPay
 
 
 	//向微信请求订单号并生成签名
-	private static function getPaySignature($wxOrderData,$thirdappinfo,$pay_no,$userInfo,$logData,$orderInfo)
+	private static function getPaySignature($wxOrderData,$thirdInfo,$pay_no,$userInfo,$logData,$orderInfo)
 	{
 		
-		$wxOrder = \WxPayApi::unifiedOrder($wxOrderData,$thirdappinfo);
+		$wxOrder = \WxPayApi::unifiedOrder($wxOrderData,$thirdInfo);
 		
 		if($wxOrder['return_code'] != 'SUCCESS' || $wxOrder['result_code'] !='SUCCESS'){
 			
@@ -132,10 +132,10 @@ class WxPay
 			
 		};
 		
-		if($thirdappinfo['wx_appid']){
-			$signature = self::sign($wxOrder,$thirdappinfo['wx_appid'],$thirdappinfo['wxkey']);
+		if($thirdInfo['wx_appid']){
+			$signature = self::sign($wxOrder,$thirdInfo['wx_appid'],$thirdInfo['wxkey']);
 		}else{
-			$signature = self::sign($wxOrder,$thirdappinfo['appid'],$thirdappinfo['wxkey']);
+			$signature = self::sign($wxOrder,$thirdInfo['appid'],$thirdInfo['wxkey']);
 		};
 		
 		if($pay_no){
@@ -185,10 +185,10 @@ class WxPay
 	public static function closeorder($orderinfo)
 	{
 		//获取项目信息
-		$thirdappinfo = ThirdappModel::getThirdUserInfo($orderinfo['thirdapp_id']);
+		$thirdInfo = ThirdappModel::getThirdUserInfo($orderinfo['thirdapp_id']);
 		$wxOrderClose = new \WxPayCloseOrder();
 		$wxOrderClose->SetOut_trade_no($orderinfo['order_no']);
-		$wxOrder = \WxPayApi::closeOrder($wxOrderClose,$thirdappinfo);
+		$wxOrder = \WxPayApi::closeOrder($wxOrderClose,$thirdInfo);
 		return $wxOrder;
 	}
 
@@ -206,7 +206,7 @@ class WxPay
 			]);
 		};
 		$FlowLogInfo = $FlowLogInfo['data'][0];
-		$thirdappinfo = ThirdApp::get(['id' => $FlowLogInfo['thirdapp_id']]);
+		$thirdInfo = ThirdApp::get(['id' => $FlowLogInfo['thirdapp_id']]);
 		if(!isset($FlowLogInfo['payInfo']['refund_no'])){
 			$refundNo = makePayNo();
 			$FlowLogInfo['payInfo']['refund_no'] = $refundNo; 
@@ -226,7 +226,7 @@ class WxPay
 		$wxOrderRefund->SetTotal_fee(-$FlowLogInfo['count']*100);
 		$wxOrderRefund->SetRefund_fee(-$FlowLogInfo['count']*100);
 		$wxOrderRefund->SetOp_user_id($FlowLogInfo['payInfo']['mch_id']);
-		$wxOrder = \WxPayApi::refund($wxOrderRefund,$thirdappinfo);
+		$wxOrder = \WxPayApi::refund($wxOrderRefund,$thirdInfo);
 
 		return $wxOrder;
 
