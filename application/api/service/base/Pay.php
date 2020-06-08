@@ -245,102 +245,38 @@ class Pay
 				'msg'=>'余额不足'
 			]);
 		};
-
-		/*是否有子订单*/
-		$modelData = [];
-		$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
-		$modelData['searchItem']['pay_status'] = 0;
-		$childs = BeforeModel::CommonGet('Order',$modelData);
 		$pay = $balance['price'];
-
-		if(count($childs['data'])>0){
-
-			foreach($childs['data'] as $order_key => $order_value){
-				$modelData = [];
-				$modelData['searchItem']['order_no'] = $order_value['order_no'];
-				$flows = BeforeModel::CommonGet('FlowLog',$modelData);
-				$flowPrice = 0;
-				if(count($flows['data'])>0){
-					foreach ($flows['data'] as $flow_key => $flow_value) {
-						$flowPrice += abs($flow_value['count']);
-					};
-				};
-				if($pay>0){
-					if($flowPrice>0){
-						if($pay>=($order_value['price']-$flowPrice)){
-							$count = $order_value['price']-$flowPrice;
-							$pay -= $order_value['price']-$flowPrice;
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}else{
-						if($pay>=$order_value['price']){
-							$count = $order_value['price'];
-							$pay -= $order_value['price'];
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}
-				};
-				$modelData = [];
-				$modelData['data'] = array(
-					'type' => 2,
-					'account' => 1,
-					'count'=>-$count,
-					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-					'pay_no'=>$data['pay_no'],
-					'trade_info'=>'余额支付',
-					'relation_table'=>'order',
-					'thirdapp_id'=>$userInfo['thirdapp_id'],
-					'user_no'=>$userInfo['user_no'],
-				);
-		
-				$modelData['FuncName'] = 'add';
-				$res = BeforeModel::CommonSave('FlowLog',$modelData);
-				
-				if(!$res>0){
-					throw new ErrorMessage([
-						'msg'=>'余额支付失败'
-					]);
-				};
-				
-				$modelData = [];
-				$modelData['searchItem']['id'] = $res;
-				FlowLogService::checkIsPayAll($modelData);
-			};
-
-		}else{
-			
-			$modelData = [];
-			$modelData['data'] = array(
-				'type' => 2,
-				'account' => 1,
-				'count'=>-$pay,
-				'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-				'pay_no'=>$data['pay_no'],
-				'trade_info'=>'余额支付',
-				'relation_table'=>'order',
-				'thirdapp_id'=>$userInfo['thirdapp_id'],
-				'user_no'=>$userInfo['user_no'],
-			);
-			
-			$modelData['FuncName'] = 'add';
-			$res = BeforeModel::CommonSave('FlowLog',$modelData);
-			
-			if(!$res>0){
-				throw new ErrorMessage([
-					'msg'=>'余额支付失败'
-				]);
-			};
-		
-			$modelData = [];
-			$modelData['searchItem']['id'] = $res;
-			FlowLogService::checkIsPayAll($modelData);
-			
+		if($pay<=0){
+			throw new ErrorMessage([
+				'msg'=>'支付余额不得小于等于0'
+			]);
 		};
+		$modelData = [];
+		$modelData['data'] = array(
+			'type' => 2,
+			'account' => 1,
+			'count'=>-$pay,
+			'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+			'pay_no'=>$data['pay_no'],
+			'trade_info'=>'余额支付',
+			'relation_table'=>'order',
+			'thirdapp_id'=>$userInfo['thirdapp_id'],
+			'user_no'=>$userInfo['user_no'],
+		);
+		
+		$modelData['FuncName'] = 'add';
+		$res = BeforeModel::CommonSave('FlowLog',$modelData);
+		
+		if(!$res>0){
+			throw new ErrorMessage([
+				'msg'=>'余额支付失败'
+			]);
+		};
+	
+		$modelData = [];
+		$modelData['searchItem']['id'] = $res;
+		FlowLogService::checkIsPayAll($modelData);
 		
 	}
 
@@ -352,103 +288,40 @@ class Pay
 				'msg'=>'积分不足'
 			]);
 		};
-		
-		/*是否有子订单*/
-		$modelData = [];
-		$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
-		$modelData['searchItem']['pay_status'] = 0;
-		$childs = BeforeModel::CommonGet('Order',$modelData);
 		$pay = $score['price'];
-		
-		if(count($childs['data'])>0){
-
-			foreach($childs['data'] as $order_key => $order_value){
-				$modelData = [];
-				$modelData['searchItem']['order_no'] = $order_value['order_no'];
-				$flows = BeforeModel::CommonGet('FlowLog',$modelData);
-				$flowPrice = 0;
-				if(count($flows['data'])>0){
-					foreach ($flows['data'] as $flow_key => $flow_value) {
-						$flowPrice += abs($flow_value['count']);
-					};
-				};
-				if($pay>0){
-					if($flowPrice>0){
-						if($pay>=($order_value['price']-$flowPrice)){
-							$count = $order_value['price']-$flowPrice;
-							$pay -= $order_value['price']-$flowPrice;
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}else{
-						if($pay>=$order_value['price']){
-							$count = $order_value['price'];
-							$pay -= $order_value['price'];
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}
-				};
-				$modelData = [];
-				$modelData['data'] = array(
-					'type' => 3,
-					'account' => 1,
-					'count'=>-$count,
-					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-					'pay_no'=>$data['pay_no'],
-					'trade_info'=>'积分支付',
-					'relation_table'=>'order',
-					'thirdapp_id'=>$userInfo['thirdapp_id'],
-					'user_no'=>$userInfo['user_no'],
-				);
-		
-				$modelData['FuncName'] = 'add';
-				$res = BeforeModel::CommonSave('FlowLog',$modelData);
-				
-				if(!$res>0){
-					throw new ErrorMessage([
-						'msg'=>'积分支付失败'
-					]);
-				};
-				
-				$modelData = [];
-				$modelData['searchItem']['id'] = $res;
-				FlowLogService::checkIsPayAll($modelData);
-			};
-		
-		}else{
-			
-			$modelData = [];
-			$modelData['data'] = array(
-				'type' => 3,
-				'account' => 1,
-				'count'=>-$pay,
-				'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-				'pay_no'=>$data['pay_no'],
-				'trade_info'=>'积分支付',
-				'relation_table'=>'order',
-				'thirdapp_id'=>$userInfo['thirdapp_id'],
-				'user_no'=>$userInfo['user_no'],
-			);
-			
-			$modelData['FuncName'] = 'add';
-			$res = BeforeModel::CommonSave('FlowLog',$modelData);
-			
-			if(!$res>0){
-				throw new ErrorMessage([
-					'msg'=>'积分支付失败'
-				]);
-			};
-		
-			$modelData = [];
-			$modelData['searchItem']['id'] = $res;
-			FlowLogService::checkIsPayAll($modelData);
-			
+		if($pay<=0){
+			throw new ErrorMessage([
+				'msg'=>'支付积分不得小于等于0'
+			]);
 		};
+			
+		$modelData = [];
+		$modelData['data'] = array(
+			'type' => 3,
+			'account' => 1,
+			'count'=>-$pay,
+			'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+			'pay_no'=>$data['pay_no'],
+			'trade_info'=>'积分支付',
+			'relation_table'=>'order',
+			'thirdapp_id'=>$userInfo['thirdapp_id'],
+			'user_no'=>$userInfo['user_no'],
+		);
 		
+		$modelData['FuncName'] = 'add';
+		$res = BeforeModel::CommonSave('FlowLog',$modelData);
+		
+		if(!$res>0){
+			throw new ErrorMessage([
+				'msg'=>'积分支付失败'
+			]);
+		};
+	
+		$modelData = [];
+		$modelData['searchItem']['id'] = $res;
+		FlowLogService::checkIsPayAll($modelData);
+
 	}
 
 
@@ -545,101 +418,33 @@ class Pay
 
 	public static function otherPay($userInfo,$orderInfo,$other,$data)
 	{
-		/*是否有子订单*/
-		$modelData = [];
-		$modelData['searchItem']['parent_no'] = $orderInfo['order_no'];
-		$modelData['searchItem']['pay_status'] = 0;
-		$childs = BeforeModel::CommonGet('Order',$modelData);
 		$pay = $other['price'];
-
-		if(count($childs['data'])>0){
-
-			foreach($childs['data'] as $order_key => $order_value){
-				$modelData = [];
-				$modelData['searchItem']['order_no'] = $order_value['order_no'];
-				$flows = BeforeModel::CommonGet('FlowLog',$modelData);
-				$flowPrice = 0;
-				if(count($flows['data'])>0){
-					foreach ($flows['data'] as $flow_key => $flow_value) {
-						$flowPrice += abs($flow_value['count']);
-					};
-				};
-				if($pay>0){
-					if($flowPrice>0){
-						if($pay>=($order_value['price']-$flowPrice)){
-							$count = $order_value['price']-$flowPrice;
-							$pay -= $order_value['price']-$flowPrice;
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}else{
-						if($pay>=$order_value['price']){
-							$count = $order_value['price'];
-							$pay -= $order_value['price'];
-						}else{
-							$count = $pay;
-							$pay = 0;
-						}
-					}
-				};
-				$modelData = [];
-				$modelData['data'] = array(
-					'type' => 7,
-					'account' => 1,
-					'count'=>-$count,
-					'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-					'pay_no'=>$data['pay_no'],
-					'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
-					'relation_table'=>'order',
-					'thirdapp_id'=>$userInfo['thirdapp_id'],
-					'user_no'=>$userInfo['user_no'],
-				);
+		$modelData = [];
+		$modelData['data'] = array(
+			'type' => 7,
+			'account' => 1,
+			'count'=>-$pay,
+			'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
+			'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
+			'pay_no'=>$data['pay_no'],
+			'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
+			'relation_table'=>'order',
+			'thirdapp_id'=>$userInfo['thirdapp_id'],
+			'user_no'=>$userInfo['user_no'],
+		);
 		
-				$modelData['FuncName'] = 'add';
-				$res = BeforeModel::CommonSave('FlowLog',$modelData);
-				
-				if(!$res>0){
-					throw new ErrorMessage([
-						'msg'=>'其它支付失败'
-					]);
-				};
-				
-				$modelData = [];
-				$modelData['searchItem']['id'] = $res;
-				FlowLogService::checkIsPayAll($modelData);
-			};
+		$modelData['FuncName'] = 'add';
+		$res = BeforeModel::CommonSave('FlowLog',$modelData);
 		
-		}else{
-			
-			$modelData = [];
-			$modelData['data'] = array(
-				'type' => 7,
-				'account' => 1,
-				'count'=>-$pay,
-				'order_no'=>isset($orderInfo['order_no'])?$orderInfo['order_no']:'',
-				'parent_no'=>isset($orderInfo['parent_no'])?$orderInfo['parent_no']:'',
-				'pay_no'=>$data['pay_no'],
-				'trade_info'=>isset($other['msg'])?$other['msg']:'其它',
-				'relation_table'=>'order',
-				'thirdapp_id'=>$userInfo['thirdapp_id'],
-				'user_no'=>$userInfo['user_no'],
-			);
-			
-			$modelData['FuncName'] = 'add';
-			$res = BeforeModel::CommonSave('FlowLog',$modelData);
-			
-			if(!$res>0){
-				throw new ErrorMessage([
-					'msg'=>'其它支付失败'
-				]);
-			};
-		
-			$modelData = [];
-			$modelData['searchItem']['id'] = $res;
-			FlowLogService::checkIsPayAll($modelData);
-			
+		if(!$res>0){
+			throw new ErrorMessage([
+				'msg'=>'其它支付失败'
+			]);
 		};
+	
+		$modelData = [];
+		$modelData['searchItem']['id'] = $res;
+		FlowLogService::checkIsPayAll($modelData);
 
 	}
 

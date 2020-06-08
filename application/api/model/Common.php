@@ -98,17 +98,30 @@ class Common extends Model{
 			}
 			
 		}else{
-
-			$sqlStr = $sqlStr."select();";
-			$res = eval($sqlStr);
-			$res = $model->dealGet(resDeal($res));
-			if($dbTable=='article'){
-				$updateData = [];
-				foreach ($res as $key => $value) {
-					array_push($updateData,['id'=>$value['id'],'view_count'=>$value['view_count']+1]);
+			
+			//获取SKU时，屏蔽掉删除的选项
+			if($dbTable=='Label'&&isset($data['searchItemOr'])){
+				$map = $data['searchItem'];
+				$or_map = $data['searchItemOr'];
+				$res = Db::name('label')->where(function ($query) use ($map) {
+									$query->where($map);
+								})->whereOr(function ($query) use ($or_map) {
+									$query->where($or_map);
+								})->select();
+				$res = resDeal($res);
+			}else{
+				$sqlStr = $sqlStr."select();";
+				$res = eval($sqlStr);
+				$res = $model->dealGet(resDeal($res));
+				if($dbTable=='article'){
+					$updateData = [];
+					foreach ($res as $key => $value) {
+						array_push($updateData,['id'=>$value['id'],'view_count'=>$value['view_count']+1]);
+					};
+					$model->saveAll($updateData);
 				};
-				$model->saveAll($updateData);
 			};
+
 		};
 		
 		if (isset($data['compute'])) {
