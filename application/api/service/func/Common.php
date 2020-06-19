@@ -81,6 +81,8 @@ class Common{
 		$modelData['getOne'] = "true";
 
 		$modelData['searchItem']['login_name'] = $data['login_name'];
+		
+		$modelData['searchItem']['user_type'] = 2;
 
 		$loginRes = BeforeModel::CommonGet("User",$modelData);
 

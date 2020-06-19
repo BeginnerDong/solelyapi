@@ -68,13 +68,15 @@ class SmsAli {
 				"Version" => "2017-05-25",
 			))
 		);
-		if($content->Message=="OK"){
-			throw new SuccessMessage([
-				'msg'=>'发送成功',
-			]);
-		}else{
-			return $content;
-		}
+		if(!$inner){
+			if($content->Message=="OK"){
+				throw new SuccessMessage([
+					'msg'=>'发送成功',
+				]);
+			}else{
+				return $content;
+			};
+		};
 
 	}
 

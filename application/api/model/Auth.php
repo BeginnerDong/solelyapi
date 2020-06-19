@@ -14,80 +14,74 @@ use app\lib\exception\ErrorMessage;
 
 
 class Auth extends BaseModel
-
 {
 
+	public static function dealAdd($data)
+	{
 
-    public static function dealAdd($data){   
+		$standard = [
+			'type'=>'',
+			'path'=>'',
+			'user_no'=>'',
+			'user_type'=>'',
+			'thirdapp_id'=>'',
+			'create_time'=>time(),
+			'update_time'=>'',
+			'delete_time'=>'',
+			'status'=>1,
+		];
 
-        
+		if(isset($data['data']['user_no'])){
 
-        $standard = [
-            'type'=>'',
-            'path'=>'',
-            'user_no'=>'',
-            'user_type'=>'',
-            'thirdapp_id'=>'',
-            'create_time'=>time(),
-            'update_time'=>'',
-            'delete_time'=>'',
-            'status'=>1,
-        ];
+			$res = User::get(['user_no' => $data['data']['user_no']]);
 
-        if(isset($data['data']['user_no'])){
+			if($res){
 
-            $res = User::get(['user_no' => $data['data']['user_no']]);
+				$data['data']['user_type'] = $res['user_type'];
 
-            if($res){
+			}else{
 
-                $data['data']['user_type'] = $res['user_type'];
+				throw new ErrorMessage([
 
-            }else{
+					'msg' => '关联user信息有误',
 
-                throw new ErrorMessage([
+				]);
 
-                    'msg' => '关联user信息有误',
+			};
 
-                ]);
+		};
 
-            };
+		$data['data'] = chargeBlank($standard,$data['data']);
 
-        };
+		return $data;
 
-        $data['data'] = chargeBlank($standard,$data['data']);
-
-        return $data;
-
-    }
+	}
 
 
 
-    public static function dealGet($data)
+	public static function dealGet($data)
+	{
 
-    {   
+		return $data;
 
-        return $data;
-
-    }
-
-
-
-    public static function dealUpdate($data)
-
-    {   
-
-    	return $data;
-
-    }
+	}
 
 
 
-    public static function dealRealDelete($data)
+	public static function dealUpdate($data)
+	{
 
-    {   
+		return $data;
 
-    	return $data;
+	}
 
-    }
+
+
+	public static function dealRealDelete($data)
+	{
+
+		return $data;
+
+	}
 
 }

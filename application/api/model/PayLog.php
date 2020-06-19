@@ -21,6 +21,7 @@ class PayLog extends BaseModel
 			'type'=>'',
 			'order_no'=>'',
 			'pay_no'=>'',
+			'trade_no'=>'',
 			'transaction_id'=>'',
 			'behavior'=>'',
 			'pay_info'=>'',

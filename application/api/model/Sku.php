@@ -28,6 +28,7 @@ class Sku extends Model{
 			'o_price'=>'',
 			'mainImg'=>[],
 			'description'=>'',
+			'listorder'=>'',
 			'create_time'=>time(),
 			'update_time'=>'',
 			'delete_time'=>'',

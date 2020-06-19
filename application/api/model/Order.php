@@ -44,7 +44,6 @@ class Order extends BaseModel
 			'delete_time'=>'',
 			'passage1'=>'',
 			'passage2'=>'',
-			'passage_array'=>[],
 			'status'=>1,
 			'thirdapp_id'=>'',
 			'user_no'=>'',

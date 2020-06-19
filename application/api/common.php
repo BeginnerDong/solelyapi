@@ -124,7 +124,7 @@ use app\lib\exception\ErrorMessage;
 		$p=xml_parser_create();
 		xml_parse_into_struct($p, $xml, $vals, $index);
 		xml_parser_free($p);
-		$data = "";
+		$data = [];
 		foreach($index as $key=>$value){
 			if($key=='xml'||$key =='XML') continue;
 			$tag=$vals[$value[0]]['tag'];
