@@ -65,7 +65,6 @@ class Sku extends Model{
 			$data['data']['sku_item'][$key] = (int)$value;
 		};
 		$mergeArray = array_keys(array_flip($res['sku_item']) + array_flip($data['data']['sku_item']));
-		//return $data;
 		Product::where('id', $res['id'])->update(['sku_item' => json_encode($mergeArray)]);
 		
 		$data['data']['category_id'] = $res['category_id'];
@@ -134,7 +133,32 @@ class Sku extends Model{
 			};
 			$mergeArray = array_keys(array_flip($product['sku_item']) + array_flip($data['data']['sku_item']));
 			$res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($mergeArray)]);
-		};        
+		};
+		
+		
+		//删除SKU，关联删除product上的sku_item
+		if(isset($data['data']['status'])&&$data['data']['status']==-1){
+			
+			$sku = Sku::get($data['searchItem']);
+			$label = [];
+			$search = [];
+			$search['product_no'] = $sku['product_no'];
+			$search['status'] = 1;
+			$sku_array = resDeal((new Sku())->where($search)->select());
+			if($sku_array){
+				foreach($sku_array as $key_s => $value_s){
+					if($value_s['id']!=$sku['id']){
+						foreach($value_s['sku_item'] as $value_c){
+							if(!in_array($value_c,$label)){
+								array_push($label,$value_c);
+							};
+						};
+					};
+				};
+			};
+			$res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($label)]);
+
+		};
 	 
 	}
 

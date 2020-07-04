@@ -332,7 +332,7 @@ class Order{
 			$modelData['searchItem']['id'] = $data['sku_id'];
 			$info = BeforeModel::CommonGet('Sku',$modelData);
 		};
-		if(!count($product['data'])>0){
+		if(count($info['data'])==0){
 			throw new ErrorMessage([
 				'msg' => '产品不存在或已下架',
 				'info'=>$info
