@@ -44,9 +44,6 @@ class User extends Model{
 		];
 
 		$data['data'] = chargeBlank($standard,$data['data']);
-		if(isset($data['data']['nickname'])){
-			$data['data']['nickname'] = base64_encode($data['data']['nickname']);
-		};
 
 		return $data;
 		
@@ -88,10 +85,6 @@ class User extends Model{
 			}else{
 				$data[$key]['distriParent'] = '';
 			};
-			
-			if(!empty($data[$key]['nickname'])){
-				$data[$key]['nickname'] = base64_decode($value['nickname']);
-			};
 
 			$authList = [];
 
@@ -122,10 +115,6 @@ class User extends Model{
 			throw new ErrorMessage([
 				'msg' => '关键信息不得为空',
 			]);
-		};
-		
-		if(isset($data['data']['nickname'])){
-			$data['data']['nickname'] = base64_encode($data['data']['nickname']);
 		};
 		
 		if(isset($data['data'])&&isset($data['data']['status'])){
