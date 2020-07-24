@@ -32,6 +32,7 @@ class Product extends BaseModel
 			'price'=>0,
 			'o_price'=>0,
 			'stock'=>'',
+			'group_price'=>0,
 			'discount'=>'',
 			'type'=>1,
 			'category_id'=>'',

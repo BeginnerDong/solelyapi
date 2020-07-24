@@ -42,6 +42,7 @@ class UserInfo extends Model
 			'behavior'=>'',
 			'img_array'=>[],
 			'birthday'=>'',
+			'shop'=>'',
 		];
 
 		if(isset($data['data']['user_no'])){

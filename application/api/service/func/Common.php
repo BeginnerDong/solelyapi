@@ -179,7 +179,7 @@ class Common{
 
 				$tokenAndToken = ['token'=>$res,'info'=>$loginRes,'solely_code'=>100000,'msg'=>'登录成功'];
 
-				Cache::set($res,$loginRes,3600);
+				Cache::set($res,$loginRes,86400);
 
 				return $tokenAndToken;
 

@@ -339,6 +339,9 @@ class Order{
 			]); 
 		};
 		$info = $info['data'][0];
+		if(!$product){
+			$info['title'] = $info['title'].$info['product']['title'];
+		};
 
 		/*检测库存*/
 		if($type<4){

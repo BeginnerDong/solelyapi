@@ -491,7 +491,7 @@ use app\lib\exception\ErrorMessage;
 	{
 		$filterArr = ['bannerImg','mainImg','passage_array','express','pay','child_array','snap_product','snap_coupon','payInfo','snap_address','wx_prepay_info','sku_array','sku_item','spu_array','spu_item','custom_rule','pay_info','extra_info','img_array','file','payAfter','saveFunction'];
 
-		if(isset($data['data'])&&!empty($data['data']&&is_array($data['data']))){
+		if(isset($data['data'])&&!empty($data['data'])&&is_array($data['data'])){
 			$dealData = $data['data'];
 		}else if(!empty($data)&&is_array($data)){
 			$dealData = $data;

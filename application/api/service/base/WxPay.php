@@ -88,7 +88,7 @@ class WxPay
 		$wxOrderData->SetOut_trade_no($pay_no);
 		$wxOrderData->SetTrade_type('JSAPI');
 		$wxOrderData->SetTotal_fee($price*100);
-		$wxOrderData->SetBody('solelyService');
+		$wxOrderData->SetBody(config('secure.customer_name'));
 		$wxOrderData->SetOpenid($userInfo['openid']);
 		$wxOrderData->SetNotify_url(config('secure.pay_back_url'));
 		return self::getPaySignature($wxOrderData,$thirdInfo,$pay_no,$userInfo,$logData,$orderInfo);
@@ -105,7 +105,7 @@ class WxPay
 		$wxOrderData->SetOut_trade_no($pay_no);
 		$wxOrderData->SetTrade_type('APP');
 		$wxOrderData->SetTotal_fee($price*100);
-		$wxOrderData->SetBody('solelyService');
+		$wxOrderData->SetBody(config('secure.customer_name'));
 		$wxOrderData->SetNotify_url(config('secure.pay_back_url'));
 		return self::getPaySignature($wxOrderData,$thirdInfo,$pay_no,$userInfo,$logData,$orderInfo);
 	

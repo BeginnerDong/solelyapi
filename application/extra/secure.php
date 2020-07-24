@@ -16,9 +16,10 @@
 
 return [
 
-    'token_salt' => 'JoHIfof446Jj',
-    'base_url' => 'http://106.12.155.217/api',
-    'pay_back_url' => 'http://106.12.155.217/api/public/index.php/api/v1/pay/notify',
+	'token_salt' => 'JoHIfof446Jj',
+	'customer_name' => 'solely',
+	'base_url' => 'http://106.12.155.217/api',
+	'pay_back_url' => 'http://106.12.155.217/api/public/index.php/api/v1/pay/notify',
 	'alipay_back_url' => 'http://106.12.155.217/api/public/index.php/api/v1/pay/alinotify',
 
 ];
