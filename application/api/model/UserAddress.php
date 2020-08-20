@@ -20,6 +20,7 @@ class UserAddress extends BaseModel
 			'province'=>'',
 			'city'=>'',
 			'country'=>'',
+			'address'=>'',
 			'detail'=>'',
 			'longitude'=>'',
 			'latitude'=>'',

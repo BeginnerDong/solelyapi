@@ -34,16 +34,16 @@ class WxAuth
 		$this->thirdapp_id = $param['thirdapp_id'];
 		if($param['code']){
 			$this->code = $param['code'];
-			$ThirdAppInfo = $this->getThirdConfig();
+			$ThirdInfo = $this->getThirdConfig();
 			$config = [];
-			$config['token'] = $ThirdAppInfo['wx_token'];
-			$config['appid'] = $ThirdAppInfo['wx_appid'];
-			$config['appsecret'] = $ThirdAppInfo['wx_appsecret'];
-			$config['encodingaeskey'] = $ThirdAppInfo['encodingaeskey'];
-			$config['access_token'] = $ThirdAppInfo['access_token'];
-			$config['access_token_expire'] = $ThirdAppInfo['access_token_expire'];
+			$config['token'] = $ThirdInfo['wx_token'];
+			$config['appid'] = $ThirdInfo['wx_appid'];
+			$config['appsecret'] = $ThirdInfo['wx_appsecret'];
+			$config['encodingaeskey'] = $ThirdInfo['encodingaeskey'];
+			$config['access_token'] = $ThirdInfo['access_token'];
+			$config['access_token_expire'] = $ThirdInfo['access_token_expire'];
 			$this->config = $config;
-			$param['distribution_level'] = $ThirdAppInfo['distribution_level'];
+			$param['distribution_level'] = $ThirdInfo['distribution_level'];
 			
 			if($this->config){
 
@@ -77,25 +77,30 @@ class WxAuth
 		$modelData['searchItem']['thirdapp_id'] = $data['thirdapp_id'];
 		$modelData['searchItem']['status'] = 1;
 		$modelData['getOne'] = "true";
-		$user=BeforeModel::CommonGet('User',$modelData);
+		$user = BeforeModel::CommonGet('User',$modelData);
 
 		if(isset($wxResult['unionid'])){ 
+	
 			$modelData = [];
 			$modelData['searchItem']['unionid'] = $wxResult['unionid'];
-			$unionUser=BeforeModel::CommonGet('User',$modelData);
+			$unionUser = BeforeModel::CommonGet('User',$modelData);
 		};
-		$userInfo = $this->getUserInfo();
-		$data['headImgUrl'] = isset($userInfo['headimgurl'])?$userInfo['headimgurl']:'';
-		$data['nickname'] = isset($userInfo['nickname'])?$userInfo['nickname']:'';
 
+		$userInfo = $this->getUserInfo();
+		//注意，微信接口返回的headimgurl是小写
+		
 		if(count($user['data'])>0){
 			
 			$uid = $user['data'][0]['id'];
 			$modelData = [];
-			$modelData['data']['nickname'] = isset($data['nickname'])?$data['nickname']:'';
-			$modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
-			$modelData['searchItem'] = ['id'=>$uid];
 			$modelData['FuncName'] = 'update';
+			$modelData['searchItem'] = ['id'=>$uid];
+			if(isset($userInfo['nickname'])&&!empty($userInfo['nickname'])){
+				$modelData['data']['nickname'] = $userInfo['nickname'];
+			};
+			if(isset($userInfo['headimgurl'])&&!empty($userInfo['headimgurl'])){
+				$modelData['data']['headImgUrl'] = $userInfo['headimgurl'];
+			};
 			$res = BeforeModel::CommonSave('User',$modelData);
 
 		}else{
@@ -104,8 +109,8 @@ class WxAuth
 			if(isset($data['data'])){
 				$modelData['data'] = $data['data'];
 			};
-			$modelData['data']['nickname'] = isset($data['nickname'])?$data['nickname']:'';
-			$modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
+			$modelData['data']['nickname'] = (isset($userInfo['nickname'])&&!empty($userInfo['nickname']))?$userInfo['nickname']:'';
+			$modelData['data']['headImgUrl'] = (isset($userInfo['headimgurl'])&&!empty($userInfo['headimgurl']))?$userInfo['headimgurl']:'';
 			$modelData['data']['openid'] = $openid;
 			$modelData['data']['user_type'] = 0;
 			$modelData['data']['thirdapp_id'] = $data['thirdapp_id'];
@@ -253,18 +258,49 @@ class WxAuth
 
 
 
-	public function saveUser($userInfo)
-	{
-		//return $userInfo;
-		$headimgurl['name'] = 'headimg';
-		$headimgurl['url'] = $userInfo['headimgurl'];
-		$headimgurl = json_encode($headimgurl);
-		$adduserRes = Db::execute('insert into user (wx_openid,headimgurl,nickname ) values (?, ?, ?)',[$userInfo['openid'],$headimgurl,$userInfo['nickname']]);
-		if($adduserRes){
-			return $adduserRes;
+	public function getUserInfo(){
+
+		$config = $this->getThirdConfig();
+		
+		if($config['access_token']&&$config['access_token_expire']>time()){
+			$ACCESS_TOKEN = $config['access_token'];
+		}else{
+			$ACCESS_TOKEN = self::getAccessToken($config);
+		};
+
+		$str = "https://api.weixin.qq.com/cgi-bin/user/info?access_token=".$ACCESS_TOKEN."&openid=".$this->openid;
+		$userInfoRes = curl_get($str);
+		if($userInfoRes){
+			$userInfo = json_decode($userInfoRes,true);
+			return $userInfo;
 		}else{
 			return false;
+		};
+
+	}
+	
+	
+
+	private static function getAccessToken($config)
+	{
+
+		$accessRes = curl_get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".$config["wx_appid"]."&secret=".$config["wx_appsecret"]);
+		if($accessRes){
+			$accessRes = json_decode($accessRes,true);
+			$modelData = [];
+			$modelData['FuncName'] = 'update';
+			$modelData['searchItem']['wx_appid'] = $config['wx_appid'];
+			$modelData['searchItem']['wx_appsecret'] = $config['wx_appsecret'];
+			$modelData['data']['access_token'] = $accessRes['access_token'];
+			$modelData['data']['access_token_expire'] = time()+7000;
+			$updateThirdApp = BeforeModel::CommonSave('ThirdApp',$modelData);
+			return $accessRes['access_token'];
+		}else{
+			throw new ErrorMessage([
+				'msg'=>'获取AccessToken失败',
+			]); 
 		}
+
 	}
 
 

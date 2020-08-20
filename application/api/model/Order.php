@@ -11,7 +11,8 @@ use app\api\model\OrderItem;
 use app\api\model\Product;
 use app\api\model\Sku;
 
-
+use app\lib\exception\SuccessMessage;
+use app\lib\exception\ErrorMessage;
 
 class Order extends BaseModel
 {
@@ -72,23 +73,14 @@ class Order extends BaseModel
 		];
 
 		if(isset($data['data']['user_no'])){
-
 			$res = User::get(['user_no' => $data['data']['user_no']]);
-
 			if($res){
-
 				$data['data']['user_type'] = $res['user_type'];
-
 			}else{
-
 				throw new ErrorMessage([
-
 					'msg' => '关联user信息有误',
-
 				]);
-
 			};
-
 		};
 
 		$data['data'] = chargeBlank($standard,$data['data']);

@@ -22,7 +22,7 @@
 ### 通用字段说明
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | id | int(11)| 主键：该数据ID |
 | listorder | int(11) | 自定义排序 |
 | img_array | varchar(100) | 图片组 |
@@ -39,15 +39,15 @@
 ### user表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | login_name | varchar(100) | 登录名 |
 | password | varchar(255) | 密码 |
 | nickname | varchar(255) | 微信昵称 |
 | openid | varchar(50) | 微信openid |
 | headImgUrl | varchar(9999) | 微信头像 |
 | role | int(11) | 权限角色 |
-| primary_scope | int(11) | 权限级别：90.平台管理员;60.项目管理员;30管理员;10用户 |
-| user_type | tinyint(2) | 0,小程序用户;2,cms用户; |
+| primary_scope | int(11) | 权限级别：60.管理员;30.门店/员工;10用户 |
+| user_type | tinyint(2) | 0,小程序用户;1,门店/员工;2,管理员; |
 | user_no | varchar(255) | 用户编号 |
 
 
@@ -55,7 +55,7 @@
 ### user_info表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | name | varchar(255) | 名称 |
 | gender | tinyint(2) | 性别:1.男;2.女 |
 | address | varchar(255) | 地址 |
@@ -68,34 +68,34 @@
 ### label表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------  | 
+| ------ | :------: | ------ |
 | title | varchar(40) | 菜单名称 |
-| description| varchar(255) | 描述 |
-| parentid| int(11) | 父级菜单ID |
-| type | tinyint(2) |  1,menu;2,menu_item;3.category;4.coupon;5.sku;6.sku_item |
+| description | varchar(255) | 描述 |
+| parentid | int(11) | 父级菜单ID |
+| type | tinyint(2) | 1,menu;2,menu_item;3.category;4.coupon;5.sku;6.sku_item |
 
 
 
 ### article表
 
 | 字段 | 类型 | 说明 |
-| ------ |  :------:  | ------  | 
+| ------ | :------: | ------ |
 | title | varchar(100) | 文章标题 |
 | menu_id | int(11) | 关联label表 |
 | description | varchar(255) | 描述 |
-| content | text | 文章内容 |
-| mainImg | text | 文章主图 |
+| content | text | 内容 |
+| mainImg | text | 主图 |
 
 
 
 ### message表-留言(type=1)
 
 | 字段 | 类型 | 说明 |
-| ------ |  :------:  | ------  | 
+| ------ | :------: | ------ |
 | title | varchar(255) | 标题 |
 | description | varchar(255) | 描述 |
 | content | text | 内容 |
-| mainImg | text | 主图，一般在列表渲染 |
+| mainImg | text | 主图 |
 
 
 
@@ -113,7 +113,7 @@
 ### pay_log表
 
 | 字段 | 类型 | 说明 |
-| ------ |  :------:  | ------  | 
+| ------ | :------: | ------ |
 | title | varchar(255) | 标题 |
 | result | varchar(255) | 结果描述 |
 | content | text | 详情 |
@@ -132,7 +132,7 @@
 ### product表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | product_no | varchar(255) | NO |
 | title | varchar(255) | 商品名称 |
 | description | varchar(255) | 描述 |
@@ -157,7 +157,7 @@
 ### sku表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | sku_no | varchar(255) | NO |
 | product_no | varchar(255) | 关联product表 |
 | title | varchar(255) | 商品名称 |
@@ -174,7 +174,7 @@
 ### product_date表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | type | tinyint(2) | 1.标准库存2.日期库存 |
 | product_no | varchar(255) | 商品NO |
 | sku_no | varchar(255) | SKU NO |
@@ -189,11 +189,11 @@
 ### order表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | order_no | varchar(255) | 订单NO |
 | pay | varchar(255) | pay方式详情 |
 | price | decimal(10,2) | 订单金额 |
-| pay_status | tinyint(2) | 0.未支付1.已支付 |
+| pay_status | tinyint(2) | -1.退款0.未支付1.已支付 |
 | type | tinyint(2) | 1.普通商品,2.会员卡,3.团购商品,6.虚拟订单 |
 | order_step | tinyint(2) | 0.正常下单,1.申请撤单,2.完成撤单,3.完结 |
 | group_status | tinyint(2) | 0.未成团,1.成团 |
@@ -213,7 +213,7 @@
 ### order_item表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | order_no | varchar(255) | 订单NO |
 | product_id | int(11) | 商品id |
 | snap_product | text | 商品信息快照 |
@@ -223,7 +223,7 @@
 ### flow_log表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | type | int(11) | 1.微信支付2.余额支付3.积分支付 |
 | count | int(11) | 金额 |
 | trade_info | varchar(255) | 说明 |
@@ -239,7 +239,7 @@
 ### coupon表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | coupon_no | varchar(255) | 优惠券编号 |
 | title | varchar(255) | 标题 |
 | description | varchar(255) | 描述 |
@@ -261,17 +261,26 @@
 ### user_coupon表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ | 
+| ------ | :------: | ------ |
 | type | tinyint(2) | 1.抵扣券2.折扣券 |
 | use_step | tinyint(2) | 1.未使用2.已使用-1.已过期 |
 | invalid_time | bigint(13) | 过期时间戳，前端记录13位 |
 
 
 
+### distribution表
+
+| 字段 | 类型 | 说明 |
+| ------ | :------: | ------ |
+| parent_no | varchar(255) | 父级NO |
+| child_no | varchar(255) | 子级NO |
+
+
+
 ### wx_template表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | name | varchar(50) | 模板名称 |
 | template_no | varchar(100) | 模板号 |
 
@@ -280,7 +289,7 @@
 ### role表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | name | varchar(50) | 角色名称 |
 
 
@@ -288,7 +297,7 @@
 ### auth表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | role | int(11) | 所属角色ID |
 | path | varchar(100) | 权限路径(对应CMS设置) |
 
@@ -297,7 +306,7 @@
 ### visitor_logs表
 
 | 字段 | 类型 | 说明 |
-| ------ | ------  | ------ |
+| ------ | :------: | ------ |
 | ip | varchar(50) | IP记录 |
 | origin | varchar(50) | 来源 |
 | content | varchar(500) | 访客记录 |

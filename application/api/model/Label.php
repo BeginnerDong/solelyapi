@@ -2,6 +2,8 @@
 
 namespace app\api\model;
 
+use app\lib\exception\SuccessMessage;
+use app\lib\exception\ErrorMessage;
 
 use think\Model;
 

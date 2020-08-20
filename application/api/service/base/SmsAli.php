@@ -42,18 +42,17 @@ class SmsAli {
 			]);
 		}
 		$params = $data['params'];
-		$code = createSMSCode(6);
-		$codeinfo['code'] = $code;
-		$codeinfo['phone'] = $params['PhoneNumbers'];
-		Cache::set('smsCode'.$params['PhoneNumbers'],$codeinfo,600);
-		
-		if (!empty($params["TemplateParam"])&&is_array($params["TemplateParam"])) {
-			$params['TemplateParam']['code'] = $code;
-		}else{
-			$params['TemplateParam'] = Array(
-				"code"=>$code,
-			);
-		};
+		// $code = createSMSCode(6);
+		// $codeinfo['code'] = $code;
+		// $codeinfo['phone'] = $params['PhoneNumbers'];
+		// Cache::set('smsCode'.$params['PhoneNumbers'],$codeinfo,600);
+		// if (!empty($params["TemplateParam"])&&is_array($params["TemplateParam"])) {
+		// 	$params['TemplateParam']['code'] = $code;
+		// }else{
+		// 	$params['TemplateParam'] = Array(
+		// 		"code"=>$code,
+		// 	);
+		// };
 		if(!empty($params["TemplateParam"])&&is_array($params["TemplateParam"])) {
 			$params["TemplateParam"] = json_encode($params["TemplateParam"], JSON_UNESCAPED_UNICODE);
 		};

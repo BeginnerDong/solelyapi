@@ -133,6 +133,7 @@ class Common {
 				
 				/*初始化每个getBefore的结果*/
 				$search = [];
+				$ids = [];
 				$fixSearchItem = [];
 				/*前表搜索出的数据结果*/
 				$origin_data = [];
@@ -177,25 +178,25 @@ class Common {
 					};
 
 					if($num==1){
-						$search = $searchItem;
+						$ids = $searchItem;
 					}else{
 						/*多个searchItem之间求交/并集*/
 						if(isset($value['searchType'])&&$value['searchType']=="merge"){
-							$search = array_merge($search,$searchItem);
+							$ids = array_merge($ids,$searchItem);
 						}else{
 							$new = [];
 							foreach($searchItem as $i_key => $i_value){
-								if(in_array($i_value,$search)){
+								if(in_array($i_value,$ids)){
 									array_push($new,$i_value);
 								};
 							};
-							$search = $new;
+							$ids = $new;
 						};
 					};
 				};
 				$target = [];
 				foreach($origin_data as $key_o => $value_o){
-					if(in_array($value_o['id'],$search)){
+					if(in_array($value_o['id'],$ids)){
 						if(!in_array($value_o[$value['key']],$target)){
 							array_push($target,$value_o[$value['key']]);
 						};
@@ -276,7 +277,6 @@ class Common {
 						$nRes = CommonModel::CommonGet($c_value['tableName'],$modelData);
 
 						if(!empty($nRes['data'])){
-							// $nRes[0] = resDeal($nRes[0]->toArray());
 							$nRes['data'][0] = resDeal($nRes['data'][0]);
 							foreach ($c_value['info'] as $info_key => $info_value) {
 							   $new[$info_value] = $nRes['data'][0][$info_value];
@@ -294,6 +294,9 @@ class Common {
 
 						if(!empty($nRes['data'])){
 							$new = resDeal($nRes['data']);
+							if($c_value['tableName']=="Sku"){
+								$new = self::checkStock($c_value['tableName'],[],$new);
+							};
 						};
 					};
 					

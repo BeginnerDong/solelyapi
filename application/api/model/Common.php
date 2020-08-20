@@ -5,6 +5,7 @@ use think\Loader;
 use think\Db;
 use think\Cache;
 
+use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 use app\api\model\Article;

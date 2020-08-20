@@ -128,11 +128,24 @@ class Sku extends Model{
 					'msg' => '关联product信息失败',
 				]);
 			};
-			foreach ($data['data']['sku_item'] as $key => $value) {
-				$data['data']['sku_item'][$key] = (int)$value;
+			$label = $data['data']['sku_item'];
+			$search = [];
+			$search['product_no'] = $sku['product_no'];
+			$search['status'] = 1;
+			$sku_array = resDeal((new Sku())->where($search)->select());
+			if($sku_array){
+				foreach($sku_array as $key_s => $value_s){
+					if($value_s['id']!=$sku['id']){
+						foreach($value_s['sku_item'] as $value_c){
+							if(!in_array($value_c,$label)){
+								array_push($label,$value_c);
+							};
+						};
+					};
+				};
 			};
-			$mergeArray = array_keys(array_flip($product['sku_item']) + array_flip($data['data']['sku_item']));
-			$res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($mergeArray)]);
+
+			$res = Product::where(['product_no'=>$sku['product_no']])->update(['sku_item' => json_encode($label)]);
 		};
 		
 		

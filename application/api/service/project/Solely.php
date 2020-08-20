@@ -315,11 +315,7 @@ class Solely{
 
 	public static function test()
 	{
-		$modelData = [];
-		$modelData['searchItem']['status'] = 1;
-		$modelData['info'] = ['login_name','user_no'];
-		$test = BeforeModel::CommonGet('User',$modelData);
-		var_dump($test['data']);
+		return 'test';
 	}
 
 }

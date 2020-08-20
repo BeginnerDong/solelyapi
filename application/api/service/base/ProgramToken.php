@@ -106,7 +106,7 @@ class ProgramToken {
 		$modelData['searchItem']['user_type'] = 0;
 		$user = BeforeModel::CommonGet('User',$modelData);
 
-		if(isset($wxResult['unionid'])){ 
+		if(isset($wxResult['unionid'])){
 			$modelData = [];
 			$modelData['searchItem']['unionid'] = $wxResult['unionid'];
 			$unionUser=BeforeModel::CommonGet('User',$modelData);
@@ -116,10 +116,14 @@ class ProgramToken {
 			
 			$uid = $user['data'][0]['id'];
 			$modelData = [];
-			$modelData['data']['nickname'] = isset($data['nickname'])?$data['nickname']:'';
-			$modelData['data']['headImgUrl'] = isset($data['headImgUrl'])?$data['headImgUrl']:'';
-			$modelData['searchItem'] = ['id'=>$uid];
 			$modelData['FuncName'] = 'update';
+			$modelData['searchItem'] = ['id'=>$uid];
+			if(isset($data['nickname'])&&!empty($data['nickname'])){
+				$modelData['data']['nickname'] = $data['nickname'];
+			};
+			if(isset($data['headImgUrl'])&&!empty($data['headImgUrl'])){
+				$modelData['data']['headImgUrl'] = $data['headImgUrl'];
+			};
 			$res = BeforeModel::CommonSave('User',$modelData);
 
 		}else{

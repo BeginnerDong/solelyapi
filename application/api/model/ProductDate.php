@@ -7,6 +7,7 @@ use think\Model;
 
 use app\api\model\User;
 
+use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 
@@ -26,13 +27,13 @@ class ProductDate extends Model
 			'day_time'=>'',
 			'stock'=>0,
 			'group_stock'=>0,
-			'user_no'=>'',
-			'status'=>1,
 			'create_time'=>time(),
 			'update_time'=>'',
 			'delete_time'=>'',
-			'thirdapp_id'=>'',
+			'user_no'=>'',
 			'user_type'=>'',
+			'thirdapp_id'=>'',
+			'status'=>1,
 		];
 
 		if(isset($data['data']['user_no'])){

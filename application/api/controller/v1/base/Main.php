@@ -52,172 +52,169 @@ class Main extends BaseController{
 
 
 
-    public static function Base()
-    {
+	public static function Base()
+	{
 
-        $data = Request::instance()->param();
-
-        $data = checkSmsAuth($data);
-
-        $data = transformExcel($data);
-
-        $service = self::loaderService($data['serviceName'],$data);
-
-        $FuncName = $data['FuncName'];
-        
-        return $service::$FuncName($data);
-
-    }
-
-
-
-    public static function Func()
-    {
-
-        $data = Request::instance()->param();
-
-        $data = checkSmsAuth($data);
-
-        $data = transformExcel($data);
-
-        if ($data['serviceName']=="Common") {
-
-            $service = new CommonService($data);
-            
-        }else{
-            
-            $service = self::loaderService($data['serviceName'],$data);
-
-        }
-
-        $FuncName = $data['FuncName'];
-        
-        return $service::$FuncName($data);
-
-    }
-
-
-
-    public static function WeFunc()
-    {
-
-        $data = Request::instance()->param();
-
-        $data = checkSmsAuth($data);
-
-        $data = transformExcel($data);
-
-        switch ($data['WeFuncName']) {
-            case 'Base':
-                $WeFunc = new weFuncBase($data);
-                break;
-            case 'Menu':
-                $WeFunc = new weFuncMenu($data);
-                break;
-            case 'Message':
-                $WeFunc = new weFuncMessage($data);
-                break;
-            case 'Project':
-                $WeFunc = new weFuncProject($data);
-                break;
-            case 'Source':
-                $WeFunc = new weFuncSource($data);
-                break;
-            default:
-                break;
-        }
-
-        $FuncName = $data['FuncName'];
-
-        return $WeFunc::$FuncName($data);
-
-    }
-
-    
-
-    public static function Common()
-    {
 		$data = Request::instance()->param();
-		/* var_dump($data);
-		return; */
-        
 
-        $data = checkSmsAuth($data);
+		$data = checkSmsAuth($data);
 
-        $data = transformExcel($data);
+		$data = transformExcel($data);
 
-        $service = self::loaderService('Common',$data);
+		$service = self::loaderService($data['serviceName'],$data);
 
-        $FuncName = $data['FuncName'];
-        
-        return $service::$FuncName($data);
+		$FuncName = $data['FuncName'];
+		
+		return $service::$FuncName($data);
 
-    }
+	}
 
 
 
-    public static function Project()
-    {
+	public static function Func()
+	{
 
-        $data = Request::instance()->param();
+		$data = Request::instance()->param();
 
-        $data = checkSmsAuth($data);
+		$data = checkSmsAuth($data);
 
-        $data = transformExcel($data);
+		$data = transformExcel($data);
 
-        $service = self::loaderService($data['serviceName'],$data);
+		if ($data['serviceName']=="Common") {
 
-        $FuncName = $data['FuncName'];
-        
-        return $service::$FuncName($data);
+			$service = new CommonService($data);
+			
+		}else{
+			
+			$service = self::loaderService($data['serviceName'],$data);
 
-    }
+		}
+
+		$FuncName = $data['FuncName'];
+		
+		return $service::$FuncName($data);
+
+	}
 
 
 
-    public static function loaderService($serviceName,$data)
-    {
+	public static function WeFunc()
+	{
 
-        if($serviceName=='Common'){
-            return new Common($data);
-        }else if($serviceName=='CouponPay'){
-            return new CouponPay($data);
-        }else if($serviceName=='FtpFile'){
-            return new FtpFile($data);
-        }else if($serviceName=='Label'){
-            return new Label($data);
-        }else if($serviceName=='Pay'){
-            return new Pay($data);
-        }else if($serviceName=='ProgramToken'){
-            return new ProgramToken($data);
-        }else if($serviceName=='QinFile'){
-            return new QinFile($data);
-        }else if($serviceName=='Qr'){
-            return new Qr($data);
-        }else if($serviceName=='SaeStorage'){
-            return new SaeStorage($data);
-        }else if($serviceName=='SmsAli'){
-            return new SmsAli($data);
-        }else if($serviceName=='SmsTencent'){
-            return new SmsTencent($data);
-        }else if($serviceName=='ThirdApp'){
-            return new ThirdApp($data);
-        }else if($serviceName=='User'){
-            return new User($data);
-        }else if($serviceName=='WxPay'){
-            return new WxPay($data);
-        }else if($serviceName=='Coupon'){
-            return new Coupon($data);
-        }else if($serviceName=='Order'){
-            return new Order($data);
-        }else if($serviceName=='Token'){
-            return new Token($data);
-        }else if($serviceName=='Solely'){
-            return new Solely($data);
-        }else{
-            throw new ErrorMessage([
-                'msg' => 'serviceName有误',
-            ]);
-        };
-    }
+		$data = Request::instance()->param();
+
+		$data = checkSmsAuth($data);
+
+		$data = transformExcel($data);
+
+		switch ($data['WeFuncName']) {
+			case 'Base':
+				$WeFunc = new weFuncBase($data);
+				break;
+			case 'Menu':
+				$WeFunc = new weFuncMenu($data);
+				break;
+			case 'Message':
+				$WeFunc = new weFuncMessage($data);
+				break;
+			case 'Project':
+				$WeFunc = new weFuncProject($data);
+				break;
+			case 'Source':
+				$WeFunc = new weFuncSource($data);
+				break;
+			default:
+				break;
+		}
+
+		$FuncName = $data['FuncName'];
+
+		return $WeFunc::$FuncName($data);
+
+	}
+
+
+
+	public static function Common()
+	{
+		$data = Request::instance()->param();
+
+		$data = checkSmsAuth($data);
+
+		$data = transformExcel($data);
+
+		$service = self::loaderService('Common',$data);
+
+		$FuncName = $data['FuncName'];
+		
+		return $service::$FuncName($data);
+
+	}
+
+
+
+	public static function Project()
+	{
+
+		$data = Request::instance()->param();
+
+		$data = checkSmsAuth($data);
+
+		$data = transformExcel($data);
+
+		$service = self::loaderService($data['serviceName'],$data);
+
+		$FuncName = $data['FuncName'];
+		
+		return $service::$FuncName($data);
+
+	}
+
+
+
+	public static function loaderService($serviceName,$data)
+	{
+
+		if($serviceName=='Common'){
+			return new Common($data);
+		}else if($serviceName=='CouponPay'){
+			return new CouponPay($data);
+		}else if($serviceName=='FtpFile'){
+			return new FtpFile($data);
+		}else if($serviceName=='Label'){
+			return new Label($data);
+		}else if($serviceName=='Pay'){
+			return new Pay($data);
+		}else if($serviceName=='ProgramToken'){
+			return new ProgramToken($data);
+		}else if($serviceName=='QinFile'){
+			return new QinFile($data);
+		}else if($serviceName=='Qr'){
+			return new Qr($data);
+		}else if($serviceName=='SaeStorage'){
+			return new SaeStorage($data);
+		}else if($serviceName=='SmsAli'){
+			return new SmsAli($data);
+		}else if($serviceName=='SmsTencent'){
+			return new SmsTencent($data);
+		}else if($serviceName=='ThirdApp'){
+			return new ThirdApp($data);
+		}else if($serviceName=='User'){
+			return new User($data);
+		}else if($serviceName=='WxPay'){
+			return new WxPay($data);
+		}else if($serviceName=='Coupon'){
+			return new Coupon($data);
+		}else if($serviceName=='Order'){
+			return new Order($data);
+		}else if($serviceName=='Token'){
+			return new Token($data);
+		}else if($serviceName=='Solely'){
+			return new Solely($data);
+		}else{
+			throw new ErrorMessage([
+				'msg' => 'serviceName有误',
+			]);
+		};
+	}
 }

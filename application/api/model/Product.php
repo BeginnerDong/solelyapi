@@ -2,17 +2,13 @@
 
 namespace app\api\model;
 
-
 use think\Model;
 
 use app\api\model\Label;
-
 use app\api\model\Sku;
-
 use app\api\model\Relation;
 
 use app\lib\exception\SuccessMessage;
-
 use app\lib\exception\ErrorMessage;
 
 
@@ -57,16 +53,15 @@ class Product extends BaseModel
 			'status'=>1,
 			'product_no'=>makeProductNo($data['data']['category_id']),
 			'standard'=>0,
-			'group_stock'=>0,
 			'balance'=>0,
-			'is_date'=>0,
-			'is_set'=>0,
 			'limit'=>'',
 			'behavior'=>'',
 			'sale_count'=>'',
 			'duration'=>'',
 			'score'=>'',
 			'img_array'=>[],
+			'is_date'=>0,
+			'is_set'=>0,
 		];
 
 		if($data['data']['category_id']!=0){

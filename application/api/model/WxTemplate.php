@@ -2,8 +2,10 @@
 
 namespace app\api\model;
 
-
 use think\Model;
+
+use app\lib\exception\SuccessMessage;
+use app\lib\exception\ErrorMessage;
 
 class WxTemplate extends BaseModel
 {

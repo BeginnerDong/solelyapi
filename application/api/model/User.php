@@ -1,12 +1,14 @@
 <?php
 
 namespace app\api\model;
+
 use think\Model;
 use app\api\model\UserInfo;
 use app\api\model\UserAddress;
 use app\api\model\FlowLog;
 use app\api\model\Distribution;
 
+use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 

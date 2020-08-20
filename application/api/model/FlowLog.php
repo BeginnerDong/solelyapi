@@ -11,6 +11,7 @@ use app\api\model\User;
 use app\api\model\UserInfo;
 use app\api\model\Order;
 
+use app\lib\exception\SuccessMessage;
 use app\lib\exception\ErrorMessage;
 
 use app\api\service\base\WxPay;
