@@ -82,9 +82,12 @@ class Sku extends Model{
 	{
 
 		$product_array = [];
+		$child_label_id = [];
+		$parent_label_id = [];
 
-		foreach ($data as $key => $value) {
+		foreach($data as $key => $value){
 			array_push($product_array,$value['product_no']);
+			$child_label_id = array_merge($child_label_id,$value['sku_item']);
 		};
 
 		$product = resDeal((new product())
@@ -92,7 +95,7 @@ class Sku extends Model{
 			->select()
 		);
 
-		foreach ($product as $key => $value) {
+		foreach($product as $key => $value){
 			$sku_array = $value['sku_array'];
 			array_push($sku_array,$value['category_id']);
 			$label = resDeal((new Label())->where('id','in',$sku_array)->whereOr('parentid','in',$sku_array)->select());
@@ -102,8 +105,8 @@ class Sku extends Model{
 		};
 
 		$product = changeIndexArray('product_no',$product);
-		
-		foreach ($data as $key => $value) {
+
+		foreach($data as $key => $value){
 			if(isset($product[$value['product_no']])){
 				$data[$key]['product'] = $product[$value['product_no']];  
 			}else{
@@ -111,6 +114,40 @@ class Sku extends Model{
 			};
 		};
 		
+		$child_label = resDeal((new Label())->where('id','in',$child_label_id)->select());
+		if(count($child_label)>0){
+			foreach($child_label as $key_c => $value_c){
+				if(!in_array($value_c['parentid'],$parent_label_id)){
+					array_push($parent_label_id,$value_c['parentid']);
+				};
+			};
+			$parent_label = resDeal((new Label())->where('id','in',$parent_label_id)->select());
+			//拼接SKU标签与父级标签信息
+			foreach($data as $key => $value){
+				$label_description = [];
+				if(count($value['sku_item'])>0){
+					foreach($value['sku_item'] as $value_item){
+						$child = '';
+						$parent = '';						
+						foreach($child_label as $key_cl => $value_cl){
+							if($value_cl['id'] == $value_item){
+								$child = $value_cl['title'];
+								foreach($parent_label as $key_pl => $value_pl){
+									if($value_pl['id'] == $value_cl['parentid']){
+										$parent = $value_pl['title'];
+									};
+								};
+							};
+						};
+						if(!empty($child)&&!empty($parent)){
+							$label_description[$parent] = $child;
+						};
+					};
+				};
+				$data[$key]['label_description'] = $label_description;
+			};
+		};
+
 		return $data;
 		
 	}

@@ -28,7 +28,7 @@ class Common{
 			'Article'=>config('scope.one'),
 			'Product'=>config('scope.one'),
 			'Sku'=>config('scope.one'),
-			'Message'=>[],
+			'Message'=>config('scope.one'),
 			'UserInfo'=>config('scope.two'),
 			'UserAddress'=>config('scope.two'),
 			'FlowLog'=>config('scope.two'),

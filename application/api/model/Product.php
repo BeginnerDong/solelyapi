@@ -137,18 +137,15 @@ class Product extends BaseModel
 			if($value['category_id']!=0){
 
 				$label = array();
-
 				array_push($label,$value['category_id']);
 				$label = array_keys(array_flip($label) + array_flip($value['sku_array'])+ array_flip($value['sku_item'])+ array_flip($value['spu_array'])+ array_flip($value['spu_item']));
 
+				$map = array();
 				$map['id'] = ['in',$label];
-
+				$map['status'] = 1;
 				$res = resDeal((new label())->where($map)->select());
-
 				$res = clist_to_tree($res);
-
 				$res = changeIndexArray('id',$res);
-
 				$data[$key]['label'] = $res;
 
 			};

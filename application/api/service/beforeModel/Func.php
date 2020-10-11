@@ -12,6 +12,7 @@ use app\api\service\beforeModel\Product as ProductService;
 use app\api\service\beforeModel\Sku as SkuService;
 use app\api\service\beforeModel\UserInfo as UserInfoService;
 use app\api\service\beforeModel\Order as OrderService;
+use app\api\service\beforeModel\Label as LabelService;
 
 use app\api\validate\CommonValidate;
 use app\lib\exception\SuccessMessage;
@@ -51,6 +52,12 @@ class Func {
 		if ($dbTable=="Order") {
 		
 			$data = OrderService::deal($data);
+		
+		};
+		
+		if ($dbTable=="Label") {
+		
+			$data = LabelService::deal($data);
 		
 		};
 

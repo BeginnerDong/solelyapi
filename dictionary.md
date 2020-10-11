@@ -65,6 +65,18 @@
 
 
 
+### user_address表
+
+| 字段 | 类型 | 说明 |
+| ------ | :------: | ------ |
+| name | varchar(100) | 姓名 |
+| phone | varchar(20) | 电话 |
+| address | varchar(255) | 地址 |
+| detail | varchar(255) | 详细 |
+| isdefault | tinyint(2) | 1.默认；0.非默认 |
+
+
+
 ### label表
 
 | 字段 | 类型 | 说明 |
@@ -215,7 +227,6 @@
 | 字段 | 类型 | 说明 |
 | ------ | :------: | ------ |
 | order_no | varchar(255) | 订单NO |
-| product_id | int(11) | 商品id |
 | snap_product | text | 商品信息快照 |
 
 
@@ -224,7 +235,7 @@
 
 | 字段 | 类型 | 说明 |
 | ------ | :------: | ------ |
-| type | int(11) | 1.微信支付2.余额支付3.积分支付 |
+| type | int(11) | 1.微信支付2.余额3.积分 |
 | count | int(11) | 金额 |
 | trade_info | varchar(255) | 说明 |
 | order_no | varchar(255) | 订单NO |

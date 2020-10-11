@@ -1262,50 +1262,96 @@ use app\lib\exception\ErrorMessage;
 
 		$passNo = [];
 		$pass = true;
-		$scope_item = $scope[$user_type.'-'.$primary_scope.'-'.$check_type];
-		
-		if(!isset($scope_item)){
-			throw new ErrorMessage([
-				'msg'=>'权限不足',
-			]);
-		};
-		if($scope_item['auth']=='isMe'){
-			$passNo = [$user_no];
-		};
-		
-		if($scope_item['auth']=='canChild'){
-			if(isset($checkUserInfo)&&$checkUserInfo['parent_no']==$user_no){
-				$passNo = [$user_no];
-			}else if(!isset($checkUserInfo)){
-				$res = (new Distribution())->where('parent_no','=',$user_no)->select();
-				if($res){
-					$user_array = [];
-					foreach ($res as $c_key => $c_value) {
-						array_push($user_array,$c_value['child_no']);
-					};
-					array_push($user_array,$user_no);
-					$passNo = ['in',$user_array];
-				}else{
+		if(is_array($check_type)){
+			foreach($check_type[1] as $value_c){
+				$scope_item = $scope[$user_type.'-'.$primary_scope.'-'.$value_c];
+				if(!isset($scope_item)){
+					throw new ErrorMessage([
+						'msg'=>'权限不足',
+					]);
+				};
+				if($scope_item['auth']=='isMe'){
 					$passNo = [$user_no];
 				};
-			}
-		};
-		
-		if($scope_item['auth']!='All'){
-			if(isset($data['searchItem']['user_no'])){
-				if(is_array($data['searchItem']['user_no'])&&!empty(array_diff($data['searchItem']['user_no'][1], $passNo))){
-					$pass = false;
-				}else{
-					$pass = in_array($data['searchItem']['user_no'],$passNo);
+				if($scope_item['auth']=='canChild'){
+					if(isset($checkUserInfo)&&$checkUserInfo['parent_no']==$user_no){
+						$passNo = [$user_no];
+					}else if(!isset($checkUserInfo)){
+						$res = (new Distribution())->where('parent_no','=',$user_no)->select();
+						if($res){
+							$user_array = [];
+							foreach ($res as $c_key => $c_value) {
+								array_push($user_array,$c_value['child_no']);
+							};
+							array_push($user_array,$user_no);
+							$passNo = ['in',$user_array];
+						}else{
+							$passNo = [$user_no];
+						};
+					}
 				};
-			}else{
-				$num = count($passNo);
-				if($num==0){
-					$pass = false;
-				}else if($num==1){
-					$data['searchItem']['user_no'] = $passNo[0];
+				if($scope_item['auth']!='All'){
+					if(isset($data['searchItem']['user_no'])){
+						if(is_array($data['searchItem']['user_no'])&&!empty(array_diff($data['searchItem']['user_no'][1], $passNo))){
+							$pass = false;
+						}else{
+							$pass = in_array($data['searchItem']['user_no'],$passNo);
+						};
+					}else{
+						$num = count($passNo);
+						if($num==0){
+							$pass = false;
+						}else if($num==1){
+							$data['searchItem']['user_no'] = $passNo[0];
+						}else{
+							$data['searchItem']['user_no'] = ['in',$passNo];
+						};
+					};
+				};
+			};
+		}else{
+			$scope_item = $scope[$user_type.'-'.$primary_scope.'-'.$check_type];
+			if(!isset($scope_item)){
+				throw new ErrorMessage([
+					'msg'=>'权限不足',
+				]);
+			};
+			if($scope_item['auth']=='isMe'){
+				$passNo = [$user_no];
+			};
+			if($scope_item['auth']=='canChild'){
+				if(isset($checkUserInfo)&&$checkUserInfo['parent_no']==$user_no){
+					$passNo = [$user_no];
+				}else if(!isset($checkUserInfo)){
+					$res = (new Distribution())->where('parent_no','=',$user_no)->select();
+					if($res){
+						$user_array = [];
+						foreach ($res as $c_key => $c_value) {
+							array_push($user_array,$c_value['child_no']);
+						};
+						array_push($user_array,$user_no);
+						$passNo = ['in',$user_array];
+					}else{
+						$passNo = [$user_no];
+					};
+				}
+			};
+			if($scope_item['auth']!='All'){
+				if(isset($data['searchItem']['user_no'])){
+					if(is_array($data['searchItem']['user_no'])&&!empty(array_diff($data['searchItem']['user_no'][1], $passNo))){
+						$pass = false;
+					}else{
+						$pass = in_array($data['searchItem']['user_no'],$passNo);
+					};
 				}else{
-					$data['searchItem']['user_no'] = ['in',$passNo];
+					$num = count($passNo);
+					if($num==0){
+						$pass = false;
+					}else if($num==1){
+						$data['searchItem']['user_no'] = $passNo[0];
+					}else{
+						$data['searchItem']['user_no'] = ['in',$passNo];
+					};
 				};
 			};
 		};
@@ -1341,7 +1387,7 @@ use app\lib\exception\ErrorMessage;
 		$thirdapp_array = Cache::get($data['token'])['thirdApp']['child_array'];
 		array_push($thirdapp_array,$thirdapp_id);
 		if(isset($data['data']['thirdapp_id'])){
-			
+
 			if(!in_array($data['data']['thirdapp_id'],$thirdapp_array)){
 				if($primary_scope<60){
 				   throw new ErrorMessage([
@@ -1359,8 +1405,6 @@ use app\lib\exception\ErrorMessage;
 			$data['data']['user_type'] = $user_type;
 			return $data;
 		}else if(isset($data['data']['user_no'])&&$data['FuncName']=='update'){
-			
-			
 			$model = new User();
 			$map['user_no'] = $data['data']['user_no'];
 			$checkUserInfo = $model->where($map)->find(); 

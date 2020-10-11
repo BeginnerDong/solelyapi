@@ -47,13 +47,26 @@ class Order{
 		};
 	}
 
+	
 
-
-	/*生成组合单*/
-	public static function addMultiOrder($data)
+	/**
+	 * 订单生成组合单
+	 * 母单记录订单相关数据，如支付状态、运输状态、团购信息
+	 * 子单记录购买的商品信息、数量
+	 */
+	public static function addOrder($data)
 	{
 
 		(new CommonValidate())->goCheck('one',$data);
+		$info = [];
+		
+		if (!isset($data['orderList'])) {
+			throw new ErrorMessage([
+				'msg' => '缺少订单参数orderList',
+			]);
+		};
+		//子单数量
+		$count = count($data['orderList']);
 
 		//生成父订单
 		$parent_no = makeOrderNo();
@@ -62,21 +75,24 @@ class Order{
 		$modelData = self::createVirtualOrderData($data);
 		$modelData['FuncName'] = 'add';
 		$parentOrder = BeforeModel::CommonSave('Order',$modelData);
-
+		
 		$totalPrice = 0;
 		$childOrder = [];
-
+		
 		$modelData = [];
 		foreach ($data['orderList'] as $key => $value) {
 			$value['token'] = $data['token'];
-			$value['data']['parent_no'] = $parent_no;
+			$value['parent_no'] = $parent_no;
+			if(isset($data['data']['group_status'])){
+				$value['group_status'] = $data['data']['group_status'];
+			};
 			$modelData = self::createOrderData($value);
 			$totalPrice += $modelData['data']['price'];
 			$modelData['FuncName'] = 'add';
 			$oneOrder = BeforeModel::CommonSave('Order',$modelData);
 			array_push($childOrder,$oneOrder);
 		}
-
+		
 		$modelData = [];
 		$modelData['FuncName'] = 'update';
 		$modelData['searchItem'] = [
@@ -84,7 +100,7 @@ class Order{
 		];
 		$modelData['data']['price'] = $totalPrice;
 		$updateParentOrder = BeforeModel::CommonSave('Order',$modelData);
-
+		
 		if($parentOrder>0){
 			if(isset($data['pay'])){
 				$pay = $data['pay'];
@@ -104,76 +120,6 @@ class Order{
 				'msg' => '下单失败',
 			]);
 		};
-	}
-
-
-
-	public static function addOrder($data)
-	{
-
-		(new CommonValidate())->goCheck('one',$data);
-		$info = [];
-		
-		if (!isset($data['orderList'])) {
-			throw new ErrorMessage([
-				'msg' => '缺少订单参数orderList',
-			]);
-		};
-		
-		$count = count($data['orderList']);
-
-		if ($count>1) {
-		
-			return self::addMultiOrder($data);
-		
-		}else if($count==1){
-			/*生成父级订单*/
-			if(isset($data['parent'])){
-				$parent_no = makeOrderNo();
-				$data['order_no'] = $parent_no;
-				$modelData = [];
-				$modelData = self::createVirtualOrderData($data);
-				$modelData['FuncName'] = 'add';
-				$parentOrder = BeforeModel::CommonSave('Order',$modelData);
-				$data['orderList'][0]['data']['parent_no'] = $parent_no;
-				$info['id'] = $parentOrder;
-			};
-			
-			$data['orderList'][0]['token'] = $data['token'];
-			$modelData = [];
-			$modelData = self::createOrderData($data['orderList'][0]);
-			$modelData['FuncName'] = 'add';
-			$orderRes = BeforeModel::CommonSave('Order',$modelData);
-			if(isset($data['parent'])){
-				/*将子级订单金额赋予父级订单*/
-				$upData = [];
-				$upData['FuncName'] = 'update';
-				$upData['searchItem']['id'] = $parentOrder;
-				$upData['data']['price'] = $modelData['data']['price'];
-				$upParent = BeforeModel::CommonSave('Order',$upData);
-				$info['childOrder'] = $orderRes;
-			}else{
-				$info['id'] = $orderRes;
-			};
-			
-			if($orderRes>0){
-				if(isset($data['pay'])){
-					$data['pay']['searchItem'] = [
-						'id'=>$orderRes
-					];
-					return PayService::pay($data['pay'],true);
-				}else{
-					throw new SuccessMessage([
-						'msg'=>'下单成功',
-						'info'=>$info,
-					]);
-				}; 
-			}else{
-				throw new ErrorMessage([
-					'msg' => '下单失败',
-				]);
-			};
-		};
 
 	}
 
@@ -187,9 +133,7 @@ class Order{
 	 */
 	public static function createOrderData($data)
 	{
-		if(!isset($data['data'])){
-			$data['data'] = [];
-		};
+		
 		$data = checkTokenAndScope($data,config('scope.two'));
 		$modelData = [];
 		$modelData = [
@@ -210,7 +154,7 @@ class Order{
 			]);
 		};
 		$totalPrice = 0;
-		$type = isset($data['type'])?$data['type']:1;
+		$level = isset($data['data']['level'])?$data['data']['level']:0;
 		$order_no = makeOrderNo();
 
 		if(!isset($data['product_id'])&&!isset($data['sku_id'])) {
@@ -224,30 +168,31 @@ class Order{
 			]);
 		};
 		
-		if(isset($data['isGroup'])){
+		if(isset($data['data']['group_status'])){
 			$isGroup = true;
 		}else{
 			$isGroup = false;
 		};
-		
-		$checkInfo = self::checkStock($data,$order_no,$user,$type,$isGroup);
+
+		$checkInfo = self::checkStock($data,$order_no,$user,$level,$isGroup);
 
 		$modelData = [];
 		$modelData['data']['order_no'] = $order_no;
+		$modelData['data']['parent_no'] = $data['parent_no'];
 		$modelData['data']['price'] = $checkInfo['totalPrice'];
-		$modelData['data']['title'] = $checkInfo['productInfo']['title'];
+		$modelData['data']['product_title'] = $checkInfo['productInfo']['product_title'];
+		$modelData['data']['sku_title'] = $checkInfo['productInfo']['sku_title'];
 		$modelData['data']['unit_price'] = $checkInfo['productInfo']['price'];
 		$modelData['data']['count'] = $data['count'];
-		$modelData['data']['type'] = $type;
+		$modelData['data']['level'] = $level;
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];
 		$modelData['data']['product_id'] = isset($data['product_id'])?$data['product_id']:0;
 		$modelData['data']['sku_id'] = isset($data['sku_id'])?$data['sku_id']:0;
-		$modelData['data']['snap_address'] = isset($data['snap_address'])?$data['snap_address']:'';
 
-		if(isset($data['data'])){
-			$modelData['data'] = array_merge($data['data'],$modelData['data']);
-		};
+		// if(isset($data['data'])){
+		// 	$modelData['data'] = array_merge($data['data'],$modelData['data']);
+		// };
 
 		return $modelData;
 	}
@@ -256,7 +201,7 @@ class Order{
 
 	/**
 	 * 生成父级订单数据
-	 * @param isGroup团购单传递，值为true
+	 * @param group_status团购单传递，值为1
 	 * @param group_no团购单传递，团购单号
 	 */
 	public static function createVirtualOrderData($data)
@@ -275,26 +220,26 @@ class Order{
 		$order_no = isset($data['order_no'])?$data['order_no']:makeOrderNo();
 		
 		$modelData['data']['order_no'] = $order_no;
-		$modelData['data']['type'] = isset($data['type'])?$data['type']:6;
+		$modelData['data']['level'] = 1;
+		$modelData['data']['type'] = isset($data['data']['type'])?$data['data']['type']:6;
 		$modelData['data']['pay'] = isset($data['pay'])?json_encode($data['pay']):json_encode([]);
 		$modelData['data']['thirdapp_id'] = $user['thirdapp_id'];
 		$modelData['data']['user_no'] = $user['user_no'];
 		
 		//因订单渲染逻辑，团购信息需要记录到父级订单上
 		//判断是否是团购商品
-		if(isset($data['isGroup'])&&!isset($data['group_no'])){
+		if(isset($data['data']['group_status'])&&$data['data']['group_status']==1&&!isset($data['data']['group_no'])){
 			$modelData['data']['group_no'] = makeGroupNo();
 			$modelData['data']['group_leader'] = "true";
-			$modelData['data']['group_status'] = 1;
 			$modelData['data']['standard'] = isset($data['data']['standard'])?$data['data']['standard']:'';
-		}else if(isset($data['isGroup'])&&isset($data['group_no'])){
+		}else if(isset($data['data']['group_status'])&&$data['data']['group_status']==1&&isset($data['data']['group_no'])){
 			$c_modelData = [];
 			$c_modelData['searchItem'] = [
-				'group_no'=>$data['group_no']
+				'group_no'=>$data['data']['group_no']
 			];
 			$groupRes = BeforeModel::CommonGet('Order',$c_modelData);
-			if (count($groupRes['data'])>0) {
-				$modelData['data']['group_no'] = $data['group_no'];
+			if(count($groupRes['data'])>0){
+				$modelData['data']['group_no'] = $data['data']['group_no'];
 				$modelData['data']['standard'] = $groupRes['data'][0]['standard'];
 				$modelData['data']['group_status'] = 1;
 			}else{
@@ -313,10 +258,10 @@ class Order{
 	 * @param data下单的信息
 	 * @param order_no订单NO
 	 * @param user下单人信息
-	 * @param type订单类型
+	 * @param level订单层级，0为子单，检测库存
 	 * @return 计算出的金额
 	 */
-	public static function checkStock($data,$order_no,$user,$type,$isGroup)
+	public static function checkStock($data,$order_no,$user,$level,$isGroup)
 	{
 		if(isset($data['product_id'])){
 			$product = true;
@@ -340,11 +285,15 @@ class Order{
 		};
 		$info = $info['data'][0];
 		if(!$product){
-			$info['title'] = $info['title'].$info['product']['title'];
+			$info['product_title'] = $info['product']['title'];
+			$info['sku_title'] = $info['title'];
+		}else{
+			$info['product_title'] = $info['title'];
+			$info['sku_title'] = '';
 		};
 
 		/*检测库存*/
-		if($type<4){
+		if($level==0){
 			$modelData = [];
 			$modelData['getOne'] = 'true';
 			if($product){

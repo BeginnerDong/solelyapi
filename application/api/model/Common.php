@@ -61,7 +61,11 @@ class Common extends Model{
 		if (isset($data['compute'])) {
 			$new = [];
 			foreach ($data['compute'] as $compute_key => $compute_value) {
-				$new[$compute_key] = self::CommonCompute($dbTable,$compute_value[0],$compute_value[1],$data['searchItem']);
+				if(isset($compute_value[2])&&!empty($compute_value[2])){
+					$new[$compute_key] = self::CommonCompute($dbTable,$compute_value[0],$compute_value[1],$compute_value[2]);
+				}else{
+					$new[$compute_key] = self::CommonCompute($dbTable,$compute_value[0],$compute_value[1],$data['searchItem']);
+				};
 			};
 		};	
 		if ($dbTable=='Distribution'&&isset($data['searchItem'])&&isset($data['searchItem']['user_no'])) {

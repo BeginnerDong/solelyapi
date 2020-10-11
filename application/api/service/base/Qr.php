@@ -15,21 +15,15 @@
 namespace app\api\service\base;
 
 use think\Cache;
-
 use think\Loader;
-
 use think\Request as Request; 
 
 use app\api\service\beforeModel\Common as BeforeModel;
-
 use app\api\service\base\QiniuImage as QiniuImageService;
-
 use app\api\service\base\FtpFile as FtpImageService;
 
 use app\api\validate\CommonValidate;
-
 use app\lib\exception\SuccessMessage;
-
 use app\lib\exception\ErrorMessage;
 
 
@@ -37,9 +31,7 @@ Loader::import('phpqrcode.phpqrcode', EXTEND_PATH, '.php');
 
 
 /**
-
  * 用户获取场景二维码
-
  */
 
 class Qr{
@@ -181,7 +173,7 @@ class Qr{
 
 			}else{
 
-				$result=self::data_uri($stream,'image/png');
+				$result = self::data_uri($stream,'image/png');
 
 				return $result;
 
@@ -320,7 +312,7 @@ class Qr{
 	public static function data_uri($contents, $mime)
 	{
 
-		$base64   = base64_encode($contents);
+		$base64 = base64_encode($contents);
 
 		return ('data:' . $mime . ';base64,' . $base64);
 

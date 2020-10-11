@@ -612,6 +612,25 @@ class Common {
 								$modelData['data']['sale_count'] = $skuInfo['sale_count']-$value_o['count'];
 							};
 							$upSku = CommonModel::CommonSave('Sku',$modelData);
+							
+							//同步记录product的销量
+							$modelData = [];
+							$modelData['getOne'] = 'true';
+							$modelData['searchItem']['product_no'] = $skuInfo['product_no'];
+							$productInfo = CommonModel::CommonGet('Product',$modelData);
+							if(count($productInfo['data'])>0){
+								$productInfo = $productInfo['data'][0];
+								$modelData = [];
+								$modelData['FuncName'] = 'update';
+								$modelData['searchItem']['id'] = $productInfo['id'];
+								if($type=='reduce'){
+									$modelData['data']['sale_count'] = $productInfo['sale_count']+$value_o['count'];
+								}else if($type=='increase'){
+									$modelData['data']['sale_count'] = $productInfo['sale_count']-$value_o['count'];
+								};
+								$upProduct = CommonModel::CommonSave('Product',$modelData);
+							};
+							
 							$modelData = [];
 							$modelData['FuncName'] = 'update';
 							$modelData['searchItem']['id'] = $stock['id'];

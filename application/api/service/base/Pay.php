@@ -105,11 +105,32 @@ class Pay
 				Cache::set($orderInfo['order_no'],'lock',3);
 			}
 		};
-
-		//微信支付
+		
 		if(!isset($data['wxPayStatus'])){
+			//微信支付状态
 			$data['wxPayStatus'] = 0;
 		};
+		if(!isset($data['aliPayStatus'])){
+			//支付宝支付状态
+			$data['aliPayStatus'] = 0;
+		};
+
+		//微信支付前检验
+		if($data['wxPayStatus']==0){
+			if(isset($data['balance'])){
+				self::balancePay($userInfo,$orderInfo,$data['balance'],$data,true);
+			};
+			if(isset($data['score'])){
+				self::scorePay($userInfo,$orderInfo,$data['score'],$data,true);
+			};
+			if(isset($data['coupon'])&&count($data['coupon'])>0){
+				foreach ($data['coupon'] as $key => $value) {
+					self::couponPay($userInfo,$orderInfo,$value,$data,true);
+				};
+			};
+		};
+
+		//微信支付
 		if(isset($data['wxPay'])&&isset($data['wxPayStatus'])&&$data['wxPayStatus']==0){
 			
 			if($data['wxPay']['price']==0){
@@ -132,9 +153,6 @@ class Pay
 		};
 		
 		//支付宝支付
-		if(!isset($data['aliPayStatus'])){
-			$data['aliPayStatus'] = 0;
-		};
 		if(isset($data['aliPay'])&&isset($data['aliPayStatus'])&&$data['aliPayStatus']==0){
 			
 			if($data['aliPay']['price']==0){
@@ -175,7 +193,7 @@ class Pay
 			if (isset($data['card'])) {
 				self::cardPay($userInfo,$orderInfo,$data['card'],$data);
 			};
-			
+
 			Db::commit();
 		}catch (Exception $ex){
 			Db::rollback();
@@ -238,7 +256,7 @@ class Pay
 
 
 
-	public static function balancePay($userInfo,$orderInfo,$balance,$data)
+	public static function balancePay($userInfo,$orderInfo,$balance,$data,$check=false)
 	{
 		if($balance['price']>$userInfo['info']['balance']){
 			throw new ErrorMessage([
@@ -251,6 +269,12 @@ class Pay
 				'msg'=>'支付余额不得小于等于0'
 			]);
 		};
+		
+		if($check){
+			//检验结束
+			return;
+		};
+		
 		$modelData = [];
 		$modelData['data'] = array(
 			'type' => 2,
@@ -281,7 +305,7 @@ class Pay
 	}
 
 
-	public static function scorePay($userInfo,$orderInfo,$score,$data)
+	public static function scorePay($userInfo,$orderInfo,$score,$data,$check=false)
 	{
 		if($score['price']>$userInfo['info']['score']){
 			throw new ErrorMessage([
@@ -294,7 +318,12 @@ class Pay
 				'msg'=>'支付积分不得小于等于0'
 			]);
 		};
-			
+		
+		if($check){
+			//检验结束
+			return;
+		};
+
 		$modelData = [];
 		$modelData['data'] = array(
 			'type' => 3,
@@ -317,7 +346,7 @@ class Pay
 				'msg'=>'积分支付失败'
 			]);
 		};
-	
+
 		$modelData = [];
 		$modelData['searchItem']['id'] = $res;
 		FlowLogService::checkIsPayAll($modelData);
@@ -325,7 +354,7 @@ class Pay
 	}
 
 
-	public static function couponPay($userInfo,$orderInfo,$coupon,$data)
+	public static function couponPay($userInfo,$orderInfo,$coupon,$data,$check=false)
 	{
 		$modelData = [];
 		$modelData['searchItem']['id'] = $coupon['id'];
@@ -341,14 +370,14 @@ class Pay
 		if($couponInfo['type']==1){//抵扣券
 			if((($couponInfo['condition']!=0)&&($orderInfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$couponInfo['value'])){
 				throw new ErrorMessage([
-					'msg' => '优惠券使用不合规',
+					'msg' => '抵扣券使用不合规',
 				]);
 			};
 		};
 		if($couponInfo['type']==2){//折扣券
 			if((($couponInfo['condition']!=0)&&($orderInfo['price']<$couponInfo['condition']))||($couponInfo['invalid_time']/1000<time())||($coupon['price']>$orderInfo['price']*$couponInfo['discount']/100)){
 				throw new ErrorMessage([
-					'msg' => '优惠券使用不合规',
+					'msg' => '折扣券使用不合规',
 				]);
 			};
 		};
@@ -372,6 +401,11 @@ class Pay
 
 		//店铺优惠券检验to do...
 		
+		if($check){
+			//检验结束
+			return;
+		};
+
 		$pay = $coupon['price'];
 
 		$modelData = [];

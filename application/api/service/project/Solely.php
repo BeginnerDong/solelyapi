@@ -171,13 +171,10 @@ class Solely{
 	{
 
 		checkTokenAndScope($data,config('scope.two'));
-
 		$img = BeforeModel::CommonGet('File',$data);
 
-		if (count($img['data'])>0) {
-			
+		if(count($img['data'])>0){
 		   $img = $img['data'][0];
-		
 		}else{
 			throw new ErrorMessage([
 				'msg' => '图片不存在',
@@ -188,14 +185,12 @@ class Solely{
 		$modelData['searchItem']['id'] = $img['id'];
 		$upImg = CommonModel::CommonDelete('File',$modelData);
 
-		if ($img['origin']==2) {
-
+		if($img['origin']==2){
 			$path = ROOT_PATH.'/public/uploads/'.$img['thirdapp_id'].'/'.$img['title'];
 			$realDel = unlink($path);
+		};
 
-		}
-
-		if (count($upImg)>0&&$realDel) {
+		if(count($upImg)>0&&$realDel){
 			throw new SuccessMessage([
 				'msg' => '删除成功',
 			]);
@@ -203,7 +198,7 @@ class Solely{
 			throw new ErrorMessage([
 				'msg' => '删除失败',
 			]);
-		}
+		};
 
 	}
 
